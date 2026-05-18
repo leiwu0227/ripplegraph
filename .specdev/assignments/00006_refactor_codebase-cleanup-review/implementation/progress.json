@@ -32,15 +32,17 @@
     },
     {
       "number": 5,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-18T15:56:05Z",
-      "completed_at": null
+      "completed_at": "2026-05-18T15:57:44Z",
+      "summary": "Centralized repeated workflow JSON setup in shared test helpers while preserving scenario-specific assertions."
     },
     {
       "number": 6,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-18T15:57:48Z",
+      "completed_at": "2026-05-18T15:59:05Z",
+      "summary": "Added template/example workflow drift coverage, recorded final scan notes, regenerated dist, and passed typecheck/test/build/pack dry-run."
     }
   ]
 }

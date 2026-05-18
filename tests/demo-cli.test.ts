@@ -18,6 +18,12 @@ function run(args: string[]): { status: number | null; stdout: string; stderr: s
 }
 
 describe('ripplegraph-demo cli', () => {
+  it('keeps packaged and example workflows aligned', () => {
+    const templateWorkflow = JSON.parse(fs.readFileSync(path.join(repoRoot, 'templates', 'minimal', 'workflow.json'), 'utf8'));
+    const exampleWorkflow = JSON.parse(fs.readFileSync(path.join(repoRoot, 'examples', 'minimal', 'workflow.json'), 'utf8'));
+    expect(exampleWorkflow).toEqual(templateWorkflow);
+  });
+
   it('renders an active run and submits output with concise guidance', () => {
     const root = makeDemoWorkflowRoot();
     try {

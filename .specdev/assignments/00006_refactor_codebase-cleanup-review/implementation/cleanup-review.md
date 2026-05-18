@@ -42,3 +42,14 @@ signal that every future storage helper should become public.
 - Unifying the template and example `AGENT.md` files is deferred unless later
   implementation finds accidental inconsistency. Their different depth appears
   useful: one is an installable protocol, the other is a quickstart.
+
+## Final scan notes
+
+- No dead source files were found after cleanup. All files under `src/` are
+  either package entrypoints, public runtime/schema/storage modules, or internal
+  helpers imported by those entrypoints.
+- New internal helper modules are not re-exported from `src/index.ts`.
+- `templates/minimal/workflow.json` and `examples/minimal/workflow.json` remain
+  intentionally identical and are covered by a test.
+- `process.exit(1)` remains in CLI entrypoints and bin wrappers as expected
+  command-line failure behavior.

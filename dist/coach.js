@@ -1,5 +1,9 @@
 import { appendTransition, ensureWorkflowRoot, listRunIds, loadWorkflow, readCheckpoint, readCurrent, writeCheckpoint, writeCurrent, writeNodeOutput, } from './storage.js';
 import { RipplegraphError, } from './schema.js';
+import { resumableRuns, runSummary, stateForCheckpoint } from './internal/coach-responses.js';
+import { validateOutput } from './internal/output-validation.js';
+import { getGraph, getNode, selectEdge } from './internal/runtime-graph.js';
+import { transitionEntry } from './internal/transitions.js';
 export function validateWorkflowRoot(rootPath) {
     const workflow = loadWorkflow(rootPath);
     ensureWorkflowRoot(rootPath);
@@ -54,16 +58,7 @@ export function listRuns(opts) {
         status: 'ok',
         workflow: { id: workflow.id, version: workflow.version },
         focusedRunId: current.focusedRunId,
-        runs: listRunIds(opts.workflowRoot).map((runId) => {
-            const checkpoint = readCheckpoint(opts.workflowRoot, runId);
-            return {
-                id: checkpoint.runId,
-                status: checkpoint.status,
-                rootGraph: checkpoint.rootGraph,
-                position: checkpoint.position,
-                updatedAt: checkpoint.updatedAt,
-            };
-        }),
+        runs: listRunIds(opts.workflowRoot).map((runId) => runSummary(opts.workflowRoot, runId)),
     };
 }
 export function stepRun(opts) {
@@ -183,114 +178,5 @@ function completeRun(rootPath, checkpoint, to) {
         status: 'completed',
         run: { id: checkpoint.runId, status: 'completed', rootGraph: checkpoint.rootGraph },
         position: checkpoint.position,
-    };
-}
-function stateForCheckpoint(workflow, checkpoint) {
-    const graph = getGraph(workflow, checkpoint.rootGraph);
-    const node = getNode(graph, checkpoint.position.node);
-    return {
-        status: 'ok',
-        workflow: { id: workflow.id, version: workflow.version },
-        run: { id: checkpoint.runId, status: checkpoint.status, rootGraph: checkpoint.rootGraph },
-        position: checkpoint.position,
-        node: {
-            id: checkpoint.position.node,
-            purpose: node.purpose,
-            instructions: node.instructions,
-            exec: node.exec,
-            outputSchema: node.outputSchema,
-        },
-        context: {
-            previous: previousNodes(checkpoint),
-            next: node.edges.map((edge) => {
-                const next = getNode(graph, edge.to);
-                return { id: edge.to, purpose: next.purpose };
-            }),
-            latches: [],
-            capabilities: [],
-        },
-        responseContract: { command: 'step', acceptedFormats: ['json'] },
-    };
-}
-function getGraph(workflow, graphId) {
-    const graph = workflow.graphs[graphId];
-    if (!graph)
-        throw new RipplegraphError('E_UNKNOWN_GRAPH', `unknown graph: ${graphId}`);
-    return graph;
-}
-function getNode(graph, nodeId) {
-    const node = graph.nodes[nodeId];
-    if (!node)
-        throw new RipplegraphError('E_UNKNOWN_NODE', `unknown node: ${nodeId}`);
-    return node;
-}
-function selectEdge(edges, output) {
-    return edges.find((edge) => !edge.when || matchesWhen(edge.when, output)) ?? null;
-}
-function matchesWhen(when, output) {
-    if (!output || typeof output !== 'object' || Array.isArray(output))
-        return false;
-    const record = output;
-    return Object.entries(when).every(([key, value]) => record[key] === value);
-}
-function validateOutput(schema, output) {
-    const errors = [];
-    validateValue(schema, output, '', errors);
-    return errors;
-}
-function validateValue(schema, value, path, errors) {
-    if (schema.type && !matchesType(schema.type, value)) {
-        errors.push({ path, message: `expected ${schema.type}` });
-        return;
-    }
-    if (schema.enum && !schema.enum.some((item) => item === value)) {
-        errors.push({ path, message: `expected one of ${schema.enum.join(', ')}` });
-    }
-    if (schema.type === 'object' || schema.properties || schema.required) {
-        if (!value || typeof value !== 'object' || Array.isArray(value)) {
-            errors.push({ path, message: 'expected object' });
-            return;
-        }
-        const record = value;
-        for (const key of schema.required ?? []) {
-            if (!(key in record))
-                errors.push({ path: path ? `${path}.${key}` : key, message: 'required' });
-        }
-        for (const [key, childSchema] of Object.entries(schema.properties ?? {})) {
-            if (key in record)
-                validateValue(childSchema, record[key], path ? `${path}.${key}` : key, errors);
-        }
-    }
-}
-function matchesType(type, value) {
-    if (type === 'array')
-        return Array.isArray(value);
-    if (type === 'object')
-        return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-    return typeof value === type;
-}
-function previousNodes(checkpoint) {
-    return Object.keys(checkpoint.outputs).slice(-2).map((id) => ({ id, purpose: 'Completed node' }));
-}
-function resumableRuns(rootPath) {
-    return listRunIds(rootPath)
-        .map((runId) => readCheckpoint(rootPath, runId))
-        .filter((checkpoint) => checkpoint.status === 'suspended')
-        .map((checkpoint) => ({ id: checkpoint.runId, status: 'suspended', rootGraph: checkpoint.rootGraph }));
-}
-function transitionEntry(op, runId, from, to) {
-    return {
-        ts: new Date().toISOString(),
-        op,
-        runId,
-        from,
-        to,
-        actor: 'agent',
-        input: null,
-        output: null,
-        validation: { ok: true },
-        gateDecision: null,
-        reason: null,
-        error: null,
     };
 }
