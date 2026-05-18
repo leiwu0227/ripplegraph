@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import {
   appendTransition,
@@ -18,102 +17,12 @@ import {
   writeCurrent,
   writeNodeOutput,
 } from '../src/index.js';
-
-function makeRoot(): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-coach-'));
-  fs.writeFileSync(
-    path.join(root, 'workflow.json'),
-    JSON.stringify({
-      id: 'demo',
-      version: '0.1.0',
-      graphs: {
-        daily: {
-          entry: 'review',
-          nodes: {
-            review: {
-              purpose: 'Review generated intents',
-              instructions: 'Submit a decision.',
-              exec: 'inline',
-              outputSchema: {
-                type: 'object',
-                required: ['decision'],
-                properties: {
-                  decision: { type: 'string', enum: ['proceed', 'stop'] },
-                },
-              },
-              edges: [
-                { to: 'execute', when: { decision: 'proceed' } },
-                { to: 'done', when: { decision: 'stop' } },
-              ],
-            },
-            execute: {
-              purpose: 'Record execution result',
-              instructions: 'Submit the execution summary.',
-              exec: 'inline',
-              outputSchema: {
-                type: 'object',
-                required: ['summary'],
-                properties: { summary: { type: 'string' } },
-              },
-              edges: [{ to: 'done' }],
-            },
-            done: { purpose: 'Complete', terminal: true },
-          },
-        },
-        mockcopy: {
-          entry: 'plan',
-          nodes: {
-            plan: {
-              purpose: 'Plan mockcopy run',
-              instructions: 'Submit the mockcopy plan.',
-              exec: 'inline',
-              outputSchema: { type: 'object' },
-              edges: [{ to: 'done' }],
-            },
-            done: { purpose: 'Complete', terminal: true },
-          },
-        },
-      },
-    }),
-    'utf8',
-  );
-  return root;
-}
+import { makeCoachWorkflowRoot, makeStorageWorkflowRoot } from './helpers/workflows.js';
 
 describe('coach runtime storage', () => {
   it('loads a multi-graph workflow and persists the focused run files', () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-storage-'));
+    const root = makeStorageWorkflowRoot();
     try {
-      fs.writeFileSync(
-        path.join(root, 'workflow.json'),
-        JSON.stringify({
-          id: 'demo',
-          version: '0.1.0',
-          graphs: {
-            daily: {
-              entry: 'review',
-              nodes: {
-                review: {
-                  purpose: 'Review generated intents',
-                  instructions: 'Submit a decision.',
-                  exec: 'inline',
-                  outputSchema: {
-                    type: 'object',
-                    required: ['decision'],
-                    properties: {
-                      decision: { type: 'string', enum: ['proceed', 'stop'] },
-                    },
-                  },
-                  edges: [{ to: 'done', when: { decision: 'proceed' } }],
-                },
-                done: { purpose: 'Complete', terminal: true },
-              },
-            },
-          },
-        }),
-        'utf8',
-      );
-
       const workflow = loadWorkflow(root);
       expect(Object.keys(workflow.graphs)).toEqual(['daily']);
 
@@ -164,7 +73,7 @@ describe('coach runtime storage', () => {
 
 describe('coach operations', () => {
   it('starts, suspends, and resumes exactly one focused run', () => {
-    const root = makeRoot();
+    const root = makeCoachWorkflowRoot();
     try {
       expect(getState({ workflowRoot: root }).status).toBe('no_focused_run');
 
@@ -206,7 +115,7 @@ describe('coach operations', () => {
   });
 
   it('steps through a branch and completes at a terminal node', () => {
-    const root = makeRoot();
+    const root = makeCoachWorkflowRoot();
     try {
       startRun({ workflowRoot: root, graph: 'daily', runId: 'daily-a' });
       const next = stepRun({ workflowRoot: root, output: { decision: 'stop' } });
@@ -227,7 +136,7 @@ describe('coach operations', () => {
   });
 
   it('rejects invalid output without advancing the checkpoint', () => {
-    const root = makeRoot();
+    const root = makeCoachWorkflowRoot();
     try {
       startRun({ workflowRoot: root, graph: 'daily', runId: 'daily-a' });
       const response = stepRun({ workflowRoot: root, output: { decision: 'maybe' } });

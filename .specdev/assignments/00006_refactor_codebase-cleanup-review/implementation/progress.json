@@ -25,14 +25,15 @@
     },
     {
       "number": 4,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-18T15:55:01Z",
-      "completed_at": null
+      "completed_at": "2026-05-18T15:56:00Z",
+      "summary": "Moved coach state response shaping, resumable summaries, and transition construction into internal modules without changing coach APIs."
     },
     {
       "number": 5,
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-05-18T15:56:05Z",
       "completed_at": null
     },
     {

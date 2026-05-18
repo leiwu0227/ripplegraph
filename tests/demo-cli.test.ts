@@ -1,62 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { makeDemoWorkflowRoot } from './helpers/workflows.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const tsxCli = path.join(repoRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs');
 const cli = path.join(repoRoot, 'src', 'demo-cli.ts');
-
-function makeRoot(): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-demo-cli-'));
-  fs.writeFileSync(
-    path.join(root, 'workflow.json'),
-    JSON.stringify({
-      id: 'demo',
-      version: '0.1.0',
-      graphs: {
-        daily: {
-          entry: 'review',
-          nodes: {
-            review: {
-              purpose: 'Review generated intents',
-              instructions: 'Submit a decision.',
-              exec: 'inline',
-              outputSchema: {
-                type: 'object',
-                required: ['decision'],
-                properties: { decision: { type: 'string', enum: ['proceed', 'stop'] } },
-              },
-              edges: [{ to: 'done', when: { decision: 'stop' } }],
-            },
-            done: { purpose: 'Complete', terminal: true },
-          },
-        },
-        mockcopy: {
-          entry: 'plan',
-          nodes: {
-            plan: {
-              purpose: 'Plan mockcopy run',
-              instructions: 'Submit the plan.',
-              exec: 'inline',
-              outputSchema: {
-                type: 'object',
-                required: ['plan'],
-                properties: { plan: { type: 'string' } },
-              },
-              edges: [{ to: 'done' }],
-            },
-            done: { purpose: 'Complete', terminal: true },
-          },
-        },
-      },
-    }),
-    'utf8',
-  );
-  return root;
-}
 
 function run(args: string[]): { status: number | null; stdout: string; stderr: string } {
   const result = spawnSync(process.execPath, [tsxCli, cli, ...args], {
@@ -68,7 +19,7 @@ function run(args: string[]): { status: number | null; stdout: string; stderr: s
 
 describe('ripplegraph-demo cli', () => {
   it('renders an active run and submits output with concise guidance', () => {
-    const root = makeRoot();
+    const root = makeDemoWorkflowRoot();
     try {
       expect(run(['start', 'daily', '--run', 'daily-a', '--workflow-root', root]).stdout).toContain('Current run: daily-a');
       const status = run(['status', '--workflow-root', root]).stdout;
@@ -82,7 +33,7 @@ describe('ripplegraph-demo cli', () => {
   });
 
   it('renders available graphs, resumable runs, and run summaries', () => {
-    const root = makeRoot();
+    const root = makeDemoWorkflowRoot();
     try {
       const noFocus = run(['status', '--workflow-root', root]).stdout;
       expect(noFocus).toContain('No focused run.');
