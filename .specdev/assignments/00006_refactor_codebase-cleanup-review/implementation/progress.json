@@ -18,14 +18,15 @@
     },
     {
       "number": 3,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-18T15:53:42Z",
-      "completed_at": null
+      "completed_at": "2026-05-18T15:54:56Z",
+      "summary": "Extracted graph lookup, edge selection, and output validation into internal modules; tightened validation error coverage."
     },
     {
       "number": 4,
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-05-18T15:55:01Z",
       "completed_at": null
     },
     {

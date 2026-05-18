@@ -15,11 +15,11 @@ import {
   type JsonSchema,
   type Node,
   type Position,
-  type TransitionLogEntry,
-  type Workflow,
 } from './schema.js';
+import { resumableRuns, runSummary, stateForCheckpoint } from './internal/coach-responses.js';
 import { validateOutput } from './internal/output-validation.js';
 import { getGraph, getNode, selectEdge } from './internal/runtime-graph.js';
+import { transitionEntry } from './internal/transitions.js';
 
 export interface WorkflowRootOptions {
   workflowRoot: string;
@@ -156,16 +156,7 @@ export function listRuns(opts: WorkflowRootOptions): RunList {
     status: 'ok',
     workflow: { id: workflow.id, version: workflow.version },
     focusedRunId: current.focusedRunId,
-    runs: listRunIds(opts.workflowRoot).map((runId) => {
-      const checkpoint = readCheckpoint(opts.workflowRoot, runId);
-      return {
-        id: checkpoint.runId,
-        status: checkpoint.status,
-        rootGraph: checkpoint.rootGraph,
-        position: checkpoint.position,
-        updatedAt: checkpoint.updatedAt,
-      };
-    }),
+    runs: listRunIds(opts.workflowRoot).map((runId) => runSummary(opts.workflowRoot, runId)),
   };
 }
 
@@ -291,66 +282,5 @@ function completeRun(rootPath: string, checkpoint: Checkpoint, to: Position): St
     status: 'completed',
     run: { id: checkpoint.runId, status: 'completed', rootGraph: checkpoint.rootGraph },
     position: checkpoint.position,
-  };
-}
-
-function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint): StateOk {
-  const graph = getGraph(workflow, checkpoint.rootGraph);
-  const node = getNode(graph, checkpoint.position.node);
-  return {
-    status: 'ok',
-    workflow: { id: workflow.id, version: workflow.version },
-    run: { id: checkpoint.runId, status: checkpoint.status, rootGraph: checkpoint.rootGraph },
-    position: checkpoint.position,
-    node: {
-      id: checkpoint.position.node,
-      purpose: node.purpose,
-      instructions: node.instructions,
-      exec: node.exec,
-      outputSchema: node.outputSchema,
-    },
-    context: {
-      previous: previousNodes(checkpoint),
-      next: node.edges.map((edge) => {
-        const next = getNode(graph, edge.to);
-        return { id: edge.to, purpose: next.purpose };
-      }),
-      latches: [],
-      capabilities: [],
-    },
-    responseContract: { command: 'step', acceptedFormats: ['json'] },
-  };
-}
-
-function previousNodes(checkpoint: Checkpoint): Array<{ id: string; purpose: string }> {
-  return Object.keys(checkpoint.outputs).slice(-2).map((id) => ({ id, purpose: 'Completed node' }));
-}
-
-function resumableRuns(rootPath: string): StateNoFocusedRun['resumableRuns'] {
-  return listRunIds(rootPath)
-    .map((runId) => readCheckpoint(rootPath, runId))
-    .filter((checkpoint) => checkpoint.status === 'suspended')
-    .map((checkpoint) => ({ id: checkpoint.runId, status: 'suspended', rootGraph: checkpoint.rootGraph }));
-}
-
-function transitionEntry(
-  op: TransitionLogEntry['op'],
-  runId: string,
-  from: Position | null,
-  to: Position | null,
-): TransitionLogEntry {
-  return {
-    ts: new Date().toISOString(),
-    op,
-    runId,
-    from,
-    to,
-    actor: 'agent',
-    input: null,
-    output: null,
-    validation: { ok: true },
-    gateDecision: null,
-    reason: null,
-    error: null,
   };
 }
