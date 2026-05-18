@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import {
   getState,
   listRuns,
@@ -12,61 +11,11 @@ import {
   type StateOk,
   type StepRunResponse,
 } from './index.js';
-
-interface ParsedArgs {
-  command: string;
-  positional: string[];
-  flags: Record<string, string | boolean>;
-}
-
-function parseArgs(argv: string[]): ParsedArgs {
-  const [command = '', ...rest] = argv;
-  const positional: string[] = [];
-  const flags: Record<string, string | boolean> = {};
-  for (let i = 0; i < rest.length; i++) {
-    const arg = rest[i]!;
-    if (!arg.startsWith('--')) {
-      positional.push(arg);
-      continue;
-    }
-    const key = arg.slice(2);
-    const next = rest[i + 1];
-    if (next === undefined || next.startsWith('--')) {
-      flags[key] = true;
-    } else {
-      flags[key] = next;
-      i++;
-    }
-  }
-  return { command, positional, flags };
-}
-
-function stringFlag(flags: ParsedArgs['flags'], name: string): string | undefined {
-  const value = flags[name];
-  return typeof value === 'string' ? value : undefined;
-}
-
-function workflowRoot(flags: ParsedArgs['flags']): string {
-  return stringFlag(flags, 'workflow-root') ?? process.cwd();
-}
-
-function required(value: string | undefined, message: string): string {
-  if (!value) throw new RipplegraphError('E_MISSING_ARG', message);
-  return value;
-}
+import { emitLine, errorText, parseArgs, parseJsonFromFileOrValue, required, stringFlag, workflowRoot, type ParsedArgs } from './internal/cli-helpers.js';
 
 function parseOutput(args: ParsedArgs): unknown {
   const file = stringFlag(args.flags, 'file');
-  const raw = file ? fs.readFileSync(file, 'utf8') : required(args.positional[0], 'missing submit JSON or --file');
-  try {
-    return JSON.parse(raw);
-  } catch (error) {
-    throw new RipplegraphError('E_BAD_JSON', `submit payload is not valid JSON: ${(error as Error).message}`);
-  }
-}
-
-function emit(text: string): void {
-  process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
+  return parseJsonFromFileOrValue(file, args.positional[0], 'missing submit JSON or --file', 'submit payload is not valid JSON');
 }
 
 function renderNoFocusedRun(state: ReturnType<typeof getState> & { status: 'no_focused_run' }, runs: RunList): string {
@@ -146,11 +95,6 @@ function formatRun(run: RunList['runs'][number]): string {
   return `${run.id}  ${run.status}  ${run.rootGraph}  ${run.position.node}`;
 }
 
-function errorText(error: unknown): string {
-  if (error instanceof RipplegraphError) return `${error.code}: ${error.message}`;
-  return `E_INTERNAL: ${(error as Error).message}`;
-}
-
 const HELP = `ripplegraph-demo — reference agent-facing Ripplegraph CLI
 
 Commands:
@@ -165,30 +109,30 @@ Commands:
 async function main(argv: string[]): Promise<void> {
   const args = parseArgs(argv);
   if (!args.command || args.command === 'help' || args.command === '--help' || args.flags['help']) {
-    emit(HELP);
+    emitLine(HELP);
     return;
   }
   const root = workflowRoot(args.flags);
   switch (args.command) {
     case 'status': {
       const state = getState({ workflowRoot: root });
-      emit(state.status === 'no_focused_run' ? renderNoFocusedRun(state, listRuns({ workflowRoot: root })) : renderActiveState(state));
+      emitLine(state.status === 'no_focused_run' ? renderNoFocusedRun(state, listRuns({ workflowRoot: root })) : renderActiveState(state));
       return;
     }
     case 'runs':
-      emit(renderRuns(listRuns({ workflowRoot: root })));
+      emitLine(renderRuns(listRuns({ workflowRoot: root })));
       return;
     case 'start':
-      emit(renderActiveState(startRun({ workflowRoot: root, graph: required(args.positional[0], 'missing graph id'), runId: required(stringFlag(args.flags, 'run'), 'missing --run') })));
+      emitLine(renderActiveState(startRun({ workflowRoot: root, graph: required(args.positional[0], 'missing graph id'), runId: required(stringFlag(args.flags, 'run'), 'missing --run') })));
       return;
     case 'pause':
-      emit(renderActiveState(suspendRun({ workflowRoot: root, note: args.positional.join(' ') || undefined })));
+      emitLine(renderActiveState(suspendRun({ workflowRoot: root, note: args.positional.join(' ') || undefined })));
       return;
     case 'resume':
-      emit(renderActiveState(resumeRun({ workflowRoot: root, runId: required(args.positional[0], 'missing run id') })));
+      emitLine(renderActiveState(resumeRun({ workflowRoot: root, runId: required(args.positional[0], 'missing run id') })));
       return;
     case 'submit':
-      emit(renderStep(stepRun({ workflowRoot: root, output: parseOutput(args) })));
+      emitLine(renderStep(stepRun({ workflowRoot: root, output: parseOutput(args) })));
       return;
     default:
       throw new RipplegraphError('E_UNKNOWN_COMMAND', `unknown command: ${args.command}`);

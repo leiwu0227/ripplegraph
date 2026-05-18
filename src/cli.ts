@@ -8,65 +8,7 @@ import {
   suspendRun,
   validateWorkflowRoot,
 } from './index.js';
-
-interface ParsedArgs {
-  command: string;
-  flags: Record<string, string | boolean>;
-}
-
-function parseArgs(argv: string[]): ParsedArgs {
-  const [command = '', ...rest] = argv;
-  const flags: Record<string, string | boolean> = {};
-  for (let i = 0; i < rest.length; i++) {
-    const arg = rest[i]!;
-    if (!arg.startsWith('--')) continue;
-    const key = arg.slice(2);
-    const next = rest[i + 1];
-    if (next === undefined || next.startsWith('--')) {
-      flags[key] = true;
-    } else {
-      flags[key] = next;
-      i++;
-    }
-  }
-  return { command, flags };
-}
-
-function stringFlag(flags: ParsedArgs['flags'], name: string): string | undefined {
-  const value = flags[name];
-  return typeof value === 'string' ? value : undefined;
-}
-
-function requiredFlag(flags: ParsedArgs['flags'], name: string): string {
-  const value = stringFlag(flags, name);
-  if (!value) throw new RipplegraphError('E_MISSING_ARG', `missing --${name}`);
-  return value;
-}
-
-function workflowRoot(flags: ParsedArgs['flags']): string {
-  return stringFlag(flags, 'workflow-root') ?? process.cwd();
-}
-
-function emitJson(payload: unknown): void {
-  process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
-}
-
-function errorPayload(error: unknown): { status: 'error'; code: string; message: string } {
-  if (error instanceof RipplegraphError) {
-    return { status: 'error', code: error.code, message: error.message };
-  }
-  const err = error as Error;
-  return { status: 'error', code: 'E_INTERNAL', message: err.message };
-}
-
-function parseOutput(raw: string | undefined): unknown {
-  if (!raw) throw new RipplegraphError('E_MISSING_ARG', 'missing --output');
-  try {
-    return JSON.parse(raw);
-  } catch (error) {
-    throw new RipplegraphError('E_BAD_JSON', `--output is not valid JSON: ${(error as Error).message}`);
-  }
-}
+import { emitJson, jsonErrorPayload, parseArgs, parseJson, requiredFlag, stringFlag, workflowRoot } from './internal/cli-helpers.js';
 
 const HELP = `ripplegraph — focused-run Coach runtime POC
 
@@ -104,7 +46,7 @@ async function main(argv: string[]): Promise<void> {
       emitJson(getState({ workflowRoot: workflowRoot(flags) }));
       return;
     case 'step':
-      emitJson(stepRun({ workflowRoot: workflowRoot(flags), output: parseOutput(stringFlag(flags, 'output')) }));
+      emitJson(stepRun({ workflowRoot: workflowRoot(flags), output: parseJson(stringFlag(flags, 'output'), 'missing --output', '--output is not valid JSON') }));
       return;
     case 'suspend':
       emitJson(suspendRun({ workflowRoot: workflowRoot(flags), note: stringFlag(flags, 'note') }));
@@ -121,7 +63,6 @@ async function main(argv: string[]): Promise<void> {
 }
 
 main(process.argv.slice(2)).catch((error) => {
-  emitJson(errorPayload(error));
+  emitJson(jsonErrorPayload(error));
   process.exit(1);
 });
-
