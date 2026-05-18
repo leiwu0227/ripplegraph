@@ -232,6 +232,9 @@ describe('coach operations', () => {
       startRun({ workflowRoot: root, graph: 'daily', runId: 'daily-a' });
       const response = stepRun({ workflowRoot: root, output: { decision: 'maybe' } });
       expect(response.status).toBe('validation_error');
+      if (response.status === 'validation_error') {
+        expect(response.errors).toEqual([{ path: 'decision', message: 'expected one of proceed, stop' }]);
+      }
       expect(readCheckpoint(root, 'daily-a').position).toEqual({ graph: 'daily', node: 'review' });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });

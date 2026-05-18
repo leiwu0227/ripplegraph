@@ -11,14 +11,15 @@
     },
     {
       "number": 2,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-18T15:51:21Z",
-      "completed_at": null
+      "completed_at": "2026-05-18T15:53:33Z",
+      "summary": "Extracted shared CLI parsing, JSON, emission, and error helpers while preserving low-level JSON and demo text CLI contracts."
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-05-18T15:53:42Z",
       "completed_at": null
     },
     {

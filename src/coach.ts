@@ -12,14 +12,14 @@ import {
 import {
   RipplegraphError,
   type Checkpoint,
-  type Edge,
-  type Graph,
   type JsonSchema,
   type Node,
   type Position,
   type TransitionLogEntry,
   type Workflow,
 } from './schema.js';
+import { validateOutput } from './internal/output-validation.js';
+import { getGraph, getNode, selectEdge } from './internal/runtime-graph.js';
 
 export interface WorkflowRootOptions {
   workflowRoot: string;
@@ -320,63 +320,6 @@ function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint): StateOk
     },
     responseContract: { command: 'step', acceptedFormats: ['json'] },
   };
-}
-
-function getGraph(workflow: Workflow, graphId: string): Graph {
-  const graph = workflow.graphs[graphId];
-  if (!graph) throw new RipplegraphError('E_UNKNOWN_GRAPH', `unknown graph: ${graphId}`);
-  return graph;
-}
-
-function getNode(graph: Graph, nodeId: string): Node {
-  const node = graph.nodes[nodeId];
-  if (!node) throw new RipplegraphError('E_UNKNOWN_NODE', `unknown node: ${nodeId}`);
-  return node;
-}
-
-function selectEdge(edges: Edge[], output: unknown): Edge | null {
-  return edges.find((edge) => !edge.when || matchesWhen(edge.when, output)) ?? null;
-}
-
-function matchesWhen(when: Record<string, unknown>, output: unknown): boolean {
-  if (!output || typeof output !== 'object' || Array.isArray(output)) return false;
-  const record = output as Record<string, unknown>;
-  return Object.entries(when).every(([key, value]) => record[key] === value);
-}
-
-function validateOutput(schema: JsonSchema, output: unknown): Array<{ path: string; message: string }> {
-  const errors: Array<{ path: string; message: string }> = [];
-  validateValue(schema, output, '', errors);
-  return errors;
-}
-
-function validateValue(schema: JsonSchema, value: unknown, path: string, errors: Array<{ path: string; message: string }>): void {
-  if (schema.type && !matchesType(schema.type, value)) {
-    errors.push({ path, message: `expected ${schema.type}` });
-    return;
-  }
-  if (schema.enum && !schema.enum.some((item) => item === value)) {
-    errors.push({ path, message: `expected one of ${schema.enum.join(', ')}` });
-  }
-  if (schema.type === 'object' || schema.properties || schema.required) {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) {
-      errors.push({ path, message: 'expected object' });
-      return;
-    }
-    const record = value as Record<string, unknown>;
-    for (const key of schema.required ?? []) {
-      if (!(key in record)) errors.push({ path: path ? `${path}.${key}` : key, message: 'required' });
-    }
-    for (const [key, childSchema] of Object.entries(schema.properties ?? {})) {
-      if (key in record) validateValue(childSchema, record[key], path ? `${path}.${key}` : key, errors);
-    }
-  }
-}
-
-function matchesType(type: JsonSchema['type'], value: unknown): boolean {
-  if (type === 'array') return Array.isArray(value);
-  if (type === 'object') return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-  return typeof value === type;
 }
 
 function previousNodes(checkpoint: Checkpoint): Array<{ id: string; purpose: string }> {
