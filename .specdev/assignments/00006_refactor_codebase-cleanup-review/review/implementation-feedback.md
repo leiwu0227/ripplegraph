@@ -65,3 +65,39 @@ The assignment must first complete the breakdown phase (create
 review can assess the quality, correctness, and completeness of changes.
 
 **Verdict:** needs-changes
+
+## Round 2
+
+**Reviewer focus:** Code efficiency — eliminate dead code, replace imperative loops
+with functional alternatives where they simplify the code, extract magic numbers
+into constants, prefer pure functions with minimal side effects, and verify Big O
+complexity of algorithms.
+
+### Findings
+
+- (none)
+
+### Addressed from changelog
+
+- The premature implementation review issue from round 1 is resolved: the
+  breakdown plan now exists and all six implementation tasks were executed.
+- Shared CLI parsing, JSON parsing, workflow-root handling, and error formatting
+  now live in `src/internal/cli-helpers.ts`; renderer-specific CLI output stays
+  local to each CLI.
+- `src/coach.ts` no longer carries graph lookup/edge selection, output
+  validation, response shaping, run summaries, or transition-entry construction;
+  those concerns are split into focused internal modules without adding public
+  exports.
+- Repeated workflow test fixtures were consolidated into
+  `tests/helpers/workflows.ts`.
+- Template/example workflow drift is covered by a test, and deferred cleanup/API
+  decisions are recorded in `implementation/cleanup-review.md`.
+
+### Verification
+
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
+- `npm pack --dry-run`
+
+**Verdict:** approved
