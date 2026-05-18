@@ -1,0 +1,42 @@
+{
+  "plan_file": ".specdev/assignments/00006_refactor_codebase-cleanup-review/breakdown/plan.md",
+  "total_tasks": 6,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "in_progress",
+      "started_at": "2026-05-18T15:50:35Z",
+      "completed_at": null
+    },
+    {
+      "number": 2,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 3,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 4,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 5,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 6,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    }
+  ]
+}
