@@ -17,6 +17,7 @@ export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint): 
       instructions: node.instructions,
       exec: node.exec,
       outputSchema: node.outputSchema,
+      gate: node.gate,
     },
     context: {
       previous: previousNodes(checkpoint),
@@ -27,7 +28,9 @@ export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint): 
       latches: [],
       capabilities: [],
     },
-    responseContract: { command: 'step', acceptedFormats: ['json'] },
+    responseContract: node.gate
+      ? { command: 'decide', acceptedFormats: ['json'], schema: node.gate.decisionSchema }
+      : { command: 'step', acceptedFormats: ['json'] },
   };
 }
 

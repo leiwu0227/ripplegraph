@@ -17,7 +17,7 @@ import {
   writeCurrent,
   writeNodeOutput,
 } from '../src/index.js';
-import { makeCoachWorkflowRoot, makeHiddenStorageWorkflowRoot, makeStorageWorkflowRoot } from './helpers/workflows.js';
+import { makeCoachWorkflowRoot, makeGatedWorkflowRoot, makeHiddenStorageWorkflowRoot, makeStorageWorkflowRoot } from './helpers/workflows.js';
 
 describe('coach runtime storage', () => {
   it('loads workflow definitions from the hidden runtime directory', () => {
@@ -81,6 +81,32 @@ describe('coach runtime storage', () => {
 });
 
 describe('coach operations', () => {
+  it('exposes gated nodes as external decision contracts', () => {
+    const root = makeGatedWorkflowRoot();
+    try {
+      const state = startRun({ workflowRoot: root, graph: 'review', runId: 'approval-a' });
+      expect(state.node.gate).toMatchObject({
+        type: 'external_decision',
+        decisionSchema: {
+          required: ['decision'],
+          properties: {
+            decision: { enum: ['approved', 'rejected'] },
+          },
+        },
+      });
+      expect(state.responseContract).toMatchObject({
+        command: 'decide',
+        acceptedFormats: ['json'],
+        schema: {
+          required: ['decision'],
+        },
+      });
+      expect(readCheckpoint(root, 'approval-a').gateDecisions).toEqual({});
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('starts, suspends, and resumes exactly one focused run', () => {
     const root = makeCoachWorkflowRoot();
     try {

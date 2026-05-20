@@ -31,6 +31,13 @@ export interface JsonSchema {
   [key: string]: unknown;
 }
 
+export const gateSchema = z
+  .object({
+    type: z.literal('external_decision'),
+    decisionSchema: jsonSchemaSchema,
+  })
+  .strict();
+
 export const edgeSchema = z
   .object({
     to: idSchema,
@@ -44,6 +51,7 @@ export const nodeSchema = z
     instructions: z.string().min(1).optional(),
     exec: z.enum(['inline', 'spawn', 'script']).default('inline'),
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
+    gate: gateSchema.optional(),
     edges: z.array(edgeSchema).default([]),
     terminal: z.boolean().default(false),
   })
@@ -103,6 +111,7 @@ export const checkpointSchema = z
     createdAt: z.string().min(1),
     updatedAt: z.string().min(1),
     outputs: z.record(z.string(), z.unknown()).default({}),
+    gateDecisions: z.record(z.string(), z.unknown()).default({}),
     resumeNote: z.string().optional(),
   })
   .strict();
@@ -133,10 +142,10 @@ export const transitionLogEntrySchema = z
 export type Workflow = z.infer<typeof workflowSchema>;
 export type Graph = z.infer<typeof graphSchema>;
 export type Node = z.infer<typeof nodeSchema>;
+export type Gate = z.infer<typeof gateSchema>;
 export type Edge = z.infer<typeof edgeSchema>;
 export type RunStatus = z.infer<typeof runStatusSchema>;
 export type Position = z.infer<typeof positionSchema>;
 export type Checkpoint = z.infer<typeof checkpointSchema>;
 export type Current = z.infer<typeof currentSchema>;
 export type TransitionLogEntry = z.infer<typeof transitionLogEntrySchema>;
-

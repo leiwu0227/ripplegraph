@@ -12,6 +12,7 @@ import {
 import {
   RipplegraphError,
   type Checkpoint,
+  type Gate,
   type JsonSchema,
   type Node,
   type Position,
@@ -57,6 +58,7 @@ export interface StateOk {
     instructions?: string;
     exec: Node['exec'];
     outputSchema: JsonSchema;
+    gate?: Gate;
   };
   context: {
     previous: Array<{ id: string; purpose: string }>;
@@ -64,7 +66,9 @@ export interface StateOk {
     latches: [];
     capabilities: [];
   };
-  responseContract: { command: 'step'; acceptedFormats: ['json'] };
+  responseContract:
+    | { command: 'step'; acceptedFormats: ['json'] }
+    | { command: 'decide'; acceptedFormats: ['json']; schema: JsonSchema };
 }
 
 export interface StateNoFocusedRun {
@@ -126,6 +130,7 @@ export function startRun(opts: StartRunOptions): StateOk {
     createdAt: now,
     updatedAt: now,
     outputs: {},
+    gateDecisions: {},
   };
   writeCheckpoint(opts.workflowRoot, checkpoint);
   writeCurrent(opts.workflowRoot, { focusedRunId: opts.runId });

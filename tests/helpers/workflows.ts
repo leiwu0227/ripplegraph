@@ -204,6 +204,44 @@ export function makeCoachWorkflowRoot(): string {
   });
 }
 
+export function makeGatedWorkflowRoot(): string {
+  return createWorkflowRoot({
+    prefix: 'ripplegraph-gated-',
+    workflow: {
+      id: 'gated-demo',
+      version: '0.1.0',
+      graphs: {
+        review: {
+          entry: 'approval',
+          nodes: {
+            approval: {
+              purpose: 'Request external approval',
+              instructions: 'Ask for an external decision before continuing.',
+              exec: 'inline',
+              gate: {
+                type: 'external_decision',
+                decisionSchema: {
+                  type: 'object',
+                  required: ['decision'],
+                  properties: {
+                    decision: { type: 'string', enum: ['approved', 'rejected'] },
+                    reason: { type: 'string' },
+                  },
+                },
+              },
+              edges: [
+                { to: 'done', when: { decision: 'approved' } },
+                { to: 'done', when: { decision: 'rejected' } },
+              ],
+            },
+            done: { purpose: 'Complete', terminal: true },
+          },
+        },
+      },
+    },
+  });
+}
+
 export function makeDemoWorkflowRoot(): string {
   return createWorkflowRoot({
     prefix: 'ripplegraph-demo-cli-',
