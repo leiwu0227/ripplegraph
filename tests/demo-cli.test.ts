@@ -37,6 +37,8 @@ describe('ripplegraph-demo cli', () => {
       expect(result.stdout).toContain(`ripplegraph-demo status --workflow-root ${root}`);
       expect(fs.existsSync(path.join(root, '.ripplegraph', 'workflow.json'))).toBe(true);
       expect(fs.existsSync(path.join(root, 'AGENT.md'))).toBe(true);
+      expect(fs.existsSync(path.join(root, 'tickets', 'inbox.json'))).toBe(true);
+      expect(fs.existsSync(path.join(root, 'support-playbook.md'))).toBe(true);
       expect(fs.existsSync(path.join(root, 'workflow.json'))).toBe(false);
       expect(run(['status', '--workflow-root', root]).stdout).toContain('No focused run.');
     } finally {
@@ -63,16 +65,19 @@ describe('ripplegraph-demo cli', () => {
       expect(run(['init', root]).status).toBe(0);
       const currentPath = path.join(root, '.ripplegraph', 'current.json');
       const runPath = path.join(root, '.ripplegraph', 'runs', 'demo-run', 'checkpoint.json');
+      const ticketPath = path.join(root, 'tickets', 'inbox.json');
       fs.mkdirSync(path.dirname(runPath), { recursive: true });
       fs.writeFileSync(currentPath, '{"focusedRunId":"demo-run"}', 'utf8');
       fs.writeFileSync(runPath, '{"status":"active"}', 'utf8');
       fs.writeFileSync(path.join(root, 'AGENT.md'), 'custom guide', 'utf8');
+      fs.writeFileSync(ticketPath, 'custom ticket', 'utf8');
 
       const result = run(['init', root, '--force']);
       expect(result.status).toBe(0);
       expect(fs.readFileSync(currentPath, 'utf8')).toBe('{"focusedRunId":"demo-run"}');
       expect(fs.readFileSync(runPath, 'utf8')).toBe('{"status":"active"}');
       expect(fs.readFileSync(path.join(root, 'AGENT.md'), 'utf8')).not.toBe('custom guide');
+      expect(fs.readFileSync(ticketPath, 'utf8')).not.toBe('custom ticket');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
