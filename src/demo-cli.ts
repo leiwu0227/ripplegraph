@@ -11,7 +11,13 @@ import {
   type StateOk,
   type StepRunResponse,
 } from './index.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { emitLine, errorText, parseArgs, parseJsonFromFileOrValue, required, stringFlag, workflowRoot, type ParsedArgs } from './internal/cli-helpers.js';
+
+const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const minimalTemplateDir = path.join(packageRoot, 'templates', 'minimal');
 
 function parseOutput(args: ParsedArgs): unknown {
   const file = stringFlag(args.flags, 'file');
@@ -95,9 +101,32 @@ function formatRun(run: RunList['runs'][number]): string {
   return `${run.id}  ${run.status}  ${run.rootGraph}  ${run.position.node}`;
 }
 
+function initDemoProject(targetPath: string, force: boolean): string {
+  const root = path.resolve(targetPath);
+  const workflowFile = path.join(root, '.ripplegraph', 'workflow.json');
+  const agentFile = path.join(root, 'AGENT.md');
+  const protectedFiles = [workflowFile, agentFile];
+  const existingFile = protectedFiles.find((filePath) => fs.existsSync(filePath));
+  if (existingFile && !force) {
+    throw new RipplegraphError('E_ALREADY_EXISTS', `${existingFile} already exists; rerun with --force to replace demo files`);
+  }
+
+  fs.mkdirSync(path.dirname(workflowFile), { recursive: true });
+  fs.copyFileSync(path.join(minimalTemplateDir, 'workflow.json'), workflowFile);
+  fs.copyFileSync(path.join(minimalTemplateDir, 'AGENT.md'), agentFile);
+
+  return [
+    `Initialized Ripplegraph demo at ${root}`,
+    '',
+    'Next:',
+    `  ripplegraph-demo status --workflow-root ${root}`,
+  ].join('\n');
+}
+
 const HELP = `ripplegraph-demo — reference agent-facing Ripplegraph CLI
 
 Commands:
+  init <path> [--force]
   status [--workflow-root <path>]
   runs [--workflow-root <path>]
   start <graph-id> --run <run-id> [--workflow-root <path>]
@@ -110,6 +139,10 @@ async function main(argv: string[]): Promise<void> {
   const args = parseArgs(argv);
   if (!args.command || args.command === 'help' || args.command === '--help' || args.flags['help']) {
     emitLine(HELP);
+    return;
+  }
+  if (args.command === 'init') {
+    emitLine(initDemoProject(required(args.positional[0], 'missing init path'), args.flags['force'] === true));
     return;
   }
   const root = workflowRoot(args.flags);

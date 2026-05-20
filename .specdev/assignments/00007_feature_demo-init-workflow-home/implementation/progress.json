@@ -4,14 +4,15 @@
   "tasks": [
     {
       "number": 1,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-20T06:57:53Z",
-      "completed_at": null
+      "completed_at": "2026-05-20T06:59:22Z",
+      "summary": "Hidden workflow loading now prefers .ripplegraph/workflow.json with root workflow.json fallback, covered by a focused coach runtime test."
     },
     {
       "number": 2,
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-05-20T06:59:29Z",
       "completed_at": null
     },
     {
