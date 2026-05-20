@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { makeCliWorkflowRoot } from './helpers/workflows.js';
+import { makeCliWorkflowRoot, makeGatedWorkflowRoot } from './helpers/workflows.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const tsxCli = path.join(repoRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs');
@@ -22,6 +22,24 @@ function run(args: string[]): { status: number | null; json: Record<string, unkn
 }
 
 describe('reference cli', () => {
+  it('renders gated state and advances it through decide', () => {
+    const root = makeGatedWorkflowRoot();
+    try {
+      expect(run(['start', '--workflow-root', root, '--graph', 'review', '--run-id', 'approval-a']).json.status).toBe('ok');
+      const state = run(['state', '--workflow-root', root]).json;
+      expect(state.responseContract).toMatchObject({ command: 'decide', schema: { required: ['decision'] } });
+      expect(run(['step', '--workflow-root', root, '--output', '{"decision":"approved"}']).json).toMatchObject({
+        status: 'error',
+        code: 'E_GATE_DECISION_REQUIRED',
+      });
+      expect(run(['decide', '--workflow-root', root, '--decision', '{"decision":"approved","reason":"ok"}']).json.status).toBe(
+        'completed',
+      );
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('starts, reads, steps, suspends, and resumes with JSON commands', () => {
     const root = makeCliWorkflowRoot();
     try {

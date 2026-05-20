@@ -11,14 +11,15 @@
     },
     {
       "number": 2,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-20T08:28:28Z",
-      "completed_at": null
+      "completed_at": "2026-05-20T08:30:16Z",
+      "summary": "Added decideGate runtime, gated step refusal, decision validation, separate gate decision storage, decide transition logging, and focused coverage."
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-05-20T08:30:20Z",
       "completed_at": null
     },
     {

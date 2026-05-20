@@ -1,5 +1,6 @@
 import {
   abandonRun,
+  decideGate,
   getState,
   resumeRun,
   RipplegraphError,
@@ -17,6 +18,7 @@ Commands:
   start --graph <graph-id> --run-id <id> [--workflow-root <path>]
   state [--workflow-root <path>]
   step --output <json> [--workflow-root <path>]
+  decide --decision <json> [--workflow-root <path>]
   suspend [--note <text>] [--workflow-root <path>]
   resume --run-id <id> [--workflow-root <path>]
   abandon [--reason <text>] [--workflow-root <path>]
@@ -47,6 +49,9 @@ async function main(argv: string[]): Promise<void> {
       return;
     case 'step':
       emitJson(stepRun({ workflowRoot: workflowRoot(flags), output: parseJson(stringFlag(flags, 'output'), 'missing --output', '--output is not valid JSON') }));
+      return;
+    case 'decide':
+      emitJson(decideGate({ workflowRoot: workflowRoot(flags), decision: parseJson(stringFlag(flags, 'decision'), 'missing --decision', '--decision is not valid JSON') }));
       return;
     case 'suspend':
       emitJson(suspendRun({ workflowRoot: workflowRoot(flags), note: stringFlag(flags, 'note') }));

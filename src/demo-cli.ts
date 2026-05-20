@@ -1,4 +1,5 @@
 import {
+  decideGate,
   getState,
   listRuns,
   resumeRun,
@@ -49,6 +50,12 @@ function renderActiveState(state: StateOk): string {
     state.node.purpose,
   ];
   if (state.node.instructions) lines.push(state.node.instructions);
+  if (state.responseContract.command === 'decide') {
+    lines.push('', 'External decision required:');
+    lines.push(...renderOutputSchema(state.responseContract.schema));
+    lines.push('', 'Next:', `  ripplegraph-demo decide '${exampleOutput(state.responseContract.schema)}'`);
+    return lines.join('\n');
+  }
   lines.push('', 'Required output:');
   lines.push(...renderOutputSchema(state.node.outputSchema));
   lines.push('', 'Next:', `  ripplegraph-demo submit '${exampleOutput(state.node.outputSchema)}'`);
@@ -148,6 +155,7 @@ Commands:
   pause [note] [--workflow-root <path>]
   resume <run-id> [--workflow-root <path>]
   submit <json> [--file <path>] [--workflow-root <path>]
+  decide <json> [--file <path>] [--workflow-root <path>]
 `;
 
 async function main(argv: string[]): Promise<void> {
@@ -181,6 +189,9 @@ async function main(argv: string[]): Promise<void> {
       return;
     case 'submit':
       emitLine(renderStep(stepRun({ workflowRoot: root, output: parseOutput(args) })));
+      return;
+    case 'decide':
+      emitLine(renderStep(decideGate({ workflowRoot: root, decision: parseOutput(args) })));
       return;
     default:
       throw new RipplegraphError('E_UNKNOWN_COMMAND', `unknown command: ${args.command}`);

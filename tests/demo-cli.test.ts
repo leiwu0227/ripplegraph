@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { makeDemoWorkflowRoot } from './helpers/workflows.js';
+import { makeDemoWorkflowRoot, makeGatedWorkflowRoot } from './helpers/workflows.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const tsxCli = path.join(repoRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs');
@@ -27,6 +27,24 @@ describe('ripplegraph-demo cli', () => {
     const templateWorkflow = JSON.parse(fs.readFileSync(path.join(repoRoot, 'templates', 'minimal', 'workflow.json'), 'utf8'));
     const exampleWorkflow = JSON.parse(fs.readFileSync(path.join(repoRoot, 'examples', 'minimal', 'workflow.json'), 'utf8'));
     expect(exampleWorkflow).toEqual(templateWorkflow);
+  });
+
+  it('renders gated nodes with decide guidance and advances decisions', () => {
+    const root = makeGatedWorkflowRoot();
+    try {
+      expect(run(['start', 'review', '--run', 'approval-a', '--workflow-root', root]).stdout).toContain(
+        'External decision required',
+      );
+      const status = run(['status', '--workflow-root', root]).stdout;
+      expect(status).toContain('decision: approved | rejected');
+      expect(status).toContain('ripplegraph-demo decide');
+      expect(run(['submit', '{"decision":"approved"}', '--workflow-root', root]).status).toBe(1);
+      expect(run(['decide', '{"decision":"approved","reason":"ok"}', '--workflow-root', root]).stdout).toContain(
+        'Run completed: approval-a',
+      );
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it('initializes a project with hidden workflow files and next-step guidance', () => {
