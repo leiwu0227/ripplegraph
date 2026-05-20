@@ -88,18 +88,33 @@ function renderRuns(runs) {
 function formatRun(run) {
     return `${run.id}  ${run.status}  ${run.rootGraph}  ${run.position.node}`;
 }
+function listTemplateFiles(dir, baseDir = dir) {
+    return fs
+        .readdirSync(dir, { withFileTypes: true })
+        .flatMap((entry) => {
+        const filePath = path.join(dir, entry.name);
+        if (entry.isDirectory())
+            return listTemplateFiles(filePath, baseDir);
+        return [path.relative(baseDir, filePath)];
+    })
+        .sort();
+}
 function initDemoProject(targetPath, force) {
     const root = path.resolve(targetPath);
     const workflowFile = path.join(root, '.ripplegraph', 'workflow.json');
-    const agentFile = path.join(root, 'AGENT.md');
-    const protectedFiles = [workflowFile, agentFile];
+    const workspaceFiles = listTemplateFiles(minimalTemplateDir).filter((filePath) => filePath !== 'workflow.json');
+    const protectedFiles = [workflowFile, ...workspaceFiles.map((filePath) => path.join(root, filePath))];
     const existingFile = protectedFiles.find((filePath) => fs.existsSync(filePath));
     if (existingFile && !force) {
         throw new RipplegraphError('E_ALREADY_EXISTS', `${existingFile} already exists; rerun with --force to replace demo files`);
     }
     fs.mkdirSync(path.dirname(workflowFile), { recursive: true });
     fs.copyFileSync(path.join(minimalTemplateDir, 'workflow.json'), workflowFile);
-    fs.copyFileSync(path.join(minimalTemplateDir, 'AGENT.md'), agentFile);
+    for (const filePath of workspaceFiles) {
+        const targetFile = path.join(root, filePath);
+        fs.mkdirSync(path.dirname(targetFile), { recursive: true });
+        fs.copyFileSync(path.join(minimalTemplateDir, filePath), targetFile);
+    }
     return [
         `Initialized Ripplegraph demo at ${root}`,
         '',

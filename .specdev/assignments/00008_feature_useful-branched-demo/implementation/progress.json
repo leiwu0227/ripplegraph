@@ -18,15 +18,17 @@
     },
     {
       "number": 3,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-20T07:43:52Z",
-      "completed_at": null
+      "completed_at": "2026-05-20T07:45:18Z",
+      "summary": "Updated demo helpers and CLI tests to use support-triage and policy-refresh, including a bug branch transition to reproduce-bug."
     },
     {
       "number": 4,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-20T07:45:24Z",
+      "completed_at": "2026-05-20T07:46:37Z",
+      "summary": "Final verification passed: typecheck, full tests, build, pack dry-run, local global install smoke, and installed demo fixture checks."
     }
   ]
 }
