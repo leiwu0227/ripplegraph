@@ -125,7 +125,7 @@ export const currentSchema = z
 export const transitionLogEntrySchema = z
   .object({
     ts: z.string().min(1),
-    op: z.enum(['start', 'step', 'suspend', 'resume', 'abandon']),
+    op: z.enum(['start', 'step', 'decide', 'suspend', 'resume', 'abandon']),
     runId: idSchema,
     from: positionSchema.nullable(),
     to: positionSchema.nullable(),

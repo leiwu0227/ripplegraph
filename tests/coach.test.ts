@@ -6,6 +6,7 @@ import {
   ensureWorkflowRoot,
   getState,
   loadWorkflow,
+  decideGate,
   readCheckpoint,
   readCurrent,
   listRuns,
@@ -146,6 +147,53 @@ describe('coach operations', () => {
       });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('decides a gated node, stores the external decision, and logs a decide transition', () => {
+    const root = makeGatedWorkflowRoot();
+    try {
+      startRun({ workflowRoot: root, graph: 'review', runId: 'approval-a' });
+      const response = decideGate({ workflowRoot: root, decision: { decision: 'approved', reason: 'classification is correct' } });
+      expect(response.status).toBe('completed');
+      expect(response.position).toEqual({ graph: 'review', node: 'done' });
+      const checkpoint = readCheckpoint(root, 'approval-a');
+      expect(checkpoint.gateDecisions).toEqual({
+        approval: { decision: 'approved', reason: 'classification is correct' },
+      });
+      const logEntries = fs
+        .readFileSync(path.join(root, '.ripplegraph', 'runs', 'approval-a', 'transition-log.jsonl'), 'utf8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as { op: string; gateDecision?: unknown });
+      expect(logEntries.map((entry) => entry.op)).toEqual(['start', 'decide']);
+      expect(logEntries[1]?.gateDecision).toEqual({ decision: 'approved', reason: 'classification is correct' });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('blocks normal step on gated nodes and validates gate decisions', () => {
+    const root = makeGatedWorkflowRoot();
+    try {
+      startRun({ workflowRoot: root, graph: 'review', runId: 'approval-a' });
+      expect(() => stepRun({ workflowRoot: root, output: { decision: 'approved' } })).toThrow(/external decision/);
+      const invalid = decideGate({ workflowRoot: root, decision: { decision: 'maybe' } });
+      expect(invalid.status).toBe('validation_error');
+      if (invalid.status === 'validation_error') {
+        expect(invalid.errors).toEqual([{ path: 'decision', message: 'expected one of approved, rejected' }]);
+      }
+      expect(readCheckpoint(root, 'approval-a').position).toEqual({ graph: 'review', node: 'approval' });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+
+    const normalRoot = makeCoachWorkflowRoot();
+    try {
+      startRun({ workflowRoot: normalRoot, graph: 'daily', runId: 'daily-a' });
+      expect(() => decideGate({ workflowRoot: normalRoot, decision: { decision: 'approved' } })).toThrow(/not gated/);
+    } finally {
+      fs.rmSync(normalRoot, { recursive: true, force: true });
     }
   });
 
