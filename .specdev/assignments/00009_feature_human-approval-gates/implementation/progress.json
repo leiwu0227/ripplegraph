@@ -18,14 +18,15 @@
     },
     {
       "number": 3,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-20T08:30:20Z",
-      "completed_at": null
+      "completed_at": "2026-05-20T08:32:19Z",
+      "summary": "Added low-level and demo decide commands, gated demo rendering, and CLI coverage for external decision flow."
     },
     {
       "number": 4,
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-05-20T08:32:23Z",
       "completed_at": null
     },
     {

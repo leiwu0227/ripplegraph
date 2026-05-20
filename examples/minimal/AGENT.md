@@ -29,11 +29,20 @@ test branching:
 npx ripplegraph-demo submit '{"category":"bug","priority":"urgent","rationale":"Checkout failures block customers from completing payment."}' --workflow-root .
 ```
 
+The workflow then enters `review-classification`, an external-decision gate.
+Normal `submit` is blocked at this node. Ask the user/operator to approve or
+reject the classification, then use `decide`:
+
+```sh
+npx ripplegraph-demo decide '{"decision":"approved-bug","reason":"The ticket describes a checkout regression that blocks renewal."}' --workflow-root .
+```
+
 The branch nodes are:
 
-- `bug` -> `reproduce-bug`
-- `feature` -> `scope-feature`
-- `question` -> `answer-question`
+- `approved-bug` -> `reproduce-bug`
+- `approved-feature` -> `scope-feature`
+- `approved-question` -> `answer-question`
+- `rejected` -> `classify-ticket`
 
 To test pause and resume with a second graph:
 
