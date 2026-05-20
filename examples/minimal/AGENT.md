@@ -22,16 +22,25 @@ tickets/inbox.json
 support-playbook.md
 ```
 
-Then submit a classification. Try different `category` values in fresh runs to
-test branching:
+Then submit a classification. This intentionally does not go straight to the
+branch node; it stops at an external-decision gate first:
 
 ```sh
 npx ripplegraph-demo submit '{"category":"bug","priority":"urgent","rationale":"Checkout failures block customers from completing payment."}' --workflow-root .
 ```
 
-The workflow then enters `review-classification`, an external-decision gate.
-Normal `submit` is blocked at this node. Ask the user/operator to approve or
-reject the classification, then use `decide`:
+The workflow enters `review-classification`, an external-decision gate. Normal
+`submit` is blocked at this node. Ask the user/operator to approve or reject the
+classification, then use `decide`.
+
+To test the rejection loop:
+
+```sh
+npx ripplegraph-demo decide '{"decision":"rejected","reason":"Need a clearer category before routing."}' --workflow-root .
+```
+
+That sends the run back to `classify-ticket`. Submit the classification again,
+then test an approval:
 
 ```sh
 npx ripplegraph-demo decide '{"decision":"approved-bug","reason":"The ticket describes a checkout regression that blocks renewal."}' --workflow-root .

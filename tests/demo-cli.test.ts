@@ -110,7 +110,15 @@ describe('ripplegraph-demo cli', () => {
       expect(status).toContain('category: bug | feature | question');
       expect(status).toContain('ripplegraph-demo submit');
       const branch = run(['submit', '{"category":"bug","priority":"urgent","rationale":"checkout is blocked"}', '--workflow-root', root]).stdout;
-      expect(branch).toContain('Node: reproduce-bug');
+      expect(branch).toContain('Node: review-classification');
+      expect(branch).toContain('External decision required');
+      expect(branch).toContain('approved-bug | approved-feature | approved-question | rejected');
+      expect(run(['submit', '{"decision":"approved-bug"}', '--workflow-root', root]).status).toBe(1);
+      const rejected = run(['decide', '{"decision":"rejected","reason":"needs a clearer category"}', '--workflow-root', root]).stdout;
+      expect(rejected).toContain('Node: classify-ticket');
+      run(['submit', '{"category":"bug","priority":"urgent","rationale":"checkout is blocked"}', '--workflow-root', root]);
+      const approved = run(['decide', '{"decision":"approved-bug","reason":"bug category is correct"}', '--workflow-root', root]).stdout;
+      expect(approved).toContain('Node: reproduce-bug');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }

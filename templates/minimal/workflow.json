@@ -1,6 +1,6 @@
 {
   "id": "support-triage-demo",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "graphs": {
     "support-triage": {
       "entry": "classify-ticket",
@@ -23,8 +23,8 @@
           ]
         },
         "review-classification": {
-          "purpose": "Review the classification before branch execution",
-          "instructions": "Ask the user or external operator to approve the classification before continuing. Use the category from classify-ticket when choosing an approved decision.",
+          "purpose": "External review gate for the classification",
+          "instructions": "Stop here and ask the user or external operator to review the previous classification. Use ripplegraph-demo decide, not submit. Choose approved-bug, approved-feature, or approved-question when the classification is accepted, or rejected to route back for reclassification.",
           "exec": "inline",
           "gate": {
             "type": "external_decision",

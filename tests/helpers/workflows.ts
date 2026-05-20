@@ -71,9 +71,33 @@ function supportTriageGraph(): unknown {
           },
         },
         edges: [
-          { to: 'reproduce-bug', when: { category: 'bug' } },
-          { to: 'scope-feature', when: { category: 'feature' } },
-          { to: 'answer-question', when: { category: 'question' } },
+          { to: 'review-classification' },
+        ],
+      },
+      'review-classification': {
+        purpose: 'External review gate for the classification',
+        instructions:
+          'Stop here and ask the user or external operator to review the previous classification. Use ripplegraph-demo decide, not submit.',
+        exec: 'inline',
+        gate: {
+          type: 'external_decision',
+          decisionSchema: {
+            type: 'object',
+            required: ['decision', 'reason'],
+            properties: {
+              decision: {
+                type: 'string',
+                enum: ['approved-bug', 'approved-feature', 'approved-question', 'rejected'],
+              },
+              reason: { type: 'string' },
+            },
+          },
+        },
+        edges: [
+          { to: 'reproduce-bug', when: { decision: 'approved-bug' } },
+          { to: 'scope-feature', when: { decision: 'approved-feature' } },
+          { to: 'answer-question', when: { decision: 'approved-question' } },
+          { to: 'classify-ticket', when: { decision: 'rejected' } },
         ],
       },
       'reproduce-bug': {
@@ -247,7 +271,7 @@ export function makeDemoWorkflowRoot(): string {
     prefix: 'ripplegraph-demo-cli-',
     workflow: {
       id: 'support-triage-demo',
-      version: '0.2.0',
+      version: '0.3.0',
       graphs: {
         'support-triage': supportTriageGraph(),
         'policy-refresh': policyRefreshGraph(),
