@@ -12,12 +12,21 @@ import {
   type Workflow,
 } from './schema.js';
 
-function workflowPath(rootPath: string): string {
+function rootWorkflowPath(rootPath: string): string {
   return path.join(rootPath, 'workflow.json');
 }
 
 export function stateDir(rootPath: string): string {
   return path.join(rootPath, '.ripplegraph');
+}
+
+function hiddenWorkflowPath(rootPath: string): string {
+  return path.join(stateDir(rootPath), 'workflow.json');
+}
+
+function workflowPath(rootPath: string): string {
+  const hiddenPath = hiddenWorkflowPath(rootPath);
+  return fs.existsSync(hiddenPath) ? hiddenPath : rootWorkflowPath(rootPath);
 }
 
 export function runsDir(rootPath: string): string {

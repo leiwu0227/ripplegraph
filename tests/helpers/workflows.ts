@@ -5,11 +5,14 @@ import path from 'node:path';
 interface WorkflowOptions {
   prefix: string;
   workflow: unknown;
+  hidden?: boolean;
 }
 
-function createWorkflowRoot({ prefix, workflow }: WorkflowOptions): string {
+function createWorkflowRoot({ prefix, workflow, hidden = false }: WorkflowOptions): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-  fs.writeFileSync(path.join(root, 'workflow.json'), JSON.stringify(workflow), 'utf8');
+  const workflowFile = hidden ? path.join(root, '.ripplegraph', 'workflow.json') : path.join(root, 'workflow.json');
+  fs.mkdirSync(path.dirname(workflowFile), { recursive: true });
+  fs.writeFileSync(workflowFile, JSON.stringify(workflow), 'utf8');
   return root;
 }
 
@@ -66,6 +69,20 @@ export function makeCliWorkflowRoot(): string {
 export function makeStorageWorkflowRoot(): string {
   return createWorkflowRoot({
     prefix: 'ripplegraph-storage-',
+    workflow: {
+      id: 'demo',
+      version: '0.1.0',
+      graphs: {
+        daily: dailyReviewGraph([{ to: 'done', when: { decision: 'proceed' } }]),
+      },
+    },
+  });
+}
+
+export function makeHiddenStorageWorkflowRoot(): string {
+  return createWorkflowRoot({
+    prefix: 'ripplegraph-storage-hidden-',
+    hidden: true,
     workflow: {
       id: 'demo',
       version: '0.1.0',

@@ -17,9 +17,18 @@ import {
   writeCurrent,
   writeNodeOutput,
 } from '../src/index.js';
-import { makeCoachWorkflowRoot, makeStorageWorkflowRoot } from './helpers/workflows.js';
+import { makeCoachWorkflowRoot, makeHiddenStorageWorkflowRoot, makeStorageWorkflowRoot } from './helpers/workflows.js';
 
 describe('coach runtime storage', () => {
+  it('loads workflow definitions from the hidden runtime directory', () => {
+    const root = makeHiddenStorageWorkflowRoot();
+    try {
+      expect(loadWorkflow(root).id).toBe('demo');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('loads a multi-graph workflow and persists the focused run files', () => {
     const root = makeStorageWorkflowRoot();
     try {
