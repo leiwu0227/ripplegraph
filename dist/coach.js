@@ -30,6 +30,7 @@ export function startRun(opts) {
         createdAt: now,
         updatedAt: now,
         outputs: {},
+        gateDecisions: {},
     };
     writeCheckpoint(opts.workflowRoot, checkpoint);
     writeCurrent(opts.workflowRoot, { focusedRunId: opts.runId });
@@ -72,6 +73,9 @@ export function stepRun(opts) {
     if (node.terminal) {
         return completeRun(opts.workflowRoot, checkpoint, checkpoint.position);
     }
+    if (node.gate) {
+        throw new RipplegraphError('E_GATE_DECISION_REQUIRED', `node ${checkpoint.position.node} requires an external decision`);
+    }
     const errors = validateOutput(node.outputSchema, opts.output);
     if (errors.length > 0) {
         appendTransition(opts.workflowRoot, checkpoint.runId, {
@@ -100,6 +104,55 @@ export function stepRun(opts) {
         ...transitionEntry('step', checkpoint.runId, from, to),
         input: { artifact },
         output: { artifact },
+    });
+    const nextNode = getNode(graph, nextNodeId);
+    if (nextNode.terminal) {
+        return completeRun(opts.workflowRoot, checkpoint, to);
+    }
+    writeCheckpoint(opts.workflowRoot, checkpoint);
+    return stateForCheckpoint(workflow, checkpoint);
+}
+export function decideGate(opts) {
+    const workflow = loadWorkflow(opts.workflowRoot);
+    const checkpoint = focusedCheckpoint(opts.workflowRoot);
+    if (checkpoint.status !== 'active') {
+        throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
+    }
+    const graph = getGraph(workflow, checkpoint.rootGraph);
+    const node = getNode(graph, checkpoint.position.node);
+    if (!node.gate) {
+        throw new RipplegraphError('E_NODE_NOT_GATED', `node ${checkpoint.position.node} is not gated`);
+    }
+    const errors = validateOutput(node.gate.decisionSchema, opts.decision);
+    if (errors.length > 0) {
+        appendTransition(opts.workflowRoot, checkpoint.runId, {
+            ...transitionEntry('decide', checkpoint.runId, checkpoint.position, checkpoint.position),
+            validation: { ok: false, errors },
+            gateDecision: opts.decision,
+            error: { code: 'E_VALIDATION', message: 'gate decision failed validation' },
+        });
+        return {
+            status: 'validation_error',
+            run: { id: checkpoint.runId, status: checkpoint.status, rootGraph: checkpoint.rootGraph },
+            position: checkpoint.position,
+            errors,
+        };
+    }
+    const artifact = writeNodeOutput(opts.workflowRoot, checkpoint.runId, checkpoint.position.node, opts.decision);
+    const nextNodeId = selectEdge(node.edges, opts.decision)?.to;
+    if (!nextNodeId) {
+        throw new RipplegraphError('E_NO_EDGE', `node ${checkpoint.position.node} has no matching edge`);
+    }
+    const from = checkpoint.position;
+    const to = { graph: checkpoint.rootGraph, node: nextNodeId };
+    checkpoint.gateDecisions[checkpoint.position.node] = opts.decision;
+    checkpoint.position = to;
+    checkpoint.updatedAt = new Date().toISOString();
+    appendTransition(opts.workflowRoot, checkpoint.runId, {
+        ...transitionEntry('decide', checkpoint.runId, from, to),
+        input: { artifact },
+        output: null,
+        gateDecision: opts.decision,
     });
     const nextNode = getNode(graph, nextNodeId);
     if (nextNode.terminal) {

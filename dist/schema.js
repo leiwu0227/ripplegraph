@@ -16,6 +16,12 @@ const jsonSchemaSchema = z.lazy(() => z
     enum: z.array(z.unknown()).optional(),
 })
     .passthrough());
+export const gateSchema = z
+    .object({
+    type: z.literal('external_decision'),
+    decisionSchema: jsonSchemaSchema,
+})
+    .strict();
 export const edgeSchema = z
     .object({
     to: idSchema,
@@ -28,6 +34,7 @@ export const nodeSchema = z
     instructions: z.string().min(1).optional(),
     exec: z.enum(['inline', 'spawn', 'script']).default('inline'),
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
+    gate: gateSchema.optional(),
     edges: z.array(edgeSchema).default([]),
     terminal: z.boolean().default(false),
 })
@@ -82,6 +89,7 @@ export const checkpointSchema = z
     createdAt: z.string().min(1),
     updatedAt: z.string().min(1),
     outputs: z.record(z.string(), z.unknown()).default({}),
+    gateDecisions: z.record(z.string(), z.unknown()).default({}),
     resumeNote: z.string().optional(),
 })
     .strict();
@@ -93,7 +101,7 @@ export const currentSchema = z
 export const transitionLogEntrySchema = z
     .object({
     ts: z.string().min(1),
-    op: z.enum(['start', 'step', 'suspend', 'resume', 'abandon']),
+    op: z.enum(['start', 'step', 'decide', 'suspend', 'resume', 'abandon']),
     runId: idSchema,
     from: positionSchema.nullable(),
     to: positionSchema.nullable(),

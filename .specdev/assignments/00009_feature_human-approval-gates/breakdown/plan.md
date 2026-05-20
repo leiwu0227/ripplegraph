@@ -118,7 +118,7 @@
 - `npm run build`
 - `npm pack --dry-run`
 - `./build-and-local-setup.sh /mnt/h/ripplepulse/tests/ripplegraph`
-- `cd /mnt/h/ripplepulse/tests/ripplegraph && ripplegraph-demo start support-triage --run gate-smoke --workflow-root . && ripplegraph-demo submit '{"category":"bug","priority":"urgent","rationale":"checkout is blocked"}' --workflow-root . && ripplegraph-demo status --workflow-root . && ripplegraph-demo decide '{"decision":"approved","reason":"classification is correct"}' --workflow-root .`
+- `cd /mnt/h/ripplepulse/tests/ripplegraph && ripplegraph-demo start support-triage --run gate-smoke --workflow-root . && ripplegraph-demo submit '{"category":"bug","priority":"urgent","rationale":"checkout is blocked"}' --workflow-root . && ripplegraph-demo status --workflow-root . && ripplegraph-demo decide '{"decision":"approved-bug","reason":"classification is correct"}' --workflow-root .`
 
 **Test Budget:** +0; final verification only
 

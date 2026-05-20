@@ -1,4 +1,4 @@
-import { type Checkpoint, type JsonSchema, type Node, type Position } from './schema.js';
+import { type Checkpoint, type Gate, type JsonSchema, type Node, type Position } from './schema.js';
 export interface WorkflowRootOptions {
     workflowRoot: string;
 }
@@ -8,6 +8,9 @@ export interface StartRunOptions extends WorkflowRootOptions {
 }
 export interface StepRunOptions extends WorkflowRootOptions {
     output: unknown;
+}
+export interface DecideGateOptions extends WorkflowRootOptions {
+    decision: unknown;
 }
 export interface SuspendRunOptions extends WorkflowRootOptions {
     note?: string;
@@ -36,6 +39,7 @@ export interface StateOk {
         instructions?: string;
         exec: Node['exec'];
         outputSchema: JsonSchema;
+        gate?: Gate;
     };
     context: {
         previous: Array<{
@@ -52,6 +56,10 @@ export interface StateOk {
     responseContract: {
         command: 'step';
         acceptedFormats: ['json'];
+    } | {
+        command: 'decide';
+        acceptedFormats: ['json'];
+        schema: JsonSchema;
     };
 }
 export interface StateNoFocusedRun {
@@ -97,7 +105,7 @@ export interface ValidationErrorResponse {
     }>;
 }
 export type CoachState = StateOk | StateNoFocusedRun;
-export type StepRunResponse = StateOk | {
+export type AdvanceResponse = StateOk | {
     status: 'completed';
     run: {
         id: string;
@@ -106,6 +114,8 @@ export type StepRunResponse = StateOk | {
     };
     position: Position;
 } | ValidationErrorResponse;
+export type StepRunResponse = AdvanceResponse;
+export type DecideGateResponse = AdvanceResponse;
 export declare function validateWorkflowRoot(rootPath: string): {
     status: 'ok';
     workflow: {
@@ -118,6 +128,7 @@ export declare function startRun(opts: StartRunOptions): StateOk;
 export declare function getState(opts: WorkflowRootOptions): CoachState;
 export declare function listRuns(opts: WorkflowRootOptions): RunList;
 export declare function stepRun(opts: StepRunOptions): StepRunResponse;
+export declare function decideGate(opts: DecideGateOptions): DecideGateResponse;
 export declare function suspendRun(opts: SuspendRunOptions): StateOk;
 export declare function resumeRun(opts: ResumeRunOptions): StateOk;
 export declare function abandonRun(opts: AbandonRunOptions): {

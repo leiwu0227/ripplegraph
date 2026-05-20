@@ -25,15 +25,17 @@
     },
     {
       "number": 4,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-20T08:32:23Z",
-      "completed_at": null
+      "completed_at": "2026-05-20T08:33:11Z",
+      "summary": "Updated support-triage demo with a review-classification external decision gate and mirrored examples."
     },
     {
       "number": 5,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-20T08:33:15Z",
+      "completed_at": "2026-05-20T08:34:41Z",
+      "summary": "Final verification passed: typecheck, full tests, build, pack dry-run, tarball/global install smoke, and support-triage gate smoke."
     }
   ]
 }
