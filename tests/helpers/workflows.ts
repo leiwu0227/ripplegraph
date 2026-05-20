@@ -53,6 +53,85 @@ function mockcopyGraph(outputSchema: unknown, instructions = 'Submit the mockcop
   };
 }
 
+function supportTriageGraph(): unknown {
+  return {
+    entry: 'classify-ticket',
+    nodes: {
+      'classify-ticket': {
+        purpose: 'Classify the newest support ticket',
+        instructions: 'Read tickets/inbox.json and support-playbook.md.',
+        exec: 'inline',
+        outputSchema: {
+          type: 'object',
+          required: ['category', 'priority', 'rationale'],
+          properties: {
+            category: { type: 'string', enum: ['bug', 'feature', 'question'] },
+            priority: { type: 'string', enum: ['low', 'normal', 'urgent'] },
+            rationale: { type: 'string' },
+          },
+        },
+        edges: [
+          { to: 'reproduce-bug', when: { category: 'bug' } },
+          { to: 'scope-feature', when: { category: 'feature' } },
+          { to: 'answer-question', when: { category: 'question' } },
+        ],
+      },
+      'reproduce-bug': {
+        purpose: 'Draft a bug reproduction plan',
+        instructions: 'Write reproduction details.',
+        exec: 'inline',
+        outputSchema: {
+          type: 'object',
+          required: ['steps', 'expected', 'actual', 'nextOwner'],
+          properties: {
+            steps: { type: 'array' },
+            expected: { type: 'string' },
+            actual: { type: 'string' },
+            nextOwner: { type: 'string', enum: ['support', 'engineering'] },
+          },
+        },
+        edges: [{ to: 'done' }],
+      },
+      'scope-feature': {
+        purpose: 'Scope a feature request',
+        exec: 'inline',
+        outputSchema: { type: 'object' },
+        edges: [{ to: 'done' }],
+      },
+      'answer-question': {
+        purpose: 'Prepare a customer answer',
+        exec: 'inline',
+        outputSchema: { type: 'object' },
+        edges: [{ to: 'done' }],
+      },
+      done: { purpose: 'Support triage complete', terminal: true },
+    },
+  };
+}
+
+function policyRefreshGraph(): unknown {
+  return {
+    entry: 'audit-playbook',
+    nodes: {
+      'audit-playbook': {
+        purpose: 'Find one improvement to the support playbook',
+        instructions: 'Suggest one concrete playbook improvement.',
+        exec: 'inline',
+        outputSchema: {
+          type: 'object',
+          required: ['gap', 'suggestedChange'],
+          properties: {
+            gap: { type: 'string' },
+            suggestedChange: { type: 'string' },
+          },
+        },
+        edges: [{ to: 'done' }],
+      },
+      done: { purpose: 'Policy refresh complete', terminal: true },
+    },
+  };
+}
+
 export function makeCliWorkflowRoot(): string {
   return createWorkflowRoot({
     prefix: 'ripplegraph-cli-',
@@ -129,18 +208,11 @@ export function makeDemoWorkflowRoot(): string {
   return createWorkflowRoot({
     prefix: 'ripplegraph-demo-cli-',
     workflow: {
-      id: 'demo',
-      version: '0.1.0',
+      id: 'support-triage-demo',
+      version: '0.2.0',
       graphs: {
-        daily: dailyReviewGraph([{ to: 'done', when: { decision: 'stop' } }]),
-        mockcopy: mockcopyGraph(
-          {
-            type: 'object',
-            required: ['plan'],
-            properties: { plan: { type: 'string' } },
-          },
-          'Submit the plan.',
-        ),
+        'support-triage': supportTriageGraph(),
+        'policy-refresh': policyRefreshGraph(),
       },
     },
   });

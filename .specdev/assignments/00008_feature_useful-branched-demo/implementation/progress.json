@@ -11,14 +11,15 @@
     },
     {
       "number": 2,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-20T07:41:44Z",
-      "completed_at": null
+      "completed_at": "2026-05-20T07:43:45Z",
+      "summary": "Updated ripplegraph-demo init to copy all non-workflow demo workspace files and refresh them with --force while preserving runtime state."
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-05-20T07:43:52Z",
       "completed_at": null
     },
     {

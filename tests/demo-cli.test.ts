@@ -86,12 +86,13 @@ describe('ripplegraph-demo cli', () => {
   it('renders an active run and submits output with concise guidance', () => {
     const root = makeDemoWorkflowRoot();
     try {
-      expect(run(['start', 'daily', '--run', 'daily-a', '--workflow-root', root]).stdout).toContain('Current run: daily-a');
+      expect(run(['start', 'support-triage', '--run', 'triage-a', '--workflow-root', root]).stdout).toContain('Current run: triage-a');
       const status = run(['status', '--workflow-root', root]).stdout;
-      expect(status).toContain('Node: review');
-      expect(status).toContain('decision: proceed | stop');
+      expect(status).toContain('Node: classify-ticket');
+      expect(status).toContain('category: bug | feature | question');
       expect(status).toContain('ripplegraph-demo submit');
-      expect(run(['submit', '{"decision":"stop"}', '--workflow-root', root]).stdout).toContain('Run completed: daily-a');
+      const branch = run(['submit', '{"category":"bug","priority":"urgent","rationale":"checkout is blocked"}', '--workflow-root', root]).stdout;
+      expect(branch).toContain('Node: reproduce-bug');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
@@ -102,18 +103,18 @@ describe('ripplegraph-demo cli', () => {
     try {
       const noFocus = run(['status', '--workflow-root', root]).stdout;
       expect(noFocus).toContain('No focused run.');
-      expect(noFocus).toContain('daily');
-      expect(noFocus).toContain('mockcopy');
+      expect(noFocus).toContain('support-triage');
+      expect(noFocus).toContain('policy-refresh');
 
-      run(['start', 'mockcopy', '--run', 'mock-a', '--workflow-root', root]);
-      run(['pause', 'pause mockcopy', '--workflow-root', root]);
+      run(['start', 'policy-refresh', '--run', 'policy-a', '--workflow-root', root]);
+      run(['pause', 'pause policy refresh', '--workflow-root', root]);
       const status = run(['status', '--workflow-root', root]).stdout;
-      expect(status).toContain('mock-a  suspended  mockcopy  plan');
-      expect(status).toContain('ripplegraph-demo resume mock-a');
+      expect(status).toContain('policy-a  suspended  policy-refresh  audit-playbook');
+      expect(status).toContain('ripplegraph-demo resume policy-a');
 
       const runs = run(['runs', '--workflow-root', root]).stdout;
       expect(runs).toContain('Focused run: none');
-      expect(runs).toContain('mock-a  suspended  mockcopy  plan');
+      expect(runs).toContain('policy-a  suspended  policy-refresh  audit-playbook');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
