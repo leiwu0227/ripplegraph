@@ -18,15 +18,17 @@
     },
     {
       "number": 3,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-20T07:01:40Z",
-      "completed_at": null
+      "completed_at": "2026-05-20T07:02:04Z",
+      "summary": "Updated build-and-local-setup.sh to initialize the test project through ripplegraph-demo init and verified script syntax."
     },
     {
       "number": 4,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-20T07:02:10Z",
+      "completed_at": "2026-05-20T07:03:33Z",
+      "summary": "Final verification passed: typecheck, full tests, build, pack dry-run, and build-and-local-setup.sh global tarball smoke."
     }
   ]
 }

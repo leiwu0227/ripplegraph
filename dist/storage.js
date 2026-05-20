@@ -1,11 +1,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { checkpointSchema, currentSchema, RipplegraphError, transitionLogEntrySchema, workflowSchema, } from './schema.js';
-function workflowPath(rootPath) {
+function rootWorkflowPath(rootPath) {
     return path.join(rootPath, 'workflow.json');
 }
 export function stateDir(rootPath) {
     return path.join(rootPath, '.ripplegraph');
+}
+function hiddenWorkflowPath(rootPath) {
+    return path.join(stateDir(rootPath), 'workflow.json');
+}
+function workflowPath(rootPath) {
+    const hiddenPath = hiddenWorkflowPath(rootPath);
+    return fs.existsSync(hiddenPath) ? hiddenPath : rootWorkflowPath(rootPath);
 }
 export function runsDir(rootPath) {
     return path.join(stateDir(rootPath), 'runs');
