@@ -11,14 +11,15 @@
     },
     {
       "number": 2,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-20T06:59:29Z",
-      "completed_at": null
+      "completed_at": "2026-05-20T07:01:33Z",
+      "summary": "Added ripplegraph-demo init with hidden workflow and root AGENT.md installation, safe overwrite refusal, force refresh, and focused CLI coverage."
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-05-20T07:01:40Z",
       "completed_at": null
     },
     {
