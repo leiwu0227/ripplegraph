@@ -1,0 +1,30 @@
+{
+  "plan_file": ".specdev/assignments/00008_feature_useful-branched-demo/breakdown/plan.md",
+  "total_tasks": 4,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "in_progress",
+      "started_at": "2026-05-20T07:40:29Z",
+      "completed_at": null
+    },
+    {
+      "number": 2,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 3,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 4,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    }
+  ]
+}

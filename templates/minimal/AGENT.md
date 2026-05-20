@@ -1,8 +1,7 @@
-# Ripplegraph minimal POC
+# Ripplegraph support triage demo
 
-Use `ripplegraph-demo` as the workflow guide. Use `ripplegraph` only when you
-need low-level JSON for debugging. The filesystem is the source of truth; do
-not infer the active step from conversation alone.
+Use `ripplegraph-demo` as the workflow guide. The filesystem is the source of
+truth; do not infer the active step from conversation alone.
 
 Start by running:
 
@@ -10,25 +9,38 @@ Start by running:
 npx ripplegraph-demo status --workflow-root .
 ```
 
-If there is no current run, start one:
+If there is no current run, start the branched triage workflow:
 
 ```sh
-npx ripplegraph-demo start daily-execution --run daily-demo --workflow-root .
+npx ripplegraph-demo start support-triage --run triage-demo --workflow-root .
 ```
 
-For each node:
-
-1. Run `npx ripplegraph-demo status --workflow-root .`.
-2. Read the current node purpose, instructions, and required output.
-3. Do the requested work.
-4. Submit JSON with `npx ripplegraph-demo submit '<json>' --workflow-root .`.
-
-To switch work:
+For the first node, inspect:
 
 ```sh
-npx ripplegraph-demo pause "pause current work" --workflow-root .
-npx ripplegraph-demo start mockcopy-backtest --run mock-demo --workflow-root .
-npx ripplegraph-demo resume <run-id> --workflow-root .
+tickets/inbox.json
+support-playbook.md
+```
+
+Then submit a classification. Try different `category` values in fresh runs to
+test branching:
+
+```sh
+npx ripplegraph-demo submit '{"category":"bug","priority":"urgent","rationale":"Checkout failures block customers from completing payment."}' --workflow-root .
+```
+
+The branch nodes are:
+
+- `bug` -> `reproduce-bug`
+- `feature` -> `scope-feature`
+- `question` -> `answer-question`
+
+To test pause and resume with a second graph:
+
+```sh
+npx ripplegraph-demo pause "switching workflows" --workflow-root .
+npx ripplegraph-demo start policy-refresh --run policy-demo --workflow-root .
+npx ripplegraph-demo resume triage-demo --workflow-root .
 ```
 
 Watch these files when debugging:

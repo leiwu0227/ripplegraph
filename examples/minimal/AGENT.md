@@ -1,25 +1,52 @@
-# Minimal POC example
+# Ripplegraph support triage demo
 
-This workflow package contains two root graphs:
+Use `ripplegraph-demo` as the workflow guide. The filesystem is the source of
+truth; do not infer the active step from conversation alone.
 
-- `daily-execution`
-- `mockcopy-backtest`
-
-Drive it with the reference agent-facing commands:
+Start by running:
 
 ```sh
-ripplegraph-demo status --workflow-root .
-ripplegraph-demo start daily-execution --run daily-demo --workflow-root .
-ripplegraph-demo submit '{"decision":"stop"}' --workflow-root .
+npx ripplegraph-demo status --workflow-root .
 ```
 
-To switch work, suspend the focused run and start or resume another:
+If there is no current run, start the branched triage workflow:
 
 ```sh
-ripplegraph-demo pause "pause for live work" --workflow-root .
-ripplegraph-demo start mockcopy-backtest --run mock-demo --workflow-root .
-ripplegraph-demo resume daily-demo --workflow-root .
+npx ripplegraph-demo start support-triage --run triage-demo --workflow-root .
 ```
 
-Runtime state is stored under `.ripplegraph/`. Use `ripplegraph` when you need
-the low-level JSON/debugging interface.
+For the first node, inspect:
+
+```sh
+tickets/inbox.json
+support-playbook.md
+```
+
+Then submit a classification. Try different `category` values in fresh runs to
+test branching:
+
+```sh
+npx ripplegraph-demo submit '{"category":"bug","priority":"urgent","rationale":"Checkout failures block customers from completing payment."}' --workflow-root .
+```
+
+The branch nodes are:
+
+- `bug` -> `reproduce-bug`
+- `feature` -> `scope-feature`
+- `question` -> `answer-question`
+
+To test pause and resume with a second graph:
+
+```sh
+npx ripplegraph-demo pause "switching workflows" --workflow-root .
+npx ripplegraph-demo start policy-refresh --run policy-demo --workflow-root .
+npx ripplegraph-demo resume triage-demo --workflow-root .
+```
+
+Watch these files when debugging:
+
+```sh
+.ripplegraph/current.json
+.ripplegraph/runs/<run-id>/checkpoint.json
+.ripplegraph/runs/<run-id>/transition-log.jsonl
+```

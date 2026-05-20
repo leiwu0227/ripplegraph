@@ -1,63 +1,100 @@
 {
-  "id": "minimal-poc",
-  "version": "0.1.0",
+  "id": "support-triage-demo",
+  "version": "0.2.0",
   "graphs": {
-    "daily-execution": {
-      "entry": "review",
+    "support-triage": {
+      "entry": "classify-ticket",
       "nodes": {
-        "review": {
-          "purpose": "Review generated intents",
-          "instructions": "Inspect today's generated intents with the user and submit a decision.",
+        "classify-ticket": {
+          "purpose": "Classify the newest support ticket",
+          "instructions": "Read tickets/inbox.json and support-playbook.md. Classify ticket TCK-1007 as bug, feature, or question; choose a priority; explain the rationale.",
           "exec": "inline",
           "outputSchema": {
             "type": "object",
-            "required": ["decision"],
+            "required": ["category", "priority", "rationale"],
             "properties": {
-              "decision": { "type": "string", "enum": ["proceed", "stop"] }
+              "category": { "type": "string", "enum": ["bug", "feature", "question"] },
+              "priority": { "type": "string", "enum": ["low", "normal", "urgent"] },
+              "rationale": { "type": "string" }
             }
           },
           "edges": [
-            { "to": "execute", "when": { "decision": "proceed" } },
-            { "to": "done", "when": { "decision": "stop" } }
+            { "to": "reproduce-bug", "when": { "category": "bug" } },
+            { "to": "scope-feature", "when": { "category": "feature" } },
+            { "to": "answer-question", "when": { "category": "question" } }
           ]
         },
-        "execute": {
-          "purpose": "Record execution result",
-          "instructions": "Submit the final execution summary.",
+        "reproduce-bug": {
+          "purpose": "Draft a bug reproduction plan",
+          "instructions": "Use the ticket details and support playbook to write a concise reproduction plan for the support engineer.",
           "exec": "inline",
           "outputSchema": {
             "type": "object",
-            "required": ["summary"],
+            "required": ["steps", "expected", "actual", "nextOwner"],
             "properties": {
-              "summary": { "type": "string" }
+              "steps": { "type": "array" },
+              "expected": { "type": "string" },
+              "actual": { "type": "string" },
+              "nextOwner": { "type": "string", "enum": ["support", "engineering"] }
+            }
+          },
+          "edges": [{ "to": "done" }]
+        },
+        "scope-feature": {
+          "purpose": "Scope a feature request",
+          "instructions": "Turn the ticket into a small product brief with a user story and acceptance criteria.",
+          "exec": "inline",
+          "outputSchema": {
+            "type": "object",
+            "required": ["userStory", "acceptanceCriteria", "nextOwner"],
+            "properties": {
+              "userStory": { "type": "string" },
+              "acceptanceCriteria": { "type": "array" },
+              "nextOwner": { "type": "string", "enum": ["product", "support"] }
+            }
+          },
+          "edges": [{ "to": "done" }]
+        },
+        "answer-question": {
+          "purpose": "Prepare a customer answer",
+          "instructions": "Answer the customer's question using only support-playbook.md and note any uncertainty.",
+          "exec": "inline",
+          "outputSchema": {
+            "type": "object",
+            "required": ["answer", "confidence", "needsFollowup"],
+            "properties": {
+              "answer": { "type": "string" },
+              "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+              "needsFollowup": { "type": "boolean" }
             }
           },
           "edges": [{ "to": "done" }]
         },
         "done": {
-          "purpose": "Daily execution complete",
+          "purpose": "Support triage complete",
           "terminal": true
         }
       }
     },
-    "mockcopy-backtest": {
-      "entry": "plan",
+    "policy-refresh": {
+      "entry": "audit-playbook",
       "nodes": {
-        "plan": {
-          "purpose": "Plan a mockcopy backtest",
-          "instructions": "Submit the mockcopy backtest plan.",
+        "audit-playbook": {
+          "purpose": "Find one improvement to the support playbook",
+          "instructions": "Read support-playbook.md and tickets/inbox.json. Suggest one concrete playbook improvement based on the sample ticket.",
           "exec": "inline",
           "outputSchema": {
             "type": "object",
-            "required": ["plan"],
+            "required": ["gap", "suggestedChange"],
             "properties": {
-              "plan": { "type": "string" }
+              "gap": { "type": "string" },
+              "suggestedChange": { "type": "string" }
             }
           },
           "edges": [{ "to": "done" }]
         },
         "done": {
-          "purpose": "Mockcopy backtest planned",
+          "purpose": "Policy refresh complete",
           "terminal": true
         }
       }

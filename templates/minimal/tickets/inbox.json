@@ -1,0 +1,16 @@
+[
+  {
+    "id": "TCK-1007",
+    "customer": "Northstar Labs",
+    "subject": "Checkout fails after changing billing address",
+    "plan": "Team",
+    "reportedAt": "2026-05-20T09:15:00Z",
+    "message": "When we update the billing address and then click Pay, the checkout page shows 'payment session expired'. Retrying in a new browser works until we edit the address again.",
+    "impact": "Two account admins cannot renew before today's deadline.",
+    "environment": {
+      "browser": "Chrome 124",
+      "region": "us-east",
+      "accountId": "acct_northstar"
+    }
+  }
+]
