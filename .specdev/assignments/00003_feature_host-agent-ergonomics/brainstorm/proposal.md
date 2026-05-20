@@ -1,5 +1,21 @@
 # 00003 — ripplegraph v0.1 host-agent ergonomics
 
+> **SHELVED 2026-05-14, pending 00004 (framework hook surface).**
+>
+> During brainstorm Q&A on restart/revise semantics, a deeper
+> architectural question surfaced: ripplegraph is a framework, but
+> currently hardcodes its own persistence. Decisions about restart,
+> revise, preconditions, and `--exec-used` are shaped by the
+> framework-vs-consumer boundary that 00004 will land.
+>
+> Items that survive 00004 unchanged and roll forward into a
+> re-scoped 00003: workflow-root discovery, `--output-file`,
+> terminology. Items that get reshaped by 00004: restart/revise
+> (collapsed into "new run" + intra-run latches), preconditions
+> (likely a lifecycle hook), `--exec-used` (TBD).
+>
+> See `.specdev/assignments/00004_feature_framework-hooks/`.
+
 ## Motivation
 
 Assignment 00002 (demoflow as end-to-end validation harness) succeeded as a

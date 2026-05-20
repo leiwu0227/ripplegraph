@@ -255,6 +255,26 @@ and whether IDs are numeric, timestamped, slugged, or domain-shaped.
 Ripplegraph requirements:
 
 - unique within the consumer's run namespace
+
+### Consumer CLIs need explicit init
+
+The reference CLI can lazily create `.ripplegraph/` because it is only a
+minimal engine-facing demo. Real consumer CLIs should not rely on implicit
+state creation from `status` or `state`.
+
+Each custom CLI should provide an explicit init command, similar to `git init`
+or `specdev init`:
+
+```text
+<consumer-cli> init
+```
+
+That command should create the consumer-owned workspace, write or copy the
+workflow definition and agent guidance, initialize runtime state, and make the
+result visible to the user. This makes project setup intentional, discoverable,
+and easier for weak agents to reason about. Ordinary driving commands should
+then assume init has already happened and produce a clear error if required
+files are missing.
 - filesystem-safe if used as a path segment
 - stored in checkpoint metadata
 - creation time stored separately from sortable ID assumptions
@@ -657,4 +677,3 @@ The crisp architecture:
 > own naming, graph selection, rendering, and domain resources; the
 > ripplegraph core owns canonical state, validation, transitions, and
 > the structured context contract.
-
