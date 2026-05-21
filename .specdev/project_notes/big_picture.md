@@ -83,7 +83,8 @@ on Ripplegraph.
 - **Effects are explicit.** Callable graphs, script nodes, and future tool
   integrations should declare effects such as `read_repo`, `write_files`,
   `network`, or domain-specific side effects. Pure-looking graph calls must not
-  hide mutations.
+  hide mutations. Effectful workflow starts and callable calls are denied by
+  default unless the host passes an explicit runtime allow-list.
 
 ## Command Model
 
@@ -94,6 +95,8 @@ The normal host-agent loop should be small:
 - `dispatch` — submit user intent to the dispatcher and apply or return a
   validated structured action. Implemented v0 actions are `start_run`,
   `resume_run`, `switch_run`, `list_runs`, `ask_user`, and `call_graph`.
+  Read-only dispatcher requests/catalog responses do not require effect grants;
+  executable `start_run` and `call_graph` actions do.
 - `explain` — richer re-anchor when the host agent is confused or context is
   long.
 - `advance` — submit the current node response, whether it is normal output or
@@ -123,6 +126,11 @@ remain while the canonical protocol settles.
   through the dispatcher when one is registered.
 - Callable graphs may have internal transitions, but they do not mutate caller
   run state except through explicit returned output consumed by the caller.
+- Graph-level effects are enforced at execution boundaries: direct workflow
+  `start`, dispatcher `start_run`, dispatcher `call_graph`, and direct
+  `call`. CLI hosts grant effects with repeated `--allow-effect <id>` or
+  comma-separated `--allow-effects a,b`; denied starts fail with
+  `E_EFFECT_NOT_ALLOWED` before run/call state is created.
 - Callable contract validation currently supports `type`, `enum`, `required`,
   nested `properties`, `const`, `oneOf`, array `items`, and
   `additionalProperties: false`; unsupported callable schema keywords fail
@@ -134,4 +142,6 @@ remain while the canonical protocol settles.
   simple filesystem state over a hidden event loop or embedded LLM runner.
 - Current dispatcher/runtime gaps are intentional: registered package folders
   are a catalog, not executable workflow definitions yet; workflow nodes cannot
-  call callables directly yet; declared effects are captured but not enforced.
+  call callables directly yet; effect enforcement is graph-level only and does
+  not provide OS sandboxing, network blocking, script execution, or effect
+  inference.

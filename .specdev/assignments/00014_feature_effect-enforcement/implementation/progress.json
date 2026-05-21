@@ -32,9 +32,10 @@
     },
     {
       "number": 5,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-21T05:05:05Z",
+      "completed_at": "2026-05-21T05:05:46Z",
+      "summary": "Documented deny-by-default effect enforcement, CLI allow flags, read-only exceptions, and non-goals."
     }
   ]
 }

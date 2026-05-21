@@ -55,8 +55,8 @@ ripplegraph-demo runs --workflow-root .
 Ripplegraph is evolving from a single `workflow.json` runner into a graph
 package repository for coach CLIs. Workspaces can register self-contained graph
 package folders with metadata such as `activationHints`, input/output schemas,
-and declared effects. Future runtime work will use that catalog for dispatcher
-routing and callable graph invocation.
+and declared effects. The runtime uses that catalog for dispatcher routing,
+callable graph invocation, and effect checks at execution boundaries.
 
 Graph kinds:
 
@@ -68,8 +68,7 @@ Graph kinds:
 The current workflow run lifecycle still uses a compact `workflow.json` format
 for demos and tests. Graph package validation, registry commands, dispatcher
 request/action validation, and callable graph invocation are implemented against
-the registry. Package-folder workflow execution and effect enforcement are
-still future runtime work.
+the registry. Package-folder workflow execution is still future runtime work.
 
 Graph package management through the JSON CLI:
 
@@ -117,6 +116,11 @@ For now it can only execute graphs that are also present in the compact
 `workflow.json` runtime; registered package-only workflows return
 `E_GRAPH_NOT_EXECUTABLE_YET`.
 
+Effectful `start_run` and `call_graph` actions are denied by default unless
+the caller explicitly allows every declared graph effect. Read-only dispatcher
+requests and catalog/list commands still expose graph metadata without effect
+grants so a host agent can inspect requirements before choosing an action.
+
 Callable graph execution is isolated from focused workflow runs. A call stores
 checkpoint, transition log, and node artifacts under
 `.ripplegraph/calls/<call-id>/`; it does not write `.ripplegraph/current.json`
@@ -125,7 +129,7 @@ or create entries under `.ripplegraph/runs/`.
 Callable lifecycle through the JSON CLI:
 
 ```sh
-ripplegraph call --graph summarize-ticket --call-id call-001 --input '{"ticketId":"TCK-1007"}' --workflow-root .
+ripplegraph call --graph summarize-ticket --call-id call-001 --input '{"ticketId":"TCK-1007"}' --allow-effect read_repo --workflow-root .
 ripplegraph call-state --call-id call-001 --workflow-root .
 ripplegraph call-step --call-id call-001 --output '{"summary":"Checkout failure."}' --workflow-root .
 ripplegraph call-list --workflow-root .
@@ -137,9 +141,26 @@ schema keywords are `type`, `enum`, `required`, `properties`, `const`, `oneOf`,
 array `items`, and `additionalProperties: false`. Unsupported callable schema
 keywords fail before a call starts so contracts are not silently ignored.
 
-Callable `effects` are metadata only in this version. Effect permission checks,
-workflow nodes that call callables directly, and automatic tool execution are
-not implemented yet.
+## Effect Policy
+
+Graphs can declare effects such as `read_repo`, `write_files`, `network`, or
+domain-specific ids. Ripplegraph enforces graph-level effects when starting a
+compact workflow run, dispatcher `start_run`, dispatcher `call_graph`, or a
+direct callable call. Effect-free graphs keep working without policy options.
+
+Effectful starts fail with `E_EFFECT_NOT_ALLOWED` unless all declared effects
+are explicitly allowed for that command:
+
+```sh
+ripplegraph start --graph daily --run-id daily-a --allow-effects read_repo,write_files --workflow-root .
+ripplegraph call --graph summarize-ticket --input '{"ticketId":"TCK-1007"}' --allow-effect read_repo --allow-effect network --workflow-root .
+ripplegraph dispatch --action '{"action":"call_graph","graphId":"summarize-ticket"}' --allow-effects read_repo,network --workflow-root .
+```
+
+The allow-list is not persisted as a reusable grant. It authorizes the current
+start/call boundary only. Ripplegraph does not provide OS sandboxing, process
+isolation, network blocking, script execution, or automatic effect inference in
+this version.
 
 ## Command Model
 
