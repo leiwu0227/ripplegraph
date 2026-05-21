@@ -201,6 +201,29 @@ describe('callable start and state', () => {
     }
   });
 
+  it('denies effectful callable starts before validating input or creating call state', () => {
+    const root = makeRoot();
+    try {
+      writeGraphPackage(root, 'graphs/summarize-ticket', callableManifest({ effects: ['read_workspace'] }));
+
+      expect(errorCode(() => startCallableCall({ workflowRoot: root, graphId: 'summarize-ticket', callId: 'call-denied' }))).toBe(
+        'E_EFFECT_NOT_ALLOWED',
+      );
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'calls'))).toBe(false);
+
+      const allowed = startCallableCall({
+        workflowRoot: root,
+        graphId: 'summarize-ticket',
+        callId: 'call-allowed',
+        input: { ticketId: 'TCK-1007' },
+        effectPolicy: { allowedEffects: ['read_workspace'] },
+      });
+      expect(allowed).toMatchObject({ status: 'active', call: { id: 'call-allowed' } });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('continues active calls against the checkpointed package after registry replacement', () => {
     const root = makeRoot();
     try {

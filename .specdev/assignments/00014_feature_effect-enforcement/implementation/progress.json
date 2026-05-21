@@ -18,9 +18,10 @@
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-21T04:59:45Z",
+      "completed_at": "2026-05-21T05:01:33Z",
+      "summary": "Enforced callable package and dispatcher registry effects before starts/calls, preserving read-only dispatcher behavior and adding focused boundary tests."
     },
     {
       "number": 4,

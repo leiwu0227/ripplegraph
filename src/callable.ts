@@ -19,6 +19,7 @@ import {
 } from './schema.js';
 import { assertSupportedCallableSchema, validateOutput, type ValidationIssue } from './internal/output-validation.js';
 import { getNode, selectEdge } from './internal/runtime-graph.js';
+import { assertEffectsAllowed, type EffectPolicy } from './effects.js';
 
 export interface CallableRootOptions {
   workflowRoot: string;
@@ -28,6 +29,7 @@ export interface StartCallableCallOptions extends CallableRootOptions {
   graphId: string;
   callId?: string;
   input?: unknown;
+  effectPolicy?: EffectPolicy;
 }
 
 export interface GetCallableCallOptions extends CallableRootOptions {
@@ -99,6 +101,7 @@ export function startCallableCall(opts: StartCallableCallOptions): StartCallable
     kind: 'callable',
   });
   const manifest = graphPackage.manifest;
+  assertEffectsAllowed(manifest.effects, opts.effectPolicy, `graph ${manifest.id}`);
   assertCallableSupported(manifest);
   const callId = opts.callId ?? generatedCallId();
   const input = opts.input ?? {};

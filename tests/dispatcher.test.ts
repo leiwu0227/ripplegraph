@@ -112,7 +112,7 @@ describe('dispatcher runtime', () => {
     const root = makeCliWorkflowRoot();
     try {
       registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });
-      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'daily', { kind: 'workflow' }) });
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'daily', { kind: 'workflow', effects: [] }) });
 
       expect(applyDispatchAction({ workflowRoot: root, action: { action: 'list_runs' } })).toMatchObject({
         status: 'ok',
@@ -142,7 +142,7 @@ describe('dispatcher runtime', () => {
     const root = makeCliWorkflowRoot();
     try {
       registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });
-      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'daily', { kind: 'workflow' }) });
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'daily', { kind: 'workflow', effects: [] }) });
 
       expect(
         applyDispatchAction({ workflowRoot: root, action: { action: 'start_run', graphId: 'daily', runId: 'daily-a' } }),
@@ -158,6 +158,83 @@ describe('dispatcher runtime', () => {
       });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('enforces registered graph effects before dispatcher start and call actions mutate state', () => {
+    const runRoot = makeCliWorkflowRoot();
+    try {
+      registerGraphPackage({ workflowRoot: runRoot, packageRoot: writePackage(runRoot, 'workspace-dispatcher') });
+      registerGraphPackage({
+        workflowRoot: runRoot,
+        packageRoot: writePackage(runRoot, 'daily', { kind: 'workflow', effects: ['write_files'] }),
+      });
+
+      expect(
+        errorCode(() =>
+          applyDispatchAction({ workflowRoot: runRoot, action: { action: 'start_run', graphId: 'daily', runId: 'daily-denied' } }),
+        ),
+      ).toBe('E_EFFECT_NOT_ALLOWED');
+      expect(fs.existsSync(path.join(runRoot, '.ripplegraph', 'current.json'))).toBe(false);
+      expect(fs.existsSync(path.join(runRoot, '.ripplegraph', 'runs'))).toBe(false);
+
+      expect(
+        applyDispatchAction({
+          workflowRoot: runRoot,
+          action: { action: 'start_run', graphId: 'daily', runId: 'daily-allowed' },
+          effectPolicy: { allowedEffects: ['write_files'] },
+        }),
+      ).toMatchObject({ status: 'ok', run: { id: 'daily-allowed' } });
+    } finally {
+      fs.rmSync(runRoot, { recursive: true, force: true });
+    }
+
+    const callRoot = makeRoot('ripplegraph-dispatcher-effects-call-');
+    try {
+      registerGraphPackage({ workflowRoot: callRoot, packageRoot: writePackage(callRoot, 'workspace-dispatcher') });
+      registerGraphPackage({
+        workflowRoot: callRoot,
+        packageRoot: writePackage(callRoot, 'summarize', {
+          kind: 'callable',
+          effects: ['network'],
+          inputSchema: {
+            type: 'object',
+            required: ['ticketId'],
+            properties: { ticketId: { type: 'string' } },
+          },
+          outputSchema: {
+            type: 'object',
+            required: ['summary'],
+            properties: { summary: { type: 'string' } },
+          },
+          entry: 'summarize',
+          nodes: {
+            summarize: {
+              purpose: 'Summarize a ticket',
+              exec: 'inline',
+              outputSchema: {
+                type: 'object',
+                required: ['summary'],
+                properties: { summary: { type: 'string' } },
+              },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        }),
+      });
+
+      expect(
+        errorCode(() =>
+          applyDispatchAction({
+            workflowRoot: callRoot,
+            action: { action: 'call_graph', graphId: 'summarize', callId: 'call-denied', input: { ticketId: 'TCK-1007' } },
+          }),
+        ),
+      ).toBe('E_EFFECT_NOT_ALLOWED');
+      expect(fs.existsSync(path.join(callRoot, '.ripplegraph', 'calls'))).toBe(false);
+    } finally {
+      fs.rmSync(callRoot, { recursive: true, force: true });
     }
   });
 
@@ -187,11 +264,12 @@ describe('dispatcher runtime', () => {
         'utf8',
       );
       registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });
-      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'package-only', { kind: 'workflow' }) });
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'package-only', { kind: 'workflow', effects: [] }) });
       registerGraphPackage({
         workflowRoot: root,
         packageRoot: writePackage(root, 'summarize', {
           kind: 'callable',
+          effects: [],
           inputSchema: {
             type: 'object',
             required: ['ticketId'],
