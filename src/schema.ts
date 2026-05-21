@@ -10,7 +10,7 @@ export class RipplegraphError extends Error {
   }
 }
 
-const idSchema = z.string().min(1).regex(/^[A-Za-z0-9_.-]+$/);
+export const idSchema = z.string().min(1).regex(/^[A-Za-z0-9_.-]+$/);
 
 const jsonSchemaSchema: z.ZodType<JsonSchema> = z.lazy(() =>
   z
@@ -57,7 +57,7 @@ export const nodeSchema = z
   })
   .strict();
 
-export const graphSchema = z
+const graphFieldsSchema = z
   .object({
     kind: z.enum(['dispatcher', 'workflow', 'callable']).default('workflow'),
     title: z.string().min(1).optional(),
@@ -69,26 +69,38 @@ export const graphSchema = z
     entry: idSchema,
     nodes: z.record(idSchema, nodeSchema),
   })
-  .strict()
-  .superRefine((graph, ctx) => {
-    if (!graph.nodes[graph.entry]) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['entry'],
-        message: `entry references unknown node: ${graph.entry}`,
-      });
-    }
-    for (const [nodeId, node] of Object.entries(graph.nodes)) {
-      for (const edge of node.edges) {
-        if (!graph.nodes[edge.to]) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['nodes', nodeId, 'edges'],
-            message: `edge references unknown node: ${edge.to}`,
-          });
-        }
+  .strict();
+
+function validateGraphReferences(graph: z.infer<typeof graphFieldsSchema>, ctx: z.RefinementCtx): void {
+  if (!graph.nodes[graph.entry]) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['entry'],
+      message: `entry references unknown node: ${graph.entry}`,
+    });
+  }
+  for (const [nodeId, node] of Object.entries(graph.nodes)) {
+    for (const edge of node.edges) {
+      if (!graph.nodes[edge.to]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['nodes', nodeId, 'edges'],
+          message: `edge references unknown node: ${edge.to}`,
+        });
       }
     }
+  }
+}
+
+export const graphSchema = graphFieldsSchema.superRefine(validateGraphReferences);
+
+export const graphPackageManifestSchema = graphFieldsSchema
+  .extend({
+    id: idSchema,
+    version: z.string().min(1),
+  })
+  .superRefine((manifest, ctx) => {
+    validateGraphReferences(manifest, ctx);
   });
 
 export const workflowSchema = z
@@ -166,6 +178,7 @@ export const transitionLogEntrySchema = z
   .strict();
 
 export type Workflow = z.infer<typeof workflowSchema>;
+export type GraphPackageManifest = z.infer<typeof graphPackageManifestSchema>;
 export type Graph = z.infer<typeof graphSchema>;
 export type Node = z.infer<typeof nodeSchema>;
 export type Gate = z.infer<typeof gateSchema>;
