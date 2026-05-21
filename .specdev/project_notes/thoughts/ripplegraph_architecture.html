@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ripplegraph Architecture</title>
+  <style>
+    :root {
+      --ink: #18212f;
+      --muted: #566276;
+      --line: #c8d2df;
+      --soft: #f5f7fa;
+      --blue: #dcecff;
+      --green: #dcf7e7;
+      --yellow: #fff2cc;
+      --purple: #eadfff;
+      --red: #ffe0df;
+      --code: #101722;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+      background: #ffffff;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 36px 0 64px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 42px 0 12px;
+      font-size: 1.55rem;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 26px 0 8px;
+      font-size: 1.08rem;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    a {
+      color: #1959a6;
+    }
+
+    .lede {
+      max-width: 880px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 10px;
+      color: var(--muted);
+      background: var(--soft);
+      font-size: 0.88rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .card h3 {
+      margin-top: 0;
+    }
+
+    .note {
+      border-left: 4px solid #4c7cc5;
+      background: #f3f7ff;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 22px;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      padding: 10px 12px;
+    }
+
+    th {
+      background: var(--soft);
+      font-weight: 650;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+      color: var(--code);
+      background: #eef2f6;
+      border-radius: 4px;
+      padding: 0.12em 0.32em;
+    }
+
+    pre {
+      overflow: auto;
+      background: #101722;
+      color: #e9eef6;
+      border-radius: 8px;
+      padding: 16px;
+      line-height: 1.45;
+      font-size: 0.9rem;
+    }
+
+    pre code {
+      padding: 0;
+      color: inherit;
+      background: transparent;
+    }
+
+    figure {
+      margin: 20px 0 30px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    figcaption {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
+
+    .status {
+      display: inline-block;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.82rem;
+      font-weight: 650;
+    }
+
+    .done {
+      background: var(--green);
+    }
+
+    .planned {
+      background: var(--yellow);
+    }
+
+    .risk {
+      background: var(--red);
+    }
+
+    ul {
+      padding-left: 1.25rem;
+    }
+
+    li {
+      margin: 0 0 8px;
+    }
+
+    @media (max-width: 760px) {
+      main {
+        width: min(100% - 24px, 1120px);
+        padding-top: 24px;
+      }
+
+      .grid.two,
+      .grid.three {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Ripplegraph Architecture</h1>
+    <p class="lede">
+      Ripplegraph is a host-agent-driven coach runtime. It gives agent-facing CLIs a portable graph backbone:
+      deterministic flow, durable state, explicit gates, typed node contracts, and recovery context for long agent sessions.
+    </p>
+    <div class="meta">
+      <span class="pill">Architecture note</span>
+      <span class="pill">Generated diagrams in <code>assets/</code></span>
+      <span class="pill">Script: <code>generate_architecture_diagrams.py</code></span>
+      <span class="pill">Status: framework foundation implemented, repository runtime planned</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>1. Executive Summary</h2>
+    <p>
+      Ripplegraph separates control flow from language work. The host agent, such as Claude Code, Codex, OpenCode, or
+      another CLI driver, performs the actual reasoning and content generation. Ripplegraph owns the deterministic
+      skeleton: graph position, state persistence, transitions, external gates, output validation, and re-anchoring
+      context.
+    </p>
+    <p>
+      The redesign positions Ripplegraph as the backbone for coach CLIs rather than a single workflow runner. A
+      workspace can act as a graph repository with dispatcher graphs, durable workflow graphs, and callable graph-shaped
+      tools. This is similar in purpose to a skills or plugin system, but the interface is stricter: graph packages
+      declare activation hints, schemas, effects, and invocation boundaries.
+    </p>
+    <div class="note">
+      Core rule: the LLM may produce content inside a contract, but it should not be trusted with unvalidated flow
+      control. If a design lets the LLM freely choose transitions, it should be moved behind a dispatcher action,
+      schema, or gate.
+    </div>
+
+    <figure>
+      <img src="assets/architecture_layers.png" alt="Layer diagram showing host agent, consumer CLI, Ripplegraph runtime, graph repository, and durable state.">
+      <figcaption>The runtime sits below host-agent-facing CLIs and above graph packages plus filesystem state.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>2. Responsibility Split</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Layer</th>
+          <th>Owns</th>
+          <th>Does not own</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Host agent</td>
+          <td>Reading project context, drafting node outputs, interpreting user intent, using local tools.</td>
+          <td>Unchecked graph selection, direct state mutation, bypassing gates.</td>
+        </tr>
+        <tr>
+          <td>Consumer CLI</td>
+          <td>Domain UX, command naming, project-specific templates, package installation, user-facing docs.</td>
+          <td>Reimplementing graph validation or inventing hidden run state.</td>
+        </tr>
+        <tr>
+          <td>Ripplegraph runtime</td>
+          <td>Schema validation, transition resolution, gate enforcement, run persistence, route neighborhood, recovery context.</td>
+          <td>LLM execution, product-specific policy, hidden side effects.</td>
+        </tr>
+        <tr>
+          <td>Graph package</td>
+          <td>Graph definition, metadata, activation hints, schemas, effects, node docs, templates, package assets.</td>
+          <td>Mutating runtime state outside the declared graph contract.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>3. Workspace Repository Model</h2>
+    <p>
+      The target workspace layout treats <code>.ripplegraph/</code> as an installed graph repository and runtime state
+      directory. Graphs become drag-and-drop packages. The registry indexes them, the dispatcher uses their metadata,
+      and runs remain durable evidence.
+    </p>
+
+    <figure>
+      <img src="assets/workspace_layout.png" alt="Filesystem layout diagram for .ripplegraph repository, graph packages, registry, and runs.">
+      <figcaption>Graph packages and run state live side by side, but they serve different purposes.</figcaption>
+    </figure>
+
+    <pre><code>.ripplegraph/
+  registry.json
+  graphs/
+    dispatcher/
+      graph.json
+      AGENT.md
+      README.md
+    specdev-assignment/
+      graph.json
+      AGENT.md
+      templates/
+    review-loop/
+      graph.json
+      README.md
+  current.json
+  runs/
+    specdev-2026-05-21-001/
+      checkpoint.json
+      transition-log.jsonl
+      artifacts/</code></pre>
+
+    <p>
+      The current implementation still supports the compact <code>workflow.json</code> format for demos and tests. The
+      folder package model is the intended next runtime contract, not yet the fully wired default.
+    </p>
+  </section>
+
+  <section>
+    <h2>4. Graph Kinds</h2>
+    <figure>
+      <img src="assets/graph_kinds.png" alt="Diagram showing dispatcher, workflow, callable, registry, and runtime validation relationships.">
+      <figcaption>Each graph kind has a different invocation boundary and persistence contract.</figcaption>
+    </figure>
+
+    <div class="grid three">
+      <article class="card">
+        <h3>Dispatcher</h3>
+        <p>
+          A dispatcher is the front door for user intent. It reads a request and workspace context, then emits a
+          structured action such as <code>start_run</code>, <code>resume_run</code>, <code>switch_run</code>,
+          <code>list_runs</code>, <code>ask_user</code>, or <code>call_graph</code>.
+        </p>
+      </article>
+      <article class="card">
+        <h3>Workflow</h3>
+        <p>
+          A workflow is a durable user-visible run. It has a current node, checkpoint, outputs, gate decisions,
+          transition log, artifacts, status, and suspend/resume behavior.
+        </p>
+      </article>
+      <article class="card">
+        <h3>Callable</h3>
+        <p>
+          A callable is a typed graph-shaped function. It may use internal transitions, but from the caller perspective
+          it returns a value and audit record without mutating caller workflow state.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Graph Package Schema</h2>
+    <p>
+      The package metadata is the public framework API. Demos are examples; schema fields are the contract that lets
+      other CLIs adapt Ripplegraph cleanly.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>Purpose</th>
+          <th>Runtime meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>id</code></td>
+          <td>Stable graph package identity.</td>
+          <td>Used by registry, dispatch actions, run root graph, and logs.</td>
+        </tr>
+        <tr>
+          <td><code>kind</code></td>
+          <td><code>dispatcher</code>, <code>workflow</code>, or <code>callable</code>.</td>
+          <td>Determines invocation and persistence rules.</td>
+        </tr>
+        <tr>
+          <td><code>activationHints</code></td>
+          <td>Soft natural-language hints for dispatcher selection.</td>
+          <td>Useful for routing, but not an authorization boundary.</td>
+        </tr>
+        <tr>
+          <td><code>inputSchema</code> and <code>outputSchema</code></td>
+          <td>Typed graph-level contract.</td>
+          <td>Lets callers validate inputs and returned outputs.</td>
+        </tr>
+        <tr>
+          <td><code>effects</code></td>
+          <td>Declared side effect capabilities, such as file writes or network.</td>
+          <td>Future enforcement and permission surface.</td>
+        </tr>
+        <tr>
+          <td><code>entry</code> and <code>nodes</code></td>
+          <td>Graph structure.</td>
+          <td>Defines starting node, node contracts, gates, and transition rules.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <pre><code>{
+  "id": "specdev-assignment",
+  "kind": "workflow",
+  "version": "0.1.0",
+  "title": "SpecDev Assignment",
+  "description": "Run a structured assignment from brainstorm through implementation.",
+  "activationHints": ["start a specdev assignment", "plan and implement a feature"],
+  "inputSchema": {},
+  "outputSchema": {},
+  "effects": ["read_repo", "write_files", "run_tests"],
+  "entry": "brainstorm",
+  "nodes": {}
+}</code></pre>
+  </section>
+
+  <section>
+    <h2>6. Dispatch Model</h2>
+    <p>
+      Direct graph selection is useful for testing, but normal use should go through <code>dispatch</code>. The host
+      agent submits the user request, the dispatcher returns a structured action, and Ripplegraph validates that action
+      against the registry before changing focus or state.
+    </p>
+
+    <pre><code>ripplegraph dispatch --request "review and clean up this codebase"</code></pre>
+
+    <pre><code>{
+  "action": "start_run",
+  "graphId": "specdev-assignment",
+  "runId": "specdev-2026-05-21-001",
+  "input": {
+    "request": "review and clean up this codebase"
+  },
+  "reason": "User requested a structured cleanup assignment."
+}</code></pre>
+
+    <p>
+      This keeps routing flexible without giving the host agent unbounded authority. <code>activationHints</code> help
+      the dispatcher decide, while registry validation decides what is actually allowed.
+    </p>
+  </section>
+
+  <section>
+    <h2>7. Run Lifecycle and Persistence</h2>
+    <figure>
+      <img src="assets/run_lifecycle.png" alt="Workflow run lifecycle diagram showing created, active, suspended, completed, and abandoned states.">
+      <figcaption>Runs are durable by default. Focus can move without deleting evidence.</figcaption>
+    </figure>
+
+    <table>
+      <thead>
+        <tr>
+          <th>State file</th>
+          <th>Contents</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>current.json</code></td>
+          <td>The currently focused run id, or no focus.</td>
+        </tr>
+        <tr>
+          <td><code>checkpoint.json</code></td>
+          <td>Root graph, current node, outputs, gate decisions, timestamps, status, and runtime snapshot.</td>
+        </tr>
+        <tr>
+          <td><code>transition-log.jsonl</code></td>
+          <td>Append-only evidence of node advances, decisions, pauses, resumes, and completion.</td>
+        </tr>
+        <tr>
+          <td><code>artifacts/</code></td>
+          <td>Files produced by graph nodes or consumer CLIs during the run.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>8. Command Model</h2>
+    <figure>
+      <img src="assets/command_loop.png" alt="Command loop diagram showing status, dispatch, advance, explain, node contract, and state response.">
+      <figcaption>The normal loop stays small so the host agent can recover even when context is long.</figcaption>
+    </figure>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Command class</th>
+          <th>Commands</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Canonical host-agent protocol</td>
+          <td><code>status</code>, <code>dispatch</code>, <code>explain</code>, <code>advance</code></td>
+          <td>Small routine loop for normal agent-driven work.</td>
+        </tr>
+        <tr>
+          <td>Management and debug</td>
+          <td><code>init</code>, <code>runs</code>, <code>focus</code>, <code>pause</code>, <code>abandon</code>, <code>graph register</code>, <code>graph list</code>, <code>graph validate</code>, <code>call</code>, direct <code>start</code></td>
+          <td>Setup, inspection, direct testing, and explicit run management.</td>
+        </tr>
+        <tr>
+          <td>Compatibility aliases</td>
+          <td><code>state</code>, <code>submit</code>, <code>decide</code>, <code>resume</code></td>
+          <td>Bridge from the current demo CLI to the cleaner protocol.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>9. Drift Recovery Strategy</h2>
+    <p>
+      Ripplegraph should help the driving agent stay oriented. Each state response should include enough nearby context
+      to continue correctly without rereading the full project or guessing from stale conversation.
+    </p>
+
+    <div class="grid two">
+      <article class="card">
+        <h3>Short orientation</h3>
+        <p>A one-sentence summary of current graph, run, node, and expected action.</p>
+      </article>
+      <article class="card">
+        <h3>Recent context</h3>
+        <p>Recent completed node outputs, including external gate decisions, so the agent can avoid repeating work.</p>
+      </article>
+      <article class="card">
+        <h3>Route neighborhood</h3>
+        <p>Available outgoing routes, branch conditions, and next node descriptions.</p>
+      </article>
+      <article class="card">
+        <h3>Recovery command</h3>
+        <p>An explicit <code>helpCommand</code>, usually <code>explain</code>, plus <code>nextAllowedCommand</code>.</p>
+      </article>
+    </div>
+
+    <pre><code>{
+  "orientation": "Run triage-demo is at gate approve-routing in support-triage.",
+  "recentContext": [
+    {
+      "node": "classify-ticket",
+      "output": {
+        "category": "bug",
+        "priority": "urgent"
+      }
+    }
+  ],
+  "availableRoutes": [
+    {
+      "to": "reproduce-bug",
+      "when": "category == bug"
+    }
+  ],
+  "nextAllowedCommand": "ripplegraph advance '{...}'",
+  "helpCommand": "ripplegraph explain"
+}</code></pre>
+  </section>
+
+  <section>
+    <h2>10. Callable Graphs as Tools</h2>
+    <p>
+      Callable graphs fill the role of structured tools. They are not just scripts: they can have internal steps,
+      validation, and transitions. The important boundary is that they behave like pure functions to the caller unless
+      declared effects explicitly say otherwise.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Design point</th>
+          <th>Rule</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Input</td>
+          <td>Validated against graph-level <code>inputSchema</code>.</td>
+        </tr>
+        <tr>
+          <td>Internal work</td>
+          <td>May use multiple nodes and transitions to compute output.</td>
+        </tr>
+        <tr>
+          <td>Output</td>
+          <td>Validated against graph-level <code>outputSchema</code> before returning.</td>
+        </tr>
+        <tr>
+          <td>Side effects</td>
+          <td>No hidden caller-state mutation. File, network, or domain effects must be declared.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>11. Implementation Status</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Area</th>
+          <th>Status</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Graph metadata fields</td>
+          <td><span class="status done">Implemented</span></td>
+          <td><code>kind</code>, <code>activationHints</code>, <code>inputSchema</code>, <code>outputSchema</code>, <code>effects</code>, title, and description exist in schema.</td>
+        </tr>
+        <tr>
+          <td>Dispatcher entry validation</td>
+          <td><span class="status done">Implemented</span></td>
+          <td><code>entryGraph</code> validation requires the referenced graph to be kind <code>dispatcher</code>.</td>
+        </tr>
+        <tr>
+          <td>Re-anchoring fields</td>
+          <td><span class="status done">Implemented</span></td>
+          <td>State includes orientation, recent context, route neighborhood, next allowed command, and help command.</td>
+        </tr>
+        <tr>
+          <td>Canonical <code>advance</code> and <code>explain</code></td>
+          <td><span class="status done">Implemented</span></td>
+          <td>Demo CLI supports the cleaner command vocabulary while preserving older aliases.</td>
+        </tr>
+        <tr>
+          <td>Graph folder registry</td>
+          <td><span class="status planned">Planned</span></td>
+          <td>Needed for drag-and-drop packages, registration, validation, and dispatcher catalog.</td>
+        </tr>
+        <tr>
+          <td>Real <code>dispatch</code> execution</td>
+          <td><span class="status planned">Planned</span></td>
+          <td>Current architecture defines the contract; runtime needs command support and registry-backed action application.</td>
+        </tr>
+        <tr>
+          <td>Callable graph invocation</td>
+          <td><span class="status planned">Planned</span></td>
+          <td>Needed to make graph-shaped pure tools available to workflows and dispatchers.</td>
+        </tr>
+        <tr>
+          <td>Effect permission enforcement</td>
+          <td><span class="status planned">Planned</span></td>
+          <td>Effects are declared now; enforcement should come with callable and package execution support.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>12. Design Invariants</h2>
+    <ul>
+      <li>Graph flow must be deterministic over validated data.</li>
+      <li>The host agent may choose content, but runtime validation chooses whether that content can advance the graph.</li>
+      <li>A focused run is mutable; completed historical runs are evidence and should not be rewritten casually.</li>
+      <li>Dispatcher hints are advisory. Registry validation is authoritative.</li>
+      <li>Callable graphs should look pure to callers unless effects are explicit.</li>
+      <li>Normal use should fit in <code>status</code>, <code>dispatch</code>, <code>explain</code>, and <code>advance</code>.</li>
+      <li>When context gets long, the runtime must serve enough state to recover without guessing.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>13. Suggested Roadmap</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Step</th>
+          <th>Why it matters</th>
+          <th>Acceptance signal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Graph package loader</td>
+          <td>Turns the architecture from metadata fields into installable packages.</td>
+          <td><code>graph validate</code> can validate a package folder and load it into a catalog.</td>
+        </tr>
+        <tr>
+          <td>Registry commands</td>
+          <td>Makes drag-and-drop graphs discoverable and auditable.</td>
+          <td><code>graph register</code> and <code>graph list</code> operate on <code>.ripplegraph/registry.json</code>.</td>
+        </tr>
+        <tr>
+          <td>Dispatcher runtime</td>
+          <td>Provides the normal entry path for multi-graph workspaces.</td>
+          <td><code>dispatch</code> returns and applies validated actions.</td>
+        </tr>
+        <tr>
+          <td>Callable runtime</td>
+          <td>Enables typed graph-shaped tools that workflows can call.</td>
+          <td><code>call &lt;graph-id&gt; '{...}'</code> validates input/output and records an audit trace.</td>
+        </tr>
+        <tr>
+          <td>Effect enforcement</td>
+          <td>Prevents pure-looking packages from hiding risky behavior.</td>
+          <td>Runtime can reject or require approval for undeclared effects.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>
