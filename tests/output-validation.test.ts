@@ -49,19 +49,29 @@ describe('output validation', () => {
   });
 
   it('rejects unsupported callable schema keywords before runtime use', () => {
-    let error: unknown;
-    try {
-      assertSupportedCallableSchema({
+    const unsupportedSchemas = [
+      {
         type: 'object',
         properties: {
           value: { type: 'string', pattern: '^ok$' },
         },
-      });
-    } catch (caught) {
-      error = caught;
-    }
+      },
+      { oneOf: { type: 'string' } },
+      { oneOf: [{ type: 'string' }, true] },
+      { type: 'array', items: [{ type: 'string' }] },
+      { enum: 'approved' },
+    ];
 
-    expect(error).toMatchObject({ code: 'E_UNSUPPORTED_SCHEMA_KEYWORD' });
+    for (const schema of unsupportedSchemas) {
+      let error: unknown;
+      try {
+        assertSupportedCallableSchema(schema);
+      } catch (caught) {
+        error = caught;
+      }
+
+      expect(error).toMatchObject({ code: 'E_UNSUPPORTED_SCHEMA_KEYWORD' });
+    }
   });
 
   it('keeps existing required property and enum path behavior compatible', () => {

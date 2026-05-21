@@ -7,3 +7,13 @@
 
 ### Addressed from changelog
 - (none -- first round)
+
+## Round 2
+
+**Verdict:** needs-changes
+
+### Findings
+1. [F2.1] CRITICAL: Callable schema subset enforcement still allows supported keywords with unsupported shapes, so contracts can be accepted and then silently ignored. `jsonSchemaSchema` only types the original keywords and uses `.passthrough()` for the new callable keywords ([src/schema.ts](/mnt/h/ripplepulse/lib/ripplegraph/src/schema.ts:15)), while `assertSupportedCallableSchema` only rejects unknown keyword names and `additionalProperties` values ([src/internal/output-validation.ts](/mnt/h/ripplepulse/lib/ripplegraph/src/internal/output-validation.ts:25)). If a callable declares malformed-but-recognized contracts such as `oneOf: { ... }`, tuple-style `items: [{ ... }]`, non-schema entries inside `oneOf`, or a non-array `enum`, the preflight accepts the schema, and `validateOutput` then ignores or under-validates the contract because it only acts on arrays/object schemas in selected branches ([src/internal/output-validation.ts](/mnt/h/ripplepulse/lib/ripplegraph/src/internal/output-validation.ts:63), [src/internal/output-validation.ts](/mnt/h/ripplepulse/lib/ripplegraph/src/internal/output-validation.ts:70)). This violates the design requirement that callable schemas either use the supported validation subset or fail clearly before unsupported keywords are ignored. Consolidate the schema-subset check so each supported keyword also has an allowed value shape, and reject unsupported forms with `E_UNSUPPORTED_SCHEMA_KEYWORD` before starting or stepping calls.
+
+### Addressed from changelog
+- [F1.1] Addressed. Active `getCallableCall` and `stepCallableCall` now load from the checkpointed `packagePath` and verify manifest id/kind/version before exposing or stepping the call; regression coverage confirms registry replacement does not rebind an in-flight call.

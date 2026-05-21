@@ -28,23 +28,36 @@ export function assertSupportedCallableSchema(schema: JsonSchema, path = '$'): v
       throw new RipplegraphError('E_UNSUPPORTED_SCHEMA_KEYWORD', `unsupported schema keyword at ${path}: ${key}`);
     }
   }
+  if ('type' in schema && !['object', 'string', 'number', 'boolean', 'array'].includes(String(schema.type))) {
+    throwUnsupportedSchemaValue(`${path}.type`);
+  }
+  if ('required' in schema && (!Array.isArray(schema.required) || schema.required.some((key) => typeof key !== 'string'))) {
+    throwUnsupportedSchemaValue(`${path}.required`);
+  }
+  if ('properties' in schema && !isSchemaRecord(schema.properties)) {
+    throwUnsupportedSchemaValue(`${path}.properties`);
+  }
+  if ('enum' in schema && !Array.isArray(schema.enum)) {
+    throwUnsupportedSchemaValue(`${path}.enum`);
+  }
   if ('additionalProperties' in schema && schema.additionalProperties !== false) {
-    throw new RipplegraphError(
-      'E_UNSUPPORTED_SCHEMA_KEYWORD',
-      `unsupported schema keyword value at ${path}.additionalProperties: only false is supported`,
-    );
+    throwUnsupportedSchemaValue(`${path}.additionalProperties`);
   }
   for (const [key, childSchema] of Object.entries(schema.properties ?? {})) {
     assertSupportedCallableSchema(childSchema, `${path}.properties.${key}`);
   }
-  if (schema.items && typeof schema.items === 'object' && !Array.isArray(schema.items)) {
+  if ('items' in schema && !isSchemaObject(schema.items)) {
+    throwUnsupportedSchemaValue(`${path}.items`);
+  }
+  if (isSchemaObject(schema.items)) {
     assertSupportedCallableSchema(schema.items as JsonSchema, `${path}.items`);
+  }
+  if ('oneOf' in schema && (!Array.isArray(schema.oneOf) || schema.oneOf.some((childSchema) => !isSchemaObject(childSchema)))) {
+    throwUnsupportedSchemaValue(`${path}.oneOf`);
   }
   if (Array.isArray(schema.oneOf)) {
     schema.oneOf.forEach((childSchema, index) => {
-      if (childSchema && typeof childSchema === 'object' && !Array.isArray(childSchema)) {
-        assertSupportedCallableSchema(childSchema as JsonSchema, `${path}.oneOf[${index}]`);
-      }
+      assertSupportedCallableSchema(childSchema as JsonSchema, `${path}.oneOf[${index}]`);
     });
   }
 }
@@ -114,4 +127,16 @@ function formatExpected(value: unknown): string {
 
 function jsonEqual(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function isSchemaObject(value: unknown): value is JsonSchema {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isSchemaRecord(value: unknown): value is Record<string, JsonSchema> {
+  return isSchemaObject(value) && Object.values(value).every(isSchemaObject);
+}
+
+function throwUnsupportedSchemaValue(path: string): never {
+  throw new RipplegraphError('E_UNSUPPORTED_SCHEMA_KEYWORD', `unsupported schema keyword value at ${path}`);
 }
