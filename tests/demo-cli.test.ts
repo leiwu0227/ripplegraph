@@ -109,7 +109,10 @@ describe('ripplegraph-demo cli', () => {
       expect(status).toContain('Node: classify-ticket');
       expect(status).toContain('category: bug | feature | question');
       expect(status).toContain('ripplegraph-demo advance');
-      const branch = run(['submit', '{"category":"bug","priority":"urgent","rationale":"checkout is blocked"}', '--workflow-root', root]).stdout;
+      const explain = run(['explain', '--workflow-root', root]).stdout;
+      expect(explain).toContain('Orientation:');
+      expect(explain).toContain('Next allowed command:');
+      const branch = run(['advance', '{"category":"bug","priority":"urgent","rationale":"checkout is blocked"}', '--workflow-root', root]).stdout;
       expect(branch).toContain('Node: review-classification');
       expect(branch).toContain('Orientation:');
       expect(branch).toContain('You are at support-triage/review-classification: External review gate for the classification.');
@@ -127,8 +130,8 @@ describe('ripplegraph-demo cli', () => {
       expect(run(['submit', '{"decision":"approved-bug"}', '--workflow-root', root]).status).toBe(1);
       const rejected = run(['decide', '{"decision":"rejected","reason":"needs a clearer category"}', '--workflow-root', root]).stdout;
       expect(rejected).toContain('Node: classify-ticket');
-      run(['submit', '{"category":"bug","priority":"urgent","rationale":"checkout is blocked"}', '--workflow-root', root]);
-      const approved = run(['decide', '{"decision":"approved-bug","reason":"bug category is correct"}', '--workflow-root', root]).stdout;
+      run(['advance', '{"category":"bug","priority":"urgent","rationale":"checkout is blocked"}', '--workflow-root', root]);
+      const approved = run(['advance', '{"decision":"approved-bug","reason":"bug category is correct"}', '--workflow-root', root]).stdout;
       expect(approved).toContain('Node: reproduce-bug');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });

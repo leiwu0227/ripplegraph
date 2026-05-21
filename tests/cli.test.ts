@@ -22,7 +22,7 @@ function run(args: string[]): { status: number | null; json: Record<string, unkn
 }
 
 describe('reference cli', () => {
-  it('renders gated state and advances it through decide', () => {
+  it('renders gated state and advances it through the canonical advance command', () => {
     const root = makeGatedWorkflowRoot();
     try {
       expect(run(['start', '--workflow-root', root, '--graph', 'review', '--run-id', 'approval-a']).json.status).toBe('ok');
@@ -32,7 +32,7 @@ describe('reference cli', () => {
         status: 'error',
         code: 'E_GATE_DECISION_REQUIRED',
       });
-      expect(run(['decide', '--workflow-root', root, '--decision', '{"decision":"approved","reason":"ok"}']).json.status).toBe(
+      expect(run(['advance', '--workflow-root', root, '--input', '{"decision":"approved","reason":"ok"}']).json.status).toBe(
         'completed',
       );
     } finally {
@@ -49,7 +49,7 @@ describe('reference cli', () => {
       expect(run(['step', '--workflow-root', root, '--output', '{"decision":"maybe"}']).json.status).toBe(
         'validation_error',
       );
-      expect(run(['step', '--workflow-root', root, '--output', '{"decision":"stop"}']).json.status).toBe(
+      expect(run(['advance', '--workflow-root', root, '--input', '{"decision":"stop"}']).json.status).toBe(
         'completed',
       );
       expect(run(['state', '--workflow-root', root]).json.status).toBe('no_focused_run');

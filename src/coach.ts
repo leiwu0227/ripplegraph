@@ -35,6 +35,10 @@ export interface StepRunOptions extends WorkflowRootOptions {
   output: unknown;
 }
 
+export interface AdvanceRunOptions extends WorkflowRootOptions {
+  input: unknown;
+}
+
 export interface DecideGateOptions extends WorkflowRootOptions {
   decision: unknown;
 }
@@ -114,6 +118,7 @@ export interface ValidationErrorResponse {
 export type CoachState = StateOk | StateNoFocusedRun;
 export type AdvanceResponse = StateOk | { status: 'completed'; run: { id: string; status: 'completed'; rootGraph: string }; position: Position } | ValidationErrorResponse;
 export type StepRunResponse = AdvanceResponse;
+export type AdvanceRunResponse = AdvanceResponse;
 export type DecideGateResponse = AdvanceResponse;
 
 export function validateWorkflowRoot(rootPath: string): { status: 'ok'; workflow: { id: string; version: string }; graphs: string[] } {
@@ -235,6 +240,15 @@ export function stepRun(opts: StepRunOptions): StepRunResponse {
   }
   writeCheckpoint(opts.workflowRoot, checkpoint);
   return stateForCheckpoint(workflow, checkpoint);
+}
+
+export function advanceRun(opts: AdvanceRunOptions): AdvanceRunResponse {
+  const workflow = loadWorkflow(opts.workflowRoot);
+  const checkpoint = focusedCheckpoint(opts.workflowRoot);
+  const graph = getGraph(workflow, checkpoint.rootGraph);
+  const node = getNode(graph, checkpoint.position.node);
+  if (node.gate) return decideGate({ workflowRoot: opts.workflowRoot, decision: opts.input });
+  return stepRun({ workflowRoot: opts.workflowRoot, output: opts.input });
 }
 
 export function decideGate(opts: DecideGateOptions): DecideGateResponse {

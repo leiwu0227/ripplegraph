@@ -83,7 +83,7 @@ The current reference CLI exposes compatibility/debug commands while the
 canonical protocol settles:
 
 ```text
-init, status, runs, start, pause, resume, submit, decide
+init, status, explain, advance, runs, start, pause, resume, submit, decide
 ```
 
 `ripplegraph-demo` is the reference agent-facing CLI with compact text output.

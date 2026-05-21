@@ -1,4 +1,5 @@
 import {
+  advanceRun,
   decideGate,
   getState,
   listRuns,
@@ -22,7 +23,7 @@ const minimalTemplateDir = path.join(packageRoot, 'templates', 'minimal');
 
 function parseOutput(args: ParsedArgs): unknown {
   const file = stringFlag(args.flags, 'file');
-  return parseJsonFromFileOrValue(file, args.positional[0], 'missing submit JSON or --file', 'submit payload is not valid JSON');
+  return parseJsonFromFileOrValue(file, args.positional[0], 'missing JSON or --file', 'payload is not valid JSON');
 }
 
 function renderNoFocusedRun(state: ReturnType<typeof getState> & { status: 'no_focused_run' }, runs: RunList): string {
@@ -183,9 +184,13 @@ function initDemoProject(targetPath: string, force: boolean): string {
 
 const HELP = `ripplegraph-demo — reference agent-facing Ripplegraph CLI
 
-Commands:
-  init <path> [--force]
+Canonical commands:
   status [--workflow-root <path>]
+  explain [--workflow-root <path>]
+  advance <json> [--file <path>] [--workflow-root <path>]
+
+Compatibility/debug commands:
+  init <path> [--force]
   runs [--workflow-root <path>]
   start <graph-id> --run <run-id> [--workflow-root <path>]
   pause [note] [--workflow-root <path>]
@@ -211,6 +216,11 @@ async function main(argv: string[]): Promise<void> {
       emitLine(state.status === 'no_focused_run' ? renderNoFocusedRun(state, listRuns({ workflowRoot: root })) : renderActiveState(state));
       return;
     }
+    case 'explain': {
+      const state = getState({ workflowRoot: root });
+      emitLine(state.status === 'no_focused_run' ? renderNoFocusedRun(state, listRuns({ workflowRoot: root })) : renderActiveState(state));
+      return;
+    }
     case 'runs':
       emitLine(renderRuns(listRuns({ workflowRoot: root })));
       return;
@@ -222,6 +232,9 @@ async function main(argv: string[]): Promise<void> {
       return;
     case 'resume':
       emitLine(renderActiveState(resumeRun({ workflowRoot: root, runId: required(args.positional[0], 'missing run id') })));
+      return;
+    case 'advance':
+      emitLine(renderStep(advanceRun({ workflowRoot: root, input: parseOutput(args) })));
       return;
     case 'submit':
       emitLine(renderStep(stepRun({ workflowRoot: root, output: parseOutput(args) })));
