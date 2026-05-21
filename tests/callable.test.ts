@@ -15,6 +15,7 @@ import {
   readCurrent,
   registerGraphPackage,
   startCallableCall,
+  stepCallableCall,
   writeCallableOutput,
 } from '../src/index.js';
 
@@ -250,6 +251,127 @@ describe('callable start and state', () => {
       expect(errorCode(() => startCallableCall({ workflowRoot: root, graphId: 'gated-ticket', callId: 'gated-call' }))).toBe(
         'E_CALLABLE_GATE_UNSUPPORTED',
       );
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('callable step and completion', () => {
+  it('steps callable nodes, persists artifacts, and completes with final output', () => {
+    const root = makeRoot();
+    try {
+      writeGraphPackage(root, 'graphs/summarize-ticket', callableManifest());
+      startCallableCall({
+        workflowRoot: root,
+        graphId: 'summarize-ticket',
+        callId: 'call-complete',
+        input: { ticketId: 'TCK-1007' },
+      });
+
+      const completed = stepCallableCall({
+        workflowRoot: root,
+        callId: 'call-complete',
+        output: { summary: 'Checkout failure.' },
+      });
+
+      expect(completed).toMatchObject({
+        status: 'completed',
+        call: { id: 'call-complete', status: 'completed', graphId: 'summarize-ticket', graphVersion: '0.1.0' },
+        position: { graph: 'summarize-ticket', node: 'done' },
+        input: { ticketId: 'TCK-1007' },
+        output: { summary: 'Checkout failure.' },
+        outputArtifact: 'artifacts/summarize/output.json',
+      });
+      expect(readCallableCheckpoint(root, 'call-complete')).toMatchObject({
+        status: 'completed',
+        finalOutput: { summary: 'Checkout failure.' },
+        outputArtifact: 'artifacts/summarize/output.json',
+      });
+      expect(JSON.parse(fs.readFileSync(callableArtifactPath(root, 'call-complete', 'summarize'), 'utf8'))).toEqual({
+        summary: 'Checkout failure.',
+      });
+      expect(fs.readFileSync(callableTransitionLogPath(root, 'call-complete'), 'utf8')).toContain('"op":"complete"');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps active position on validation errors and rejects no-edge or completed steps', () => {
+    const root = makeRoot();
+    try {
+      writeGraphPackage(root, 'graphs/summarize-ticket', callableManifest());
+      writeGraphPackage(root, 'graphs/no-edge-ticket', {
+        ...callableManifest({
+          id: 'no-edge-ticket',
+          nodes: {
+            summarize: {
+              purpose: 'Summarize a support ticket',
+              exec: 'inline',
+              outputSchema: {
+                type: 'object',
+                required: ['summary'],
+                properties: { summary: { type: 'string' } },
+              },
+              edges: [{ to: 'done', when: { route: 'done' } }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        }),
+      });
+      startCallableCall({
+        workflowRoot: root,
+        graphId: 'summarize-ticket',
+        callId: 'call-invalid-step',
+        input: { ticketId: 'TCK-1007' },
+      });
+      const invalid = stepCallableCall({
+        workflowRoot: root,
+        callId: 'call-invalid-step',
+        output: { summary: 7 },
+      });
+
+      expect(invalid).toMatchObject({
+        status: 'validation_error',
+        call: { id: 'call-invalid-step', status: 'active', graphId: 'summarize-ticket' },
+        position: { graph: 'summarize-ticket', node: 'summarize' },
+        errors: [{ path: 'summary', message: 'expected string' }],
+      });
+      expect(readCallableCheckpoint(root, 'call-invalid-step').position).toEqual({
+        graph: 'summarize-ticket',
+        node: 'summarize',
+      });
+
+      startCallableCall({
+        workflowRoot: root,
+        graphId: 'no-edge-ticket',
+        callId: 'call-no-edge',
+        input: { ticketId: 'TCK-1007' },
+      });
+      expect(
+        errorCode(() =>
+          stepCallableCall({
+            workflowRoot: root,
+            callId: 'call-no-edge',
+            output: { summary: 'Checkout failure.' },
+          }),
+        ),
+      ).toBe('E_NO_EDGE');
+
+      stepCallableCall({
+        workflowRoot: root,
+        callId: 'call-invalid-step',
+        output: { summary: 'Checkout failure.' },
+      });
+      expect(
+        errorCode(() =>
+          stepCallableCall({
+            workflowRoot: root,
+            callId: 'call-invalid-step',
+            output: { summary: 'Again.' },
+          }),
+        ),
+      ).toBe('E_CALL_NOT_ACTIVE');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }

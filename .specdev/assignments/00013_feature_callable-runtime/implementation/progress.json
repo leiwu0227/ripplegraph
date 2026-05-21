@@ -25,9 +25,10 @@
     },
     {
       "number": 4,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-21T04:30:33Z",
+      "completed_at": "2026-05-21T04:32:15Z",
+      "summary": "Implemented callable step execution with validation errors, edge selection, artifact persistence, transition logging, completed checkpoints, final output responses, and non-active call rejection."
     },
     {
       "number": 5,

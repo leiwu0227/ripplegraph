@@ -3,6 +3,8 @@ import {
   createCallableCheckpoint,
   listCallIds,
   readCallableCheckpoint,
+  writeCallableCheckpoint,
+  writeCallableOutput,
 } from './storage.js';
 import { resolveRegisteredGraphPackage } from './registry.js';
 import {
@@ -14,7 +16,7 @@ import {
   type Position,
 } from './schema.js';
 import { assertSupportedCallableSchema, validateOutput, type ValidationIssue } from './internal/output-validation.js';
-import { getNode } from './internal/runtime-graph.js';
+import { getNode, selectEdge } from './internal/runtime-graph.js';
 
 export interface CallableRootOptions {
   workflowRoot: string;
@@ -28,6 +30,11 @@ export interface StartCallableCallOptions extends CallableRootOptions {
 
 export interface GetCallableCallOptions extends CallableRootOptions {
   callId: string;
+}
+
+export interface StepCallableCallOptions extends CallableRootOptions {
+  callId: string;
+  output: unknown;
 }
 
 export interface CallableCallSummary {
@@ -65,11 +72,23 @@ export interface CallableState {
 
 export interface CallableValidationErrorResponse {
   status: 'validation_error';
-  call: { id: string; graphId: string };
+  call: { id: string; status?: CallableCheckpoint['status']; graphId: string };
+  position?: Position;
   errors: ValidationIssue[];
 }
 
+export interface CallableCompleted {
+  status: 'completed';
+  call: { id: string; status: 'completed'; graphId: string; graphVersion: string };
+  position: Position;
+  input: unknown;
+  output: unknown;
+  outputArtifact?: string;
+}
+
 export type StartCallableCallResponse = CallableState | CallableValidationErrorResponse;
+export type CallableCallResponse = CallableState | CallableCompleted;
+export type StepCallableCallResponse = CallableCallResponse | CallableValidationErrorResponse;
 
 export function startCallableCall(opts: StartCallableCallOptions): StartCallableCallResponse {
   const { entry, graphPackage } = resolveRegisteredGraphPackage({
@@ -118,14 +137,116 @@ export function startCallableCall(opts: StartCallableCallOptions): StartCallable
   return stateForCallable(manifest, checkpoint);
 }
 
-export function getCallableCall(opts: GetCallableCallOptions): CallableState {
+export function getCallableCall(opts: GetCallableCallOptions): CallableCallResponse {
   const checkpoint = readCallableCheckpoint(opts.workflowRoot, opts.callId);
   const { graphPackage } = resolveRegisteredGraphPackage({
     workflowRoot: opts.workflowRoot,
     graphId: checkpoint.graphId,
     kind: 'callable',
   });
+  if (checkpoint.status === 'completed') return completedForCallable(checkpoint);
   return stateForCallable(graphPackage.manifest, checkpoint);
+}
+
+export function stepCallableCall(opts: StepCallableCallOptions): StepCallableCallResponse {
+  const checkpoint = readCallableCheckpoint(opts.workflowRoot, opts.callId);
+  if (checkpoint.status !== 'active') {
+    throw new RipplegraphError('E_CALL_NOT_ACTIVE', `call ${opts.callId} is not active: ${checkpoint.status}`);
+  }
+  const { graphPackage } = resolveRegisteredGraphPackage({
+    workflowRoot: opts.workflowRoot,
+    graphId: checkpoint.graphId,
+    kind: 'callable',
+  });
+  const manifest = graphPackage.manifest;
+  const node = getNode(manifest, checkpoint.position.node);
+  const errors = validateOutput(node.outputSchema, opts.output);
+  if (errors.length > 0) {
+    appendCallableTransition(opts.workflowRoot, checkpoint.callId, {
+      ts: new Date().toISOString(),
+      op: 'step',
+      callId: checkpoint.callId,
+      from: checkpoint.position,
+      to: checkpoint.position,
+      input: null,
+      output: opts.output,
+      validation: { ok: false, errors },
+      error: { code: 'E_VALIDATION', message: 'output failed validation' },
+    });
+    return {
+      status: 'validation_error',
+      call: { id: checkpoint.callId, status: checkpoint.status, graphId: checkpoint.graphId },
+      position: checkpoint.position,
+      errors,
+    };
+  }
+  const nextNodeId = selectEdge(node.edges, opts.output)?.to;
+  if (!nextNodeId) {
+    throw new RipplegraphError('E_NO_EDGE', `callable node ${checkpoint.position.node} has no matching edge`);
+  }
+  const nextNode = getNode(manifest, nextNodeId);
+  const from = checkpoint.position;
+  const to = { graph: checkpoint.graphId, node: nextNodeId };
+  if (nextNode.terminal) {
+    const outputErrors = validateOutput(manifest.outputSchema, opts.output);
+    if (outputErrors.length > 0) {
+      appendCallableTransition(opts.workflowRoot, checkpoint.callId, {
+        ts: new Date().toISOString(),
+        op: 'step',
+        callId: checkpoint.callId,
+        from,
+        to: from,
+        input: null,
+        output: opts.output,
+        validation: { ok: false, errors: outputErrors },
+        error: { code: 'E_VALIDATION', message: 'call output failed validation' },
+      });
+      return {
+        status: 'validation_error',
+        call: { id: checkpoint.callId, status: checkpoint.status, graphId: checkpoint.graphId },
+        position: checkpoint.position,
+        errors: outputErrors,
+      };
+    }
+    const artifact = writeCallableOutput(opts.workflowRoot, checkpoint.callId, checkpoint.position.node, opts.output);
+    checkpoint.outputs[checkpoint.position.node] = opts.output;
+    checkpoint.position = to;
+    checkpoint.status = 'completed';
+    checkpoint.finalOutput = opts.output;
+    checkpoint.outputArtifact = artifact;
+    checkpoint.updatedAt = new Date().toISOString();
+    writeCallableCheckpoint(opts.workflowRoot, checkpoint);
+    appendCallableTransition(opts.workflowRoot, checkpoint.callId, {
+      ts: checkpoint.updatedAt,
+      op: 'complete',
+      callId: checkpoint.callId,
+      from,
+      to,
+      input: { artifact },
+      output: { artifact },
+      validation: { ok: true },
+      error: null,
+    });
+    return completedForCallable(checkpoint);
+  }
+
+  const artifact = writeCallableOutput(opts.workflowRoot, checkpoint.callId, checkpoint.position.node, opts.output);
+  checkpoint.outputs[checkpoint.position.node] = opts.output;
+  checkpoint.position = to;
+  checkpoint.updatedAt = new Date().toISOString();
+  writeCallableCheckpoint(opts.workflowRoot, checkpoint);
+  appendCallableTransition(opts.workflowRoot, checkpoint.callId, {
+    ts: checkpoint.updatedAt,
+    op: 'step',
+    callId: checkpoint.callId,
+    from,
+    to,
+    input: { artifact },
+    output: { artifact },
+    validation: { ok: true },
+    error: null,
+  });
+  return stateForCallable(manifest, checkpoint);
 }
 
 export function listCallableCalls(opts: CallableRootOptions): CallableCallList {
@@ -182,6 +303,22 @@ function stateForCallable(manifest: GraphPackageManifest, checkpoint: CallableCh
     responseContract: { command: 'call-step', acceptedFormats: ['json'], schema: node.outputSchema },
     nextAllowedCommand: `ripplegraph call-step --call-id ${checkpoint.callId} --output <json>`,
     helpCommand: `ripplegraph explain --call-id ${checkpoint.callId}`,
+  };
+}
+
+function completedForCallable(checkpoint: CallableCheckpoint): CallableCompleted {
+  return {
+    status: 'completed',
+    call: {
+      id: checkpoint.callId,
+      status: 'completed',
+      graphId: checkpoint.graphId,
+      graphVersion: checkpoint.graphVersion,
+    },
+    position: checkpoint.position,
+    input: checkpoint.input,
+    output: checkpoint.finalOutput,
+    outputArtifact: checkpoint.outputArtifact,
   };
 }
 
