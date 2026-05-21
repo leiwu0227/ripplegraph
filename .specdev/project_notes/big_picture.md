@@ -45,7 +45,9 @@ on Ripplegraph.
   transitions.
 - **Workspace as graph repository.** A workspace can contain many graph
   packages. A package is a self-contained folder with graph definition,
-  metadata, docs, templates, assets, and tests.
+  metadata, docs, templates, assets, and tests. The current foundation can
+  validate flat `graph.json` package manifests and register them in
+  `.ripplegraph/registry.json`.
 - **Graph package metadata is the framework API.** Packages declare `kind`,
   `activationHints`, `inputSchema`, `outputSchema`, `effects`, version, and
   human-readable description. Demos are examples, not contracts.

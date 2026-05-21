@@ -18,14 +18,15 @@
     },
     {
       "number": 3,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-21T03:42:36Z",
-      "completed_at": null
+      "completed_at": "2026-05-21T03:44:04Z",
+      "summary": "Added low-level JSON graph validate/register/list commands and CLI coverage."
     },
     {
       "number": 4,
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-05-21T03:44:10Z",
       "completed_at": null
     },
     {
