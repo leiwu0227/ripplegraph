@@ -1,0 +1,31 @@
+{
+  "plan_file": ".specdev/assignments/00012_feature_dispatcher-runtime/breakdown/plan.md",
+  "total_tasks": 4,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-05-21T03:56:36Z",
+      "completed_at": "2026-05-21T03:58:14Z",
+      "summary": "Added the dispatcher request contract, graph catalog summaries, dispatcher selection errors, exports, and focused request tests."
+    },
+    {
+      "number": 2,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 3,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 4,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    }
+  ]
+}
