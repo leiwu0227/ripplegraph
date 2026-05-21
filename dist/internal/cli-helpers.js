@@ -13,21 +13,54 @@ export function parseArgs(argv) {
         const key = arg.slice(2);
         const next = rest[i + 1];
         if (next === undefined || next.startsWith('--')) {
-            flags[key] = true;
+            appendFlag(flags, key, true);
         }
         else {
-            flags[key] = next;
+            appendFlag(flags, key, next);
             i++;
         }
     }
     return { command, positional, flags };
 }
+function appendFlag(flags, key, value) {
+    const existing = flags[key];
+    if (existing === undefined) {
+        flags[key] = value;
+        return;
+    }
+    if (Array.isArray(existing)) {
+        if (typeof value === 'string')
+            existing.push(value);
+        return;
+    }
+    if (typeof existing === 'string' && typeof value === 'string') {
+        flags[key] = [existing, value];
+        return;
+    }
+    flags[key] = value;
+}
 export function stringFlag(flags, name) {
     const value = flags[name];
+    if (Array.isArray(value))
+        return value.at(-1);
     return typeof value === 'string' ? value : undefined;
+}
+export function stringFlags(flags, name) {
+    const value = flags[name];
+    if (Array.isArray(value))
+        return value;
+    return typeof value === 'string' ? [value] : [];
 }
 export function workflowRoot(flags) {
     return stringFlag(flags, 'workflow-root') ?? process.cwd();
+}
+export function effectPolicyFromFlags(flags) {
+    const repeated = stringFlags(flags, 'allow-effect');
+    const commaSeparated = stringFlags(flags, 'allow-effects').flatMap((value) => value
+        .split(',')
+        .map((effect) => effect.trim())
+        .filter(Boolean));
+    return { allowedEffects: [...repeated, ...commaSeparated] };
 }
 export function required(value, message) {
     if (!value)

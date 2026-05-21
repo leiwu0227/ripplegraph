@@ -5,6 +5,7 @@ import { resolveRegisteredGraphPackage } from './registry.js';
 import { RipplegraphError, } from './schema.js';
 import { assertSupportedCallableSchema, validateOutput } from './internal/output-validation.js';
 import { getNode, selectEdge } from './internal/runtime-graph.js';
+import { assertEffectsAllowed } from './effects.js';
 export function startCallableCall(opts) {
     const { entry, graphPackage } = resolveRegisteredGraphPackage({
         workflowRoot: opts.workflowRoot,
@@ -12,6 +13,7 @@ export function startCallableCall(opts) {
         kind: 'callable',
     });
     const manifest = graphPackage.manifest;
+    assertEffectsAllowed(manifest.effects, opts.effectPolicy, `graph ${manifest.id}`);
     assertCallableSupported(manifest);
     const callId = opts.callId ?? generatedCallId();
     const input = opts.input ?? {};

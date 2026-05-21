@@ -1,11 +1,14 @@
+import type { EffectPolicy } from '../effects.js';
 export interface ParsedArgs {
     command: string;
     positional: string[];
-    flags: Record<string, string | boolean>;
+    flags: Record<string, string | string[] | boolean>;
 }
 export declare function parseArgs(argv: string[]): ParsedArgs;
 export declare function stringFlag(flags: ParsedArgs['flags'], name: string): string | undefined;
+export declare function stringFlags(flags: ParsedArgs['flags'], name: string): string[];
 export declare function workflowRoot(flags: ParsedArgs['flags']): string;
+export declare function effectPolicyFromFlags(flags: ParsedArgs['flags']): EffectPolicy;
 export declare function required(value: string | undefined, message: string): string;
 export declare function requiredFlag(flags: ParsedArgs['flags'], name: string): string;
 export declare function parseJson(raw: string | undefined, missingMessage: string, invalidPrefix: string): unknown;

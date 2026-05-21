@@ -1,5 +1,6 @@
 import { type CallableCheckpoint, type JsonSchema, type Node, type Position } from './schema.js';
 import { type ValidationIssue } from './internal/output-validation.js';
+import { type EffectPolicy } from './effects.js';
 export interface CallableRootOptions {
     workflowRoot: string;
 }
@@ -7,6 +8,7 @@ export interface StartCallableCallOptions extends CallableRootOptions {
     graphId: string;
     callId?: string;
     input?: unknown;
+    effectPolicy?: EffectPolicy;
 }
 export interface GetCallableCallOptions extends CallableRootOptions {
     callId: string;

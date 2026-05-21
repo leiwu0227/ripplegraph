@@ -4,6 +4,7 @@ import { resumableRuns, runSummary, stateForCheckpoint } from './internal/coach-
 import { validateOutput } from './internal/output-validation.js';
 import { getGraph, getNode, selectEdge } from './internal/runtime-graph.js';
 import { transitionEntry } from './internal/transitions.js';
+import { assertEffectsAllowed } from './effects.js';
 export function validateWorkflowRoot(rootPath) {
     const workflow = loadWorkflow(rootPath);
     ensureWorkflowRoot(rootPath);
@@ -11,12 +12,13 @@ export function validateWorkflowRoot(rootPath) {
 }
 export function startRun(opts) {
     const workflow = loadWorkflow(opts.workflowRoot);
+    const graph = getGraph(workflow, opts.graph);
+    assertEffectsAllowed(graph.effects, opts.effectPolicy, `graph ${opts.graph}`);
     ensureWorkflowRoot(opts.workflowRoot);
     const current = readCurrent(opts.workflowRoot);
     if (current.focusedRunId) {
         throw new RipplegraphError('E_FOCUSED_RUN_EXISTS', `focused run already exists: ${current.focusedRunId}`);
     }
-    const graph = getGraph(workflow, opts.graph);
     if (listRunIds(opts.workflowRoot).includes(opts.runId)) {
         throw new RipplegraphError('E_RUN_EXISTS', `run already exists: ${opts.runId}`);
     }

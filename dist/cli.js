@@ -1,5 +1,5 @@
 import { abandonRun, advanceRun, applyDispatchAction, getCallableCall, decideGate, getDispatchRequest, getState, listCallableCalls, listRegisteredGraphs, loadGraphPackage, registerGraphPackage, resumeRun, RipplegraphError, startCallableCall, startRun, stepRun, stepCallableCall, suspendRun, validateWorkflowRoot, } from './index.js';
-import { emitJson, jsonErrorPayload, parseArgs, parseJson, required, requiredFlag, stringFlag, workflowRoot } from './internal/cli-helpers.js';
+import { effectPolicyFromFlags, emitJson, jsonErrorPayload, parseArgs, parseJson, required, requiredFlag, stringFlag, workflowRoot, } from './internal/cli-helpers.js';
 const HELP = `ripplegraph — focused-run Coach runtime POC
 
 Canonical commands:
@@ -43,6 +43,7 @@ async function main(argv) {
                 workflowRoot: workflowRoot(flags),
                 graph: requiredFlag(flags, 'graph'),
                 runId: requiredFlag(flags, 'run-id'),
+                effectPolicy: effectPolicyFromFlags(flags),
             }));
             return;
         case 'state':
@@ -63,6 +64,7 @@ async function main(argv) {
                 graphId: requiredFlag(flags, 'graph'),
                 callId: stringFlag(flags, 'call-id'),
                 input: parseJson(stringFlag(flags, 'input'), 'missing --input', '--input is not valid JSON'),
+                effectPolicy: effectPolicyFromFlags(flags),
             }));
             return;
         case 'call-state':
@@ -110,6 +112,7 @@ function handleDispatchCommand(flags) {
         return applyDispatchAction({
             workflowRoot: workflowRoot(flags),
             action: parseJson(action, 'missing --action', '--action is not valid JSON'),
+            effectPolicy: effectPolicyFromFlags(flags),
         });
     }
     throw new RipplegraphError('E_MISSING_ARG', 'missing --request or --action');

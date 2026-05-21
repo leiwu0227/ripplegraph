@@ -4,6 +4,7 @@ import { listRuns, resumeRun, startRun } from './coach.js';
 import { listRegisteredGraphs } from './registry.js';
 import { RipplegraphError } from './schema.js';
 import { loadWorkflow } from './storage.js';
+import { assertEffectsAllowed } from './effects.js';
 const startRunActionSchema = z
     .object({
     action: z.literal('start_run'),
@@ -135,20 +136,29 @@ export function applyDispatchAction(options) {
         case 'switch_run':
             return resumeRun({ workflowRoot: options.workflowRoot, runId: action.runId });
         case 'start_run': {
-            requireRegisteredGraph(graphs, action.graphId, 'workflow');
+            const graph = requireRegisteredGraph(graphs, action.graphId, 'workflow');
+            assertEffectsAllowed(graph.effects, options.effectPolicy, `graph ${action.graphId}`);
             if (!compactWorkflowHasExecutableGraph(options.workflowRoot, action.graphId)) {
                 throw new RipplegraphError('E_GRAPH_NOT_EXECUTABLE_YET', `registered graph ${action.graphId} is not executable yet because it is not present as a workflow in workflow.json`);
             }
-            return startRun({ workflowRoot: options.workflowRoot, graph: action.graphId, runId: action.runId ?? generatedRunId(action.graphId) });
+            return startRun({
+                workflowRoot: options.workflowRoot,
+                graph: action.graphId,
+                runId: action.runId ?? generatedRunId(action.graphId),
+                effectPolicy: options.effectPolicy,
+            });
         }
-        case 'call_graph':
-            requireRegisteredGraph(graphs, action.graphId, 'callable');
+        case 'call_graph': {
+            const graph = requireRegisteredGraph(graphs, action.graphId, 'callable');
+            assertEffectsAllowed(graph.effects, options.effectPolicy, `graph ${action.graphId}`);
             return startCallableCall({
                 workflowRoot: options.workflowRoot,
                 graphId: action.graphId,
                 callId: action.callId,
                 input: action.input,
+                effectPolicy: options.effectPolicy,
             });
+        }
     }
 }
 function graphSummary(entry) {

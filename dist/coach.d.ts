@@ -1,10 +1,12 @@
 import { type Checkpoint, type Gate, type JsonSchema, type Node, type Position } from './schema.js';
+import { type EffectPolicy } from './effects.js';
 export interface WorkflowRootOptions {
     workflowRoot: string;
 }
 export interface StartRunOptions extends WorkflowRootOptions {
     graph: string;
     runId: string;
+    effectPolicy?: EffectPolicy;
 }
 export interface StepRunOptions extends WorkflowRootOptions {
     output: unknown;

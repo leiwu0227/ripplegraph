@@ -2,6 +2,7 @@ import { type StartCallableCallResponse } from './callable.js';
 import { type RunList, type StateOk } from './coach.js';
 import { type RegistryEntry } from './registry.js';
 import { type JsonSchema } from './schema.js';
+import { type EffectPolicy } from './effects.js';
 export interface DispatchOptions {
     workflowRoot: string;
 }
@@ -10,6 +11,7 @@ export interface DispatchRequestOptions extends DispatchOptions {
 }
 export interface DispatchActionOptions extends DispatchOptions {
     action: unknown;
+    effectPolicy?: EffectPolicy;
 }
 export interface RegisteredGraphSummary {
     id: string;
