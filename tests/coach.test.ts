@@ -176,6 +176,31 @@ describe('coach operations', () => {
     }
   });
 
+  it('denies effectful workflow starts before creating runtime state', () => {
+    const root = makeGraphMetadataWorkflowRoot();
+    try {
+      let code: string | undefined;
+      try {
+        startRun({ workflowRoot: root, graph: 'dispatcher', runId: 'dispatch-a' });
+      } catch (error) {
+        code = (error as { code?: string }).code;
+      }
+      expect(code).toBe('E_EFFECT_NOT_ALLOWED');
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'current.json'))).toBe(false);
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'runs'))).toBe(false);
+
+      const allowed = startRun({
+        workflowRoot: root,
+        graph: 'dispatcher',
+        runId: 'dispatch-a',
+        effectPolicy: { allowedEffects: ['read_workspace'] },
+      });
+      expect(allowed.run.id).toBe('dispatch-a');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('starts, suspends, and resumes exactly one focused run', () => {
     const root = makeCoachWorkflowRoot();
     try {
