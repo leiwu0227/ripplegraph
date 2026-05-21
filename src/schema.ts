@@ -131,6 +131,7 @@ export const workflowSchema = z
   });
 
 export const runStatusSchema = z.enum(['active', 'suspended', 'completed', 'abandoned']);
+export const callStatusSchema = z.enum(['active', 'completed', 'failed']);
 
 export const positionSchema = z
   .object({
@@ -177,6 +178,37 @@ export const transitionLogEntrySchema = z
   })
   .strict();
 
+export const callableCheckpointSchema = z
+  .object({
+    callId: idSchema,
+    status: callStatusSchema,
+    graphId: idSchema,
+    graphVersion: z.string().min(1),
+    packagePath: z.string().min(1),
+    position: positionSchema,
+    input: z.unknown(),
+    outputs: z.record(z.string(), z.unknown()).default({}),
+    createdAt: z.string().min(1),
+    updatedAt: z.string().min(1),
+    finalOutput: z.unknown().optional(),
+    outputArtifact: z.string().optional(),
+  })
+  .strict();
+
+export const callableTransitionLogEntrySchema = z
+  .object({
+    ts: z.string().min(1),
+    op: z.enum(['start', 'step', 'complete', 'fail']),
+    callId: idSchema,
+    from: positionSchema.nullable(),
+    to: positionSchema.nullable(),
+    input: z.unknown().nullable(),
+    output: z.unknown().nullable(),
+    validation: z.object({ ok: z.boolean() }).passthrough(),
+    error: z.unknown().nullable(),
+  })
+  .strict();
+
 export type Workflow = z.infer<typeof workflowSchema>;
 export type GraphPackageManifest = z.infer<typeof graphPackageManifestSchema>;
 export type Graph = z.infer<typeof graphSchema>;
@@ -188,3 +220,6 @@ export type Position = z.infer<typeof positionSchema>;
 export type Checkpoint = z.infer<typeof checkpointSchema>;
 export type Current = z.infer<typeof currentSchema>;
 export type TransitionLogEntry = z.infer<typeof transitionLogEntrySchema>;
+export type CallStatus = z.infer<typeof callStatusSchema>;
+export type CallableCheckpoint = z.infer<typeof callableCheckpointSchema>;
+export type CallableTransitionLogEntry = z.infer<typeof callableTransitionLogEntrySchema>;
