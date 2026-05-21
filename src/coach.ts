@@ -56,6 +56,9 @@ export interface StateOk {
   workflow: { id: string; version: string };
   run: { id: string; status: Checkpoint['status']; rootGraph: string };
   position: Position;
+  orientation: string;
+  nextAllowedCommand: string;
+  helpCommand: string;
   node: {
     id: string;
     purpose: string;
@@ -65,8 +68,8 @@ export interface StateOk {
     gate?: Gate;
   };
   context: {
-    previous: Array<{ id: string; purpose: string }>;
-    next: Array<{ id: string; purpose: string }>;
+    previous: Array<{ id: string; purpose: string; output?: unknown }>;
+    next: Array<{ id: string; purpose: string; when?: Record<string, unknown> }>;
     latches: [];
     capabilities: [];
   };
@@ -80,6 +83,10 @@ export interface StateNoFocusedRun {
   workflow: { id: string; version: string };
   availableGraphs: string[];
   resumableRuns: Array<{ id: string; status: 'suspended'; rootGraph: string }>;
+  dispatcher?: { graph: string; available: true };
+  orientation: string;
+  nextAllowedCommand: string;
+  helpCommand: string;
 }
 
 export interface RunSummary {
@@ -149,11 +156,18 @@ export function getState(opts: WorkflowRootOptions): CoachState {
   ensureWorkflowRoot(opts.workflowRoot);
   const current = readCurrent(opts.workflowRoot);
   if (!current.focusedRunId) {
+    const dispatcher = workflow.entryGraph ? { graph: workflow.entryGraph, available: true as const } : undefined;
     return {
       status: 'no_focused_run',
       workflow: { id: workflow.id, version: workflow.version },
       availableGraphs: Object.keys(workflow.graphs),
       resumableRuns: resumableRuns(opts.workflowRoot),
+      dispatcher,
+      orientation: dispatcher ? 'No run is focused. Submit user intent to the dispatcher.' : 'No run is focused. Start or resume a run.',
+      nextAllowedCommand: dispatcher
+        ? 'ripplegraph dispatch --request "<user request>"'
+        : `ripplegraph start --graph ${Object.keys(workflow.graphs)[0] ?? '<graph-id>'} --run-id <run-id>`,
+      helpCommand: 'ripplegraph explain',
     };
   }
   return stateForCheckpoint(workflow, readCheckpoint(opts.workflowRoot, current.focusedRunId));

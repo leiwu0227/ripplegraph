@@ -126,6 +126,9 @@ describe('coach operations', () => {
     const root = makeGatedWorkflowRoot();
     try {
       const state = startRun({ workflowRoot: root, graph: 'review', runId: 'approval-a' });
+      expect(state.orientation).toBe('You are at review/approval: Request external approval.');
+      expect(state.nextAllowedCommand).toContain('ripplegraph advance');
+      expect(state.helpCommand).toBe('ripplegraph explain');
       expect(state.node.gate).toMatchObject({
         type: 'external_decision',
         decisionSchema: {
@@ -143,6 +146,22 @@ describe('coach operations', () => {
         },
       });
       expect(readCheckpoint(root, 'approval-a').gateDecisions).toEqual({});
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('exposes dispatcher-ready guidance when no run is focused', () => {
+    const root = makeGraphMetadataWorkflowRoot();
+    try {
+      const state = getState({ workflowRoot: root });
+      expect(state.status).toBe('no_focused_run');
+      if (state.status === 'no_focused_run') {
+        expect(state.dispatcher).toEqual({ graph: 'dispatcher', available: true });
+        expect(state.orientation).toBe('No run is focused. Submit user intent to the dispatcher.');
+        expect(state.nextAllowedCommand).toBe('ripplegraph dispatch --request "<user request>"');
+        expect(state.helpCommand).toBe('ripplegraph explain');
+      }
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
@@ -208,6 +227,23 @@ describe('coach operations', () => {
         .map((line) => JSON.parse(line) as { op: string; gateDecision?: unknown });
       expect(logEntries.map((entry) => entry.op)).toEqual(['start', 'decide']);
       expect(logEntries[1]?.gateDecision).toEqual({ decision: 'approved', reason: 'classification is correct' });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('exposes previous outputs and conditional routes as neighborhood context', () => {
+    const root = makeCoachWorkflowRoot();
+    try {
+      startRun({ workflowRoot: root, graph: 'daily', runId: 'daily-a' });
+      const state = stepRun({ workflowRoot: root, output: { decision: 'proceed' } });
+      expect(state.status).toBe('ok');
+      if (state.status === 'ok') {
+        expect(state.context.previous).toEqual([
+          { id: 'review', purpose: 'Completed node', output: { decision: 'proceed' } },
+        ]);
+        expect(state.context.next).toEqual([{ id: 'done', purpose: 'Complete', when: undefined }]);
+      }
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }

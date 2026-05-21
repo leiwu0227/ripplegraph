@@ -11,6 +11,9 @@ export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint): 
     workflow: { id: workflow.id, version: workflow.version },
     run: { id: checkpoint.runId, status: checkpoint.status, rootGraph: checkpoint.rootGraph },
     position: checkpoint.position,
+    orientation: `You are at ${checkpoint.position.graph}/${checkpoint.position.node}: ${node.purpose}.`,
+    nextAllowedCommand: `ripplegraph advance --input '${exampleOutput(node.gate ? node.gate.decisionSchema : node.outputSchema)}'`,
+    helpCommand: 'ripplegraph explain',
     node: {
       id: checkpoint.position.node,
       purpose: node.purpose,
@@ -23,7 +26,7 @@ export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint): 
       previous: previousNodes(checkpoint),
       next: node.edges.map((edge) => {
         const next = getNode(graph, edge.to);
-        return { id: edge.to, purpose: next.purpose };
+        return { id: edge.to, purpose: next.purpose, when: edge.when };
       }),
       latches: [],
       capabilities: [],
@@ -32,6 +35,14 @@ export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint): 
       ? { command: 'decide', acceptedFormats: ['json'], schema: node.gate.decisionSchema }
       : { command: 'step', acceptedFormats: ['json'] },
   };
+}
+
+function exampleOutput(schema: { properties?: Record<string, { enum?: unknown[]; type?: string }> }): string {
+  const payload: Record<string, unknown> = {};
+  for (const [name, property] of Object.entries(schema.properties ?? {})) {
+    payload[name] = property.enum?.[0] ?? property.type ?? 'value';
+  }
+  return JSON.stringify(payload);
 }
 
 export function runSummary(rootPath: string, runId: string): RunSummary {
@@ -52,6 +63,8 @@ export function resumableRuns(rootPath: string): StateNoFocusedRun['resumableRun
     .map((checkpoint) => ({ id: checkpoint.runId, status: 'suspended', rootGraph: checkpoint.rootGraph }));
 }
 
-function previousNodes(checkpoint: Checkpoint): Array<{ id: string; purpose: string }> {
-  return Object.keys(checkpoint.outputs).slice(-2).map((id) => ({ id, purpose: 'Completed node' }));
+function previousNodes(checkpoint: Checkpoint): Array<{ id: string; purpose: string; output?: unknown }> {
+  return Object.keys(checkpoint.outputs)
+    .slice(-3)
+    .map((id) => ({ id, purpose: 'Completed node', output: checkpoint.outputs[id] }));
 }

@@ -37,7 +37,7 @@ describe('ripplegraph-demo cli', () => {
       );
       const status = run(['status', '--workflow-root', root]).stdout;
       expect(status).toContain('decision: approved | rejected');
-      expect(status).toContain('ripplegraph-demo decide');
+      expect(status).toContain('ripplegraph-demo advance');
       expect(run(['submit', '{"decision":"approved"}', '--workflow-root', root]).status).toBe(1);
       expect(run(['decide', '{"decision":"approved","reason":"ok"}', '--workflow-root', root]).stdout).toContain(
         'Run completed: approval-a',
@@ -108,9 +108,20 @@ describe('ripplegraph-demo cli', () => {
       const status = run(['status', '--workflow-root', root]).stdout;
       expect(status).toContain('Node: classify-ticket');
       expect(status).toContain('category: bug | feature | question');
-      expect(status).toContain('ripplegraph-demo submit');
+      expect(status).toContain('ripplegraph-demo advance');
       const branch = run(['submit', '{"category":"bug","priority":"urgent","rationale":"checkout is blocked"}', '--workflow-root', root]).stdout;
       expect(branch).toContain('Node: review-classification');
+      expect(branch).toContain('Orientation:');
+      expect(branch).toContain('You are at support-triage/review-classification: External review gate for the classification.');
+      expect(branch).toContain('If unsure:');
+      expect(branch).toContain('ripplegraph-demo explain');
+      expect(branch).toContain('Next allowed command:');
+      expect(branch).toContain('ripplegraph-demo advance');
+      expect(branch).toContain('Recent context:');
+      expect(branch).toContain('classify-ticket: Completed node');
+      expect(branch).toContain('output: {"category":"bug","priority":"urgent","rationale":"checkout is blocked"}');
+      expect(branch).toContain('Available routes:');
+      expect(branch).toContain('-> reproduce-bug: Draft a bug reproduction plan when {"decision":"approved-bug"}');
       expect(branch).toContain('External decision required');
       expect(branch).toContain('approved-bug | approved-feature | approved-question | rejected');
       expect(run(['submit', '{"decision":"approved-bug"}', '--workflow-root', root]).status).toBe(1);

@@ -26,7 +26,11 @@ function parseOutput(args: ParsedArgs): unknown {
 }
 
 function renderNoFocusedRun(state: ReturnType<typeof getState> & { status: 'no_focused_run' }, runs: RunList): string {
-  const lines = ['No focused run.', '', 'Available graphs:'];
+  const lines = ['No focused run.', '', 'Orientation:', `  ${state.orientation}`, '', 'If unsure:', '  ripplegraph-demo explain'];
+  if (state.dispatcher) {
+    lines.push('', 'Dispatcher:', `  ${state.dispatcher.graph}`, '', 'Next allowed command:', '  ripplegraph-demo dispatch --request "<user request>"');
+  }
+  lines.push('', 'Available graphs:');
   for (const graph of state.availableGraphs) lines.push(`  ${graph}`);
   const resumable = runs.runs.filter((run) => run.status === 'suspended');
   lines.push('', 'Resumable runs:');
@@ -47,19 +51,51 @@ function renderActiveState(state: StateOk): string {
     `Graph: ${state.position.graph}`,
     `Node: ${state.position.node}`,
     '',
+    'Orientation:',
+    `  ${state.orientation}`,
+    '',
+    'If unsure:',
+    '  ripplegraph-demo explain',
+    '',
     state.node.purpose,
   ];
   if (state.node.instructions) lines.push(state.node.instructions);
+  lines.push(...renderNeighborhood(state));
   if (state.responseContract.command === 'decide') {
     lines.push('', 'External decision required:');
     lines.push(...renderOutputSchema(state.responseContract.schema));
-    lines.push('', 'Next:', `  ripplegraph-demo decide '${exampleOutput(state.responseContract.schema)}'`);
+    lines.push('', 'Next allowed command:', `  ripplegraph-demo advance '${exampleOutput(state.responseContract.schema)}'`);
     return lines.join('\n');
   }
   lines.push('', 'Required output:');
   lines.push(...renderOutputSchema(state.node.outputSchema));
-  lines.push('', 'Next:', `  ripplegraph-demo submit '${exampleOutput(state.node.outputSchema)}'`);
+  lines.push('', 'Next allowed command:', `  ripplegraph-demo advance '${exampleOutput(state.node.outputSchema)}'`);
   return lines.join('\n');
+}
+
+function renderNeighborhood(state: StateOk): string[] {
+  const lines: string[] = [];
+  if (state.context.previous.length > 0) {
+    lines.push('', 'Recent context:');
+    for (const previous of state.context.previous) {
+      lines.push(`  ${previous.id}: ${previous.purpose}`);
+      if (previous.output !== undefined) lines.push(`    output: ${compactJson(previous.output)}`);
+    }
+  }
+  if (state.context.next.length > 0) {
+    lines.push('', 'Available routes:');
+    for (const next of state.context.next) {
+      const condition = next.when ? ` when ${compactJson(next.when)}` : '';
+      lines.push(`  -> ${next.id}: ${next.purpose}${condition}`);
+    }
+  }
+  return lines;
+}
+
+function compactJson(value: unknown): string {
+  const text = JSON.stringify(value);
+  if (!text) return String(value);
+  return text.length > 220 ? `${text.slice(0, 217)}...` : text;
 }
 
 function renderOutputSchema(schema: JsonSchema): string[] {
