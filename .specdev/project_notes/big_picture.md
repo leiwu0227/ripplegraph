@@ -63,7 +63,16 @@ on Ripplegraph.
   graph IDs. It submits user intent through `dispatch`; Ripplegraph validates
   the dispatcher action against the registered graph catalog. The current v0
   dispatcher runtime uses a two-step JSON CLI flow: request state is read-only,
-  and action submission is validated before any run mutation.
+  and action submission is validated before any run mutation. `call_graph`
+  actions now start registered callable graph packages with optional caller
+  `callId` and typed input.
+- **Callable execution is isolated.** Registered callable packages can be
+  started, inspected, stepped, listed, and completed through runtime APIs and
+  JSON CLI commands. Their checkpoints, transition logs, and artifacts live
+  under `.ripplegraph/calls/<call-id>/`, not workflow `runs/`, and they do not
+  mutate focused workflow state. Callable state responses include the original
+  input so a host agent can recover after context loss; completion responses
+  return the validated final output directly.
 - **Runs are durable by default.** Every workflow execution is a run with
   checkpoint, transition log, artifacts, timestamps, status, and root graph.
   A workspace can have many saved runs but at most one focused run.
@@ -84,8 +93,7 @@ The normal host-agent loop should be small:
   focused.
 - `dispatch` — submit user intent to the dispatcher and apply or return a
   validated structured action. Implemented v0 actions are `start_run`,
-  `resume_run`, `switch_run`, `list_runs`, `ask_user`, and recognized
-  `call_graph`.
+  `resume_run`, `switch_run`, `list_runs`, `ask_user`, and `call_graph`.
 - `explain` — richer re-anchor when the host agent is confused or context is
   long.
 - `advance` — submit the current node response, whether it is normal output or
@@ -100,7 +108,7 @@ mental model:
 - `pause`
 - `abandon`
 - `graph register/list/validate`
-- `call`
+- `call`, `call-state`, `call-step`, `call-list`
 - direct `start <graph-id>` for tests and explicit debugging
 
 Compatibility aliases such as `submit`, `decide`, `state`, and `resume` may
@@ -115,11 +123,15 @@ remain while the canonical protocol settles.
   through the dispatcher when one is registered.
 - Callable graphs may have internal transitions, but they do not mutate caller
   run state except through explicit returned output consumed by the caller.
+- Callable contract validation currently supports `type`, `enum`, `required`,
+  nested `properties`, `const`, `oneOf`, array `items`, and
+  `additionalProperties: false`; unsupported callable schema keywords fail
+  early rather than being ignored.
 - Historical runs are evidence. A currently focused run must validate against
   the installed graph package; old completed runs do not need forced migration
   unless explicitly resumed/upgraded.
 - Keep the core small and boring. Prefer data schemas, explicit contracts, and
   simple filesystem state over a hidden event loop or embedded LLM runner.
-- Current dispatcher gaps are intentional: registered package folders are a
-  catalog, not executable workflow definitions yet; callable graphs are
-  recognized but not run; declared effects are captured but not enforced.
+- Current dispatcher/runtime gaps are intentional: registered package folders
+  are a catalog, not executable workflow definitions yet; workflow nodes cannot
+  call callables directly yet; declared effects are captured but not enforced.

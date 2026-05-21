@@ -108,6 +108,7 @@ export const workflowSchema = z
     }
 });
 export const runStatusSchema = z.enum(['active', 'suspended', 'completed', 'abandoned']);
+export const callStatusSchema = z.enum(['active', 'completed', 'failed']);
 export const positionSchema = z
     .object({
     graph: idSchema,
@@ -146,6 +147,35 @@ export const transitionLogEntrySchema = z
     validation: z.object({ ok: z.boolean() }).passthrough(),
     gateDecision: z.unknown().nullable(),
     reason: z.string().nullable(),
+    error: z.unknown().nullable(),
+})
+    .strict();
+export const callableCheckpointSchema = z
+    .object({
+    callId: idSchema,
+    status: callStatusSchema,
+    graphId: idSchema,
+    graphVersion: z.string().min(1),
+    packagePath: z.string().min(1),
+    position: positionSchema,
+    input: z.unknown(),
+    outputs: z.record(z.string(), z.unknown()).default({}),
+    createdAt: z.string().min(1),
+    updatedAt: z.string().min(1),
+    finalOutput: z.unknown().optional(),
+    outputArtifact: z.string().optional(),
+})
+    .strict();
+export const callableTransitionLogEntrySchema = z
+    .object({
+    ts: z.string().min(1),
+    op: z.enum(['start', 'step', 'complete', 'fail']),
+    callId: idSchema,
+    from: positionSchema.nullable(),
+    to: positionSchema.nullable(),
+    input: z.unknown().nullable(),
+    output: z.unknown().nullable(),
+    validation: z.object({ ok: z.boolean() }).passthrough(),
     error: z.unknown().nullable(),
 })
     .strict();

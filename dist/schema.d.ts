@@ -712,6 +712,7 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
     entryGraph?: string | undefined;
 }>;
 export declare const runStatusSchema: z.ZodEnum<["active", "suspended", "completed", "abandoned"]>;
+export declare const callStatusSchema: z.ZodEnum<["active", "completed", "failed"]>;
 export declare const positionSchema: z.ZodObject<{
     graph: z.ZodString;
     node: z.ZodString;
@@ -877,6 +878,136 @@ export declare const transitionLogEntrySchema: z.ZodObject<{
     gateDecision?: unknown;
     error?: unknown;
 }>;
+export declare const callableCheckpointSchema: z.ZodObject<{
+    callId: z.ZodString;
+    status: z.ZodEnum<["active", "completed", "failed"]>;
+    graphId: z.ZodString;
+    graphVersion: z.ZodString;
+    packagePath: z.ZodString;
+    position: z.ZodObject<{
+        graph: z.ZodString;
+        node: z.ZodString;
+    }, "strict", z.ZodTypeAny, {
+        node: string;
+        graph: string;
+    }, {
+        node: string;
+        graph: string;
+    }>;
+    input: z.ZodUnknown;
+    outputs: z.ZodDefault<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+    createdAt: z.ZodString;
+    updatedAt: z.ZodString;
+    finalOutput: z.ZodOptional<z.ZodUnknown>;
+    outputArtifact: z.ZodOptional<z.ZodString>;
+}, "strict", z.ZodTypeAny, {
+    status: "active" | "completed" | "failed";
+    position: {
+        node: string;
+        graph: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+    outputs: Record<string, unknown>;
+    callId: string;
+    graphId: string;
+    graphVersion: string;
+    packagePath: string;
+    input?: unknown;
+    finalOutput?: unknown;
+    outputArtifact?: string | undefined;
+}, {
+    status: "active" | "completed" | "failed";
+    position: {
+        node: string;
+        graph: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+    callId: string;
+    graphId: string;
+    graphVersion: string;
+    packagePath: string;
+    outputs?: Record<string, unknown> | undefined;
+    input?: unknown;
+    finalOutput?: unknown;
+    outputArtifact?: string | undefined;
+}>;
+export declare const callableTransitionLogEntrySchema: z.ZodObject<{
+    ts: z.ZodString;
+    op: z.ZodEnum<["start", "step", "complete", "fail"]>;
+    callId: z.ZodString;
+    from: z.ZodNullable<z.ZodObject<{
+        graph: z.ZodString;
+        node: z.ZodString;
+    }, "strict", z.ZodTypeAny, {
+        node: string;
+        graph: string;
+    }, {
+        node: string;
+        graph: string;
+    }>>;
+    to: z.ZodNullable<z.ZodObject<{
+        graph: z.ZodString;
+        node: z.ZodString;
+    }, "strict", z.ZodTypeAny, {
+        node: string;
+        graph: string;
+    }, {
+        node: string;
+        graph: string;
+    }>>;
+    input: z.ZodNullable<z.ZodUnknown>;
+    output: z.ZodNullable<z.ZodUnknown>;
+    validation: z.ZodObject<{
+        ok: z.ZodBoolean;
+    }, "passthrough", z.ZodTypeAny, z.objectOutputType<{
+        ok: z.ZodBoolean;
+    }, z.ZodTypeAny, "passthrough">, z.objectInputType<{
+        ok: z.ZodBoolean;
+    }, z.ZodTypeAny, "passthrough">>;
+    error: z.ZodNullable<z.ZodUnknown>;
+}, "strict", z.ZodTypeAny, {
+    validation: {
+        ok: boolean;
+    } & {
+        [k: string]: unknown;
+    };
+    to: {
+        node: string;
+        graph: string;
+    } | null;
+    ts: string;
+    op: "start" | "step" | "complete" | "fail";
+    from: {
+        node: string;
+        graph: string;
+    } | null;
+    callId: string;
+    input?: unknown;
+    output?: unknown;
+    error?: unknown;
+}, {
+    validation: {
+        ok: boolean;
+    } & {
+        [k: string]: unknown;
+    };
+    to: {
+        node: string;
+        graph: string;
+    } | null;
+    ts: string;
+    op: "start" | "step" | "complete" | "fail";
+    from: {
+        node: string;
+        graph: string;
+    } | null;
+    callId: string;
+    input?: unknown;
+    output?: unknown;
+    error?: unknown;
+}>;
 export type Workflow = z.infer<typeof workflowSchema>;
 export type GraphPackageManifest = z.infer<typeof graphPackageManifestSchema>;
 export type Graph = z.infer<typeof graphSchema>;
@@ -888,3 +1019,6 @@ export type Position = z.infer<typeof positionSchema>;
 export type Checkpoint = z.infer<typeof checkpointSchema>;
 export type Current = z.infer<typeof currentSchema>;
 export type TransitionLogEntry = z.infer<typeof transitionLogEntrySchema>;
+export type CallStatus = z.infer<typeof callStatusSchema>;
+export type CallableCheckpoint = z.infer<typeof callableCheckpointSchema>;
+export type CallableTransitionLogEntry = z.infer<typeof callableTransitionLogEntrySchema>;

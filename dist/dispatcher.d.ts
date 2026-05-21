@@ -1,3 +1,4 @@
+import { type StartCallableCallResponse } from './callable.js';
 import { type RunList, type StateOk } from './coach.js';
 import { type RegistryEntry } from './registry.js';
 import { type JsonSchema } from './schema.js';
@@ -37,6 +38,6 @@ export type DispatchActionResult = (RunList & {
     status: 'needs_user_input';
     question: string;
     choices?: string[];
-} | StateOk;
+} | StartCallableCallResponse | StateOk;
 export declare function getDispatchRequest(options: DispatchRequestOptions): DispatchRequestState;
 export declare function applyDispatchAction(options: DispatchActionOptions): DispatchActionResult;

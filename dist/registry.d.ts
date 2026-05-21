@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { type GraphPackage } from './graph-package.js';
 export declare const registryEntrySchema: z.ZodObject<{
     id: z.ZodString;
     version: z.ZodString;
@@ -98,7 +99,16 @@ export interface RegisterGraphPackageOptions {
     force?: boolean;
     now?: string;
 }
+export interface ResolveRegisteredGraphPackageOptions {
+    workflowRoot: string;
+    graphId: string;
+    kind?: RegistryEntry['kind'];
+}
 export declare function readRegistry(workflowRoot: string): GraphRegistry;
 export declare function writeRegistry(workflowRoot: string, registry: GraphRegistry): void;
 export declare function listRegisteredGraphs(workflowRoot: string): RegistryEntry[];
 export declare function registerGraphPackage(options: RegisterGraphPackageOptions): RegistryEntry;
+export declare function resolveRegisteredGraphPackage(options: ResolveRegisteredGraphPackageOptions): {
+    entry: RegistryEntry;
+    graphPackage: GraphPackage;
+};

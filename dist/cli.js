@@ -1,4 +1,4 @@
-import { abandonRun, advanceRun, applyDispatchAction, decideGate, getDispatchRequest, getState, listRegisteredGraphs, loadGraphPackage, registerGraphPackage, resumeRun, RipplegraphError, startRun, stepRun, suspendRun, validateWorkflowRoot, } from './index.js';
+import { abandonRun, advanceRun, applyDispatchAction, getCallableCall, decideGate, getDispatchRequest, getState, listCallableCalls, listRegisteredGraphs, loadGraphPackage, registerGraphPackage, resumeRun, RipplegraphError, startCallableCall, startRun, stepRun, stepCallableCall, suspendRun, validateWorkflowRoot, } from './index.js';
 import { emitJson, jsonErrorPayload, parseArgs, parseJson, required, requiredFlag, stringFlag, workflowRoot } from './internal/cli-helpers.js';
 const HELP = `ripplegraph — focused-run Coach runtime POC
 
@@ -8,6 +8,10 @@ Canonical commands:
   advance --input <json> [--workflow-root <path>]
   dispatch --request <text> [--workflow-root <path>]
   dispatch --action <json> [--workflow-root <path>]
+  call --graph <graph-id> --input <json> [--call-id <id>] [--workflow-root <path>]
+  call-state --call-id <id> [--workflow-root <path>]
+  call-step --call-id <id> --output <json> [--workflow-root <path>]
+  call-list [--workflow-root <path>]
 
 Compatibility/debug commands:
   validate --workflow-root <path>
@@ -52,6 +56,27 @@ async function main(argv) {
             return;
         case 'dispatch':
             emitJson(handleDispatchCommand(flags));
+            return;
+        case 'call':
+            emitJson(startCallableCall({
+                workflowRoot: workflowRoot(flags),
+                graphId: requiredFlag(flags, 'graph'),
+                callId: stringFlag(flags, 'call-id'),
+                input: parseJson(stringFlag(flags, 'input'), 'missing --input', '--input is not valid JSON'),
+            }));
+            return;
+        case 'call-state':
+            emitJson(getCallableCall({ workflowRoot: workflowRoot(flags), callId: requiredFlag(flags, 'call-id') }));
+            return;
+        case 'call-step':
+            emitJson(stepCallableCall({
+                workflowRoot: workflowRoot(flags),
+                callId: requiredFlag(flags, 'call-id'),
+                output: parseJson(stringFlag(flags, 'output'), 'missing --output', '--output is not valid JSON'),
+            }));
+            return;
+        case 'call-list':
+            emitJson(listCallableCalls({ workflowRoot: workflowRoot(flags) }));
             return;
         case 'step':
             emitJson(stepRun({ workflowRoot: workflowRoot(flags), output: parseJson(stringFlag(flags, 'output'), 'missing --output', '--output is not valid JSON') }));

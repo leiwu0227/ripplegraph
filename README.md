@@ -65,11 +65,11 @@ Graph kinds:
 - `callable` behaves like a typed function: graph-shaped internally, but no
   caller workflow side effects beyond its returned output.
 
-The current run lifecycle still uses a compact `workflow.json` format for demos
-and tests. Graph package validation and registry commands are implemented as the
-foundation for the repository model. Dispatcher request/action validation is
-implemented against the registry; package-folder workflow execution, callable
-graph invocation, and effect enforcement are still future runtime work.
+The current workflow run lifecycle still uses a compact `workflow.json` format
+for demos and tests. Graph package validation, registry commands, dispatcher
+request/action validation, and callable graph invocation are implemented against
+the registry. Package-folder workflow execution and effect enforcement are
+still future runtime work.
 
 Graph package management through the JSON CLI:
 
@@ -108,14 +108,38 @@ ripplegraph dispatch --action '{"action":"list_runs"}' --workflow-root .
 
 Normal dispatch requires exactly one registered graph with `kind:
 "dispatcher"`. Supported v0 actions are `start_run`, `resume_run`,
-`switch_run`, `list_runs`, `ask_user`, and `call_graph`. `call_graph` is
-recognized but returns `E_CALLABLE_RUNTIME_NOT_IMPLEMENTED` until callable
-runtime support exists.
+`switch_run`, `list_runs`, `ask_user`, and `call_graph`. `call_graph` accepts
+`graphId`, optional `callId`, and optional `input`, then starts an isolated
+callable call when the target is registered with `kind: "callable"`.
 
 `start_run` validates that the target graph is registered as a `workflow`.
 For now it can only execute graphs that are also present in the compact
 `workflow.json` runtime; registered package-only workflows return
 `E_GRAPH_NOT_EXECUTABLE_YET`.
+
+Callable graph execution is isolated from focused workflow runs. A call stores
+checkpoint, transition log, and node artifacts under
+`.ripplegraph/calls/<call-id>/`; it does not write `.ripplegraph/current.json`
+or create entries under `.ripplegraph/runs/`.
+
+Callable lifecycle through the JSON CLI:
+
+```sh
+ripplegraph call --graph summarize-ticket --call-id call-001 --input '{"ticketId":"TCK-1007"}' --workflow-root .
+ripplegraph call-state --call-id call-001 --workflow-root .
+ripplegraph call-step --call-id call-001 --output '{"summary":"Checkout failure."}' --workflow-root .
+ripplegraph call-list --workflow-root .
+```
+
+The host agent still performs each callable node. Ripplegraph validates call
+input, node output, internal edge transitions, and final output. Supported v0
+schema keywords are `type`, `enum`, `required`, `properties`, `const`, `oneOf`,
+array `items`, and `additionalProperties: false`. Unsupported callable schema
+keywords fail before a call starts so contracts are not silently ignored.
+
+Callable `effects` are metadata only in this version. Effect permission checks,
+workflow nodes that call callables directly, and automatic tool execution are
+not implemented yet.
 
 ## Command Model
 
@@ -133,7 +157,8 @@ canonical protocol settles:
 
 ```text
 init, status, explain, advance, runs, start, pause, resume, submit, decide,
-graph validate, graph register, graph list
+graph validate, graph register, graph list, call, call-state, call-step,
+call-list
 ```
 
 `ripplegraph-demo` is the reference agent-facing CLI with compact text output.

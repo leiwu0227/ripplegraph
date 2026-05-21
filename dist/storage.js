@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { checkpointSchema, currentSchema, RipplegraphError, transitionLogEntrySchema, workflowSchema, } from './schema.js';
+import { callableCheckpointSchema, callableTransitionLogEntrySchema, checkpointSchema, currentSchema, idSchema, RipplegraphError, transitionLogEntrySchema, workflowSchema, } from './schema.js';
 function rootWorkflowPath(rootPath) {
     return path.join(rootPath, 'workflow.json');
 }
@@ -17,6 +17,9 @@ function workflowPath(rootPath) {
 export function runsDir(rootPath) {
     return path.join(stateDir(rootPath), 'runs');
 }
+export function callsDir(rootPath) {
+    return path.join(stateDir(rootPath), 'calls');
+}
 export function currentPath(rootPath) {
     return path.join(stateDir(rootPath), 'current.json');
 }
@@ -27,18 +30,38 @@ export function runDir(rootPath, runId) {
     assertPathSegment(runId, 'runId');
     return path.join(runsDir(rootPath), runId);
 }
+export function callDir(rootPath, callId) {
+    assertIdPathSegment(callId, 'callId');
+    return path.join(callsDir(rootPath), callId);
+}
 export function checkpointPath(rootPath, runId) {
     return path.join(runDir(rootPath, runId), 'checkpoint.json');
 }
+export function callableCheckpointPath(rootPath, callId) {
+    return path.join(callDir(rootPath, callId), 'checkpoint.json');
+}
 export function transitionLogPath(rootPath, runId) {
     return path.join(runDir(rootPath, runId), 'transition-log.jsonl');
+}
+export function callableTransitionLogPath(rootPath, callId) {
+    return path.join(callDir(rootPath, callId), 'transition-log.jsonl');
 }
 export function artifactPath(rootPath, runId, nodeId) {
     assertPathSegment(nodeId, 'nodeId');
     return path.join(runDir(rootPath, runId), 'artifacts', nodeId, 'output.json');
 }
+export function callableArtifactPath(rootPath, callId, nodeId) {
+    assertPathSegment(nodeId, 'nodeId');
+    return path.join(callDir(rootPath, callId), 'artifacts', nodeId, 'output.json');
+}
 function assertPathSegment(value, label) {
     if (!value || value.includes('/') || value.includes('\\') || value === '.' || value === '..') {
+        throw new RipplegraphError('E_BAD_PATH_SEGMENT', `${label} must be a filesystem-safe path segment`);
+    }
+}
+function assertIdPathSegment(value, label) {
+    assertPathSegment(value, label);
+    if (!idSchema.safeParse(value).success) {
         throw new RipplegraphError('E_BAD_PATH_SEGMENT', `${label} must be a filesystem-safe path segment`);
     }
 }
@@ -103,10 +126,42 @@ export function writeCheckpoint(rootPath, checkpoint) {
     fs.mkdirSync(path.join(runPath, 'scratch'), { recursive: true });
     writeJson(checkpointPath(rootPath, checkpoint.runId), checkpointSchema.parse(checkpoint));
 }
+export function createCallableCheckpoint(rootPath, checkpoint) {
+    assertIdPathSegment(checkpoint.callId, 'callId');
+    const parsed = callableCheckpointSchema.parse(checkpoint);
+    const callPath = callDir(rootPath, parsed.callId);
+    if (fs.existsSync(callPath)) {
+        throw new RipplegraphError('E_CALL_EXISTS', `call already exists: ${parsed.callId}`);
+    }
+    writeCallableCheckpoint(rootPath, parsed);
+}
+export function readCallableCheckpoint(rootPath, callId) {
+    const filePath = callableCheckpointPath(rootPath, callId);
+    if (!fs.existsSync(filePath)) {
+        throw new RipplegraphError('E_MISSING_CALL', `no checkpoint.json found for call ${callId}`);
+    }
+    const result = callableCheckpointSchema.safeParse(readJson(filePath));
+    if (!result.success) {
+        throw new RipplegraphError('E_INVALID_CALL_CHECKPOINT', result.error.issues.map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`).join('; '));
+    }
+    return result.data;
+}
+export function writeCallableCheckpoint(rootPath, checkpoint) {
+    assertIdPathSegment(checkpoint.callId, 'callId');
+    const callPath = callDir(rootPath, checkpoint.callId);
+    fs.mkdirSync(path.join(callPath, 'artifacts'), { recursive: true });
+    fs.mkdirSync(path.join(callPath, 'scratch'), { recursive: true });
+    writeJson(callableCheckpointPath(rootPath, checkpoint.callId), callableCheckpointSchema.parse(checkpoint));
+}
 export function writeNodeOutput(rootPath, runId, nodeId, output) {
     const filePath = artifactPath(rootPath, runId, nodeId);
     writeJson(filePath, output);
     return path.relative(runDir(rootPath, runId), filePath).replaceAll(path.sep, '/');
+}
+export function writeCallableOutput(rootPath, callId, nodeId, output) {
+    const filePath = callableArtifactPath(rootPath, callId, nodeId);
+    writeJson(filePath, output);
+    return path.relative(callDir(rootPath, callId), filePath).replaceAll(path.sep, '/');
 }
 export function appendTransition(rootPath, runId, entry) {
     const parsed = transitionLogEntrySchema.parse(entry);
@@ -114,8 +169,24 @@ export function appendTransition(rootPath, runId, entry) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.appendFileSync(filePath, `${JSON.stringify(parsed)}\n`, 'utf8');
 }
+export function appendCallableTransition(rootPath, callId, entry) {
+    const parsed = callableTransitionLogEntrySchema.parse(entry);
+    const filePath = callableTransitionLogPath(rootPath, callId);
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.appendFileSync(filePath, `${JSON.stringify(parsed)}\n`, 'utf8');
+}
 export function listRunIds(rootPath) {
     const dir = runsDir(rootPath);
+    if (!fs.existsSync(dir))
+        return [];
+    return fs
+        .readdirSync(dir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => entry.name)
+        .sort();
+}
+export function listCallIds(rootPath) {
+    const dir = callsDir(rootPath);
     if (!fs.existsSync(dir))
         return [];
     return fs

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { startCallableCall } from './callable.js';
 import { listRuns, resumeRun, startRun } from './coach.js';
 import { listRegisteredGraphs } from './registry.js';
 import { RipplegraphError } from './schema.js';
@@ -35,6 +36,7 @@ const callGraphActionSchema = z
     .object({
     action: z.literal('call_graph'),
     graphId: z.string().min(1),
+    callId: z.string().min(1).optional(),
     input: z.unknown().optional(),
     reason: z.string().min(1).optional(),
 })
@@ -92,6 +94,7 @@ const dispatchActionSchema = {
             properties: {
                 action: { const: 'call_graph' },
                 graphId: { type: 'string' },
+                callId: { type: 'string' },
                 input: {},
                 reason: { type: 'string' },
             },
@@ -140,7 +143,12 @@ export function applyDispatchAction(options) {
         }
         case 'call_graph':
             requireRegisteredGraph(graphs, action.graphId, 'callable');
-            throw new RipplegraphError('E_CALLABLE_RUNTIME_NOT_IMPLEMENTED', `callable graph execution is not implemented: ${action.graphId}`);
+            return startCallableCall({
+                workflowRoot: options.workflowRoot,
+                graphId: action.graphId,
+                callId: action.callId,
+                input: action.input,
+            });
     }
 }
 function graphSummary(entry) {
