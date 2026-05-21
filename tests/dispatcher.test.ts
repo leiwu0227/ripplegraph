@@ -148,8 +148,30 @@ describe('dispatcher runtime', () => {
   });
 
   it('rejects unsupported dispatcher action targets clearly', () => {
-    const root = makeCliWorkflowRoot();
+    const root = makeRoot('ripplegraph-dispatcher-unsupported-');
     try {
+      fs.writeFileSync(
+        path.join(root, 'workflow.json'),
+        JSON.stringify({
+          id: 'unsupported-demo',
+          version: '0.1.0',
+          graphs: {
+            'package-only': {
+              kind: 'dispatcher',
+              entry: 'route',
+              nodes: {
+                route: {
+                  purpose: 'Route a request',
+                  exec: 'inline',
+                  outputSchema: { type: 'object' },
+                  terminal: true,
+                },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
       registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });
       registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'package-only', { kind: 'workflow' }) });
       registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'summarize', { kind: 'callable' }) });

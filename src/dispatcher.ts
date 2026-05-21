@@ -182,10 +182,10 @@ export function applyDispatchAction(options: DispatchActionOptions): DispatchAct
       return resumeRun({ workflowRoot: options.workflowRoot, runId: action.runId });
     case 'start_run': {
       requireRegisteredGraph(graphs, action.graphId, 'workflow');
-      if (!compactWorkflowHasGraph(options.workflowRoot, action.graphId)) {
+      if (!compactWorkflowHasExecutableGraph(options.workflowRoot, action.graphId)) {
         throw new RipplegraphError(
           'E_GRAPH_NOT_EXECUTABLE_YET',
-          `registered graph ${action.graphId} is not executable yet because it is not present in workflow.json`,
+          `registered graph ${action.graphId} is not executable yet because it is not present as a workflow in workflow.json`,
         );
       }
       return startRun({ workflowRoot: options.workflowRoot, graph: action.graphId, runId: action.runId ?? generatedRunId(action.graphId) });
@@ -231,9 +231,9 @@ function requireRegisteredGraph(graphs: RegisteredGraphSummary[], graphId: strin
   return graph;
 }
 
-function compactWorkflowHasGraph(workflowRoot: string, graphId: string): boolean {
+function compactWorkflowHasExecutableGraph(workflowRoot: string, graphId: string): boolean {
   try {
-    return Boolean(loadWorkflow(workflowRoot).graphs[graphId]);
+    return loadWorkflow(workflowRoot).graphs[graphId]?.kind === 'workflow';
   } catch (error) {
     if (error instanceof RipplegraphError && error.code === 'E_MISSING_WORKFLOW') return false;
     throw error;
