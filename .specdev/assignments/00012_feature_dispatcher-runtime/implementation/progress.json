@@ -11,9 +11,10 @@
     },
     {
       "number": 2,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-21T03:58:31Z",
+      "completed_at": "2026-05-21T04:00:49Z",
+      "summary": "Added strict dispatcher action validation and applied list, ask-user, start, resume/switch, callable-not-implemented, and target validation behavior."
     },
     {
       "number": 3,

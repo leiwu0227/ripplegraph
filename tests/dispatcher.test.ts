@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { getDispatchRequest, registerGraphPackage } from '../src/index.js';
+import { applyDispatchAction, getDispatchRequest, registerGraphPackage, suspendRun } from '../src/index.js';
+import { makeCliWorkflowRoot } from './helpers/workflows.js';
 
 const baseManifest = {
   id: 'workspace-dispatcher',
@@ -88,6 +89,82 @@ describe('dispatcher runtime', () => {
 
       expect(errorCode(() => getDispatchRequest({ workflowRoot: root, request: 'start work' }))).toBe('E_AMBIGUOUS_DISPATCHER');
       expect(() => getDispatchRequest({ workflowRoot: root, request: 'start work' })).toThrow(/dispatcher-a.*dispatcher-b/);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('applies read-only dispatcher actions without changing focused run state', () => {
+    const root = makeCliWorkflowRoot();
+    try {
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'daily', { kind: 'workflow' }) });
+
+      expect(applyDispatchAction({ workflowRoot: root, action: { action: 'list_runs' } })).toMatchObject({
+        status: 'ok',
+        focusedRunId: null,
+        runs: [],
+        availableGraphs: [
+          { id: 'daily', kind: 'workflow' },
+          { id: 'workspace-dispatcher', kind: 'dispatcher' },
+        ],
+      });
+      expect(
+        applyDispatchAction({
+          workflowRoot: root,
+          action: { action: 'ask_user', question: 'Which workflow should handle this?', choices: ['daily'] },
+        }),
+      ).toEqual({
+        status: 'needs_user_input',
+        question: 'Which workflow should handle this?',
+        choices: ['daily'],
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('starts and resumes executable workflow runs through dispatcher actions', () => {
+    const root = makeCliWorkflowRoot();
+    try {
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'daily', { kind: 'workflow' }) });
+
+      expect(
+        applyDispatchAction({ workflowRoot: root, action: { action: 'start_run', graphId: 'daily', runId: 'daily-a' } }),
+      ).toMatchObject({
+        status: 'ok',
+        run: { id: 'daily-a', rootGraph: 'daily', status: 'active' },
+      });
+
+      suspendRun({ workflowRoot: root, note: 'pause' });
+      expect(applyDispatchAction({ workflowRoot: root, action: { action: 'switch_run', runId: 'daily-a' } })).toMatchObject({
+        status: 'ok',
+        run: { id: 'daily-a', rootGraph: 'daily', status: 'active' },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects unsupported dispatcher action targets clearly', () => {
+    const root = makeCliWorkflowRoot();
+    try {
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'package-only', { kind: 'workflow' }) });
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'summarize', { kind: 'callable' }) });
+
+      expect(
+        errorCode(() =>
+          applyDispatchAction({ workflowRoot: root, action: { action: 'start_run', graphId: 'package-only', runId: 'pkg-a' } }),
+        ),
+      ).toBe('E_GRAPH_NOT_EXECUTABLE_YET');
+      expect(errorCode(() => applyDispatchAction({ workflowRoot: root, action: { action: 'call_graph', graphId: 'summarize' } }))).toBe(
+        'E_CALLABLE_RUNTIME_NOT_IMPLEMENTED',
+      );
+      expect(errorCode(() => applyDispatchAction({ workflowRoot: root, action: { action: 'start_run', graphId: 'missing' } }))).toBe(
+        'E_UNKNOWN_GRAPH',
+      );
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
