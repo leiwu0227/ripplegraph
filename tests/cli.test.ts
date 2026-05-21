@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -22,6 +23,57 @@ function run(args: string[]): { status: number | null; json: Record<string, unkn
 }
 
 describe('reference cli', () => {
+  it('validates, registers, and lists graph packages', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-cli-registry-'));
+    const packageRoot = path.join(root, '.ripplegraph', 'graphs', 'support-triage');
+    const manifest = {
+      id: 'support-triage',
+      version: '0.1.0',
+      kind: 'workflow',
+      title: 'Support Triage',
+      description: 'Classify support tickets.',
+      activationHints: ['triage support ticket'],
+      inputSchema: { type: 'object' },
+      outputSchema: { type: 'object' },
+      effects: ['read_workspace'],
+      entry: 'classify-ticket',
+      nodes: {
+        'classify-ticket': {
+          purpose: 'Classify the newest support ticket',
+          exec: 'inline',
+          outputSchema: { type: 'object' },
+          terminal: true,
+        },
+      },
+    };
+    try {
+      fs.mkdirSync(packageRoot, { recursive: true });
+      fs.writeFileSync(path.join(packageRoot, 'graph.json'), JSON.stringify(manifest), 'utf8');
+
+      expect(run(['graph', 'validate', packageRoot]).json).toMatchObject({
+        status: 'ok',
+        package: {
+          id: 'support-triage',
+          version: '0.1.0',
+          kind: 'workflow',
+        },
+      });
+      expect(run(['graph', 'register', packageRoot, '--workflow-root', root]).json).toMatchObject({
+        status: 'ok',
+        entry: {
+          id: 'support-triage',
+          path: '.ripplegraph/graphs/support-triage',
+        },
+      });
+      expect(run(['graph', 'list', '--workflow-root', root]).json).toMatchObject({
+        status: 'ok',
+        graphs: [{ id: 'support-triage', version: '0.1.0' }],
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('renders gated state and advances it through the canonical advance command', () => {
     const root = makeGatedWorkflowRoot();
     try {

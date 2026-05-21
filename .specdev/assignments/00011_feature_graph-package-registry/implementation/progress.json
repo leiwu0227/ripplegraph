@@ -11,14 +11,15 @@
     },
     {
       "number": 2,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-21T03:41:00Z",
-      "completed_at": null
+      "completed_at": "2026-05-21T03:42:30Z",
+      "summary": "Added registry persistence helpers with deterministic list/update behavior and duplicate conflict handling."
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
+      "status": "in_progress",
+      "started_at": "2026-05-21T03:42:36Z",
       "completed_at": null
     },
     {
