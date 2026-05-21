@@ -17,3 +17,18 @@
 
 ### Addressed from changelog
 - [F1.1] Addressed. Active `getCallableCall` and `stepCallableCall` now load from the checkpointed `packagePath` and verify manifest id/kind/version before exposing or stepping the call; regression coverage confirms registry replacement does not rebind an in-flight call.
+
+## Round 3
+
+**Verdict:** approved
+
+### Findings
+- (none)
+
+### Addressed from changelog
+- [F2.1] Addressed. `assertSupportedCallableSchema` now validates supported keyword value shapes for `type`, `required`, `properties`, `enum`, `items`, `oneOf`, and `additionalProperties`, and the added regression coverage exercises malformed supported keywords before callable runtime use.
+
+### Verification
+- `npm test -- tests/output-validation.test.ts tests/callable.test.ts tests/dispatcher.test.ts tests/cli.test.ts`
+- `npm run typecheck`
+- `npm test`
