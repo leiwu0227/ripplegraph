@@ -25,15 +25,17 @@
     },
     {
       "number": 4,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-21T03:44:10Z",
-      "completed_at": null
+      "completed_at": "2026-05-21T03:44:46Z",
+      "summary": "Documented implemented registry commands and current dispatcher/callable boundaries."
     },
     {
       "number": 5,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-21T03:44:52Z",
+      "completed_at": "2026-05-21T03:45:31Z",
+      "summary": "Ran final typecheck and full test suite; prepared implementation for checkpoint and Codex reviewloop."
     }
   ]
 }

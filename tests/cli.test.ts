@@ -9,9 +9,22 @@ import { makeCliWorkflowRoot, makeGatedWorkflowRoot } from './helpers/workflows.
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const tsxCli = path.join(repoRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs');
 const cli = path.join(repoRoot, 'src', 'cli.ts');
+const binCli = path.join(repoRoot, 'bin', 'ripplegraph');
 
 function run(args: string[]): { status: number | null; json: Record<string, unknown>; stderr: string } {
   const result = spawnSync(process.execPath, [tsxCli, cli, ...args], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+  return {
+    status: result.status,
+    json: JSON.parse(result.stdout || '{}') as Record<string, unknown>,
+    stderr: result.stderr,
+  };
+}
+
+function runBuilt(args: string[]): { status: number | null; json: Record<string, unknown>; stderr: string } {
+  const result = spawnSync(process.execPath, [binCli, ...args], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
@@ -66,6 +79,10 @@ describe('reference cli', () => {
         },
       });
       expect(run(['graph', 'list', '--workflow-root', root]).json).toMatchObject({
+        status: 'ok',
+        graphs: [{ id: 'support-triage', version: '0.1.0' }],
+      });
+      expect(runBuilt(['graph', 'list', '--workflow-root', root]).json).toMatchObject({
         status: 'ok',
         graphs: [{ id: 'support-triage', version: '0.1.0' }],
       });

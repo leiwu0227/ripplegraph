@@ -7,7 +7,7 @@ export class RipplegraphError extends Error {
         this.name = 'RipplegraphError';
     }
 }
-const idSchema = z.string().min(1).regex(/^[A-Za-z0-9_.-]+$/);
+export const idSchema = z.string().min(1).regex(/^[A-Za-z0-9_.-]+$/);
 const jsonSchemaSchema = z.lazy(() => z
     .object({
     type: z.enum(['object', 'string', 'number', 'boolean', 'array']).optional(),
@@ -39,7 +39,7 @@ export const nodeSchema = z
     terminal: z.boolean().default(false),
 })
     .strict();
-export const graphSchema = z
+const graphFieldsSchema = z
     .object({
     kind: z.enum(['dispatcher', 'workflow', 'callable']).default('workflow'),
     title: z.string().min(1).optional(),
@@ -51,8 +51,8 @@ export const graphSchema = z
     entry: idSchema,
     nodes: z.record(idSchema, nodeSchema),
 })
-    .strict()
-    .superRefine((graph, ctx) => {
+    .strict();
+function validateGraphReferences(graph, ctx) {
     if (!graph.nodes[graph.entry]) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -71,6 +71,15 @@ export const graphSchema = z
             }
         }
     }
+}
+export const graphSchema = graphFieldsSchema.superRefine(validateGraphReferences);
+export const graphPackageManifestSchema = graphFieldsSchema
+    .extend({
+    id: idSchema,
+    version: z.string().min(1),
+})
+    .superRefine((manifest, ctx) => {
+    validateGraphReferences(manifest, ctx);
 });
 export const workflowSchema = z
     .object({

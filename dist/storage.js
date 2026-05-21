@@ -20,6 +20,9 @@ export function runsDir(rootPath) {
 export function currentPath(rootPath) {
     return path.join(stateDir(rootPath), 'current.json');
 }
+export function registryPath(rootPath) {
+    return path.join(stateDir(rootPath), 'registry.json');
+}
 export function runDir(rootPath, runId) {
     assertPathSegment(runId, 'runId');
     return path.join(runsDir(rootPath), runId);

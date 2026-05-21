@@ -2,6 +2,7 @@ import { type Checkpoint, type Current, type TransitionLogEntry, type Workflow }
 export declare function stateDir(rootPath: string): string;
 export declare function runsDir(rootPath: string): string;
 export declare function currentPath(rootPath: string): string;
+export declare function registryPath(rootPath: string): string;
 export declare function runDir(rootPath: string, runId: string): string;
 export declare function checkpointPath(rootPath: string, runId: string): string;
 export declare function transitionLogPath(rootPath: string, runId: string): string;

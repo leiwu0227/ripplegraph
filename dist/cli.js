@@ -1,5 +1,5 @@
-import { abandonRun, advanceRun, decideGate, getState, resumeRun, RipplegraphError, startRun, stepRun, suspendRun, validateWorkflowRoot, } from './index.js';
-import { emitJson, jsonErrorPayload, parseArgs, parseJson, requiredFlag, stringFlag, workflowRoot } from './internal/cli-helpers.js';
+import { abandonRun, advanceRun, decideGate, getState, listRegisteredGraphs, loadGraphPackage, registerGraphPackage, resumeRun, RipplegraphError, startRun, stepRun, suspendRun, validateWorkflowRoot, } from './index.js';
+import { emitJson, jsonErrorPayload, parseArgs, parseJson, required, requiredFlag, stringFlag, workflowRoot } from './internal/cli-helpers.js';
 const HELP = `ripplegraph — focused-run Coach runtime POC
 
 Canonical commands:
@@ -9,6 +9,9 @@ Canonical commands:
 
 Compatibility/debug commands:
   validate --workflow-root <path>
+  graph validate <path> [--workflow-root <path>]
+  graph register <path> [--workflow-root <path>] [--force]
+  graph list [--workflow-root <path>]
   start --graph <graph-id> --run-id <id> [--workflow-root <path>]
   step --output <json> [--workflow-root <path>]
   decide --decision <json> [--workflow-root <path>]
@@ -23,6 +26,9 @@ async function main(argv) {
         return;
     }
     switch (command) {
+        case 'graph':
+            emitJson(handleGraphCommand(flags, parseArgs(argv).positional));
+            return;
         case 'validate':
             emitJson(validateWorkflowRoot(workflowRoot(flags)));
             return;
@@ -59,6 +65,40 @@ async function main(argv) {
             return;
         default:
             throw new RipplegraphError('E_UNKNOWN_COMMAND', `unknown command: ${command}`);
+    }
+}
+function packageSummary(manifest) {
+    return {
+        id: manifest.id,
+        version: manifest.version,
+        kind: manifest.kind,
+        title: manifest.title,
+        description: manifest.description,
+        activationHints: manifest.activationHints,
+        effects: manifest.effects,
+        entry: manifest.entry,
+    };
+}
+function handleGraphCommand(flags, positional) {
+    const [subcommand, packageRoot] = positional;
+    switch (subcommand) {
+        case 'validate': {
+            const graphPackage = loadGraphPackage(required(packageRoot, 'missing graph package path'));
+            return { status: 'ok', package: packageSummary(graphPackage.manifest), path: graphPackage.path };
+        }
+        case 'register':
+            return {
+                status: 'ok',
+                entry: registerGraphPackage({
+                    workflowRoot: workflowRoot(flags),
+                    packageRoot: required(packageRoot, 'missing graph package path'),
+                    force: flags['force'] === true,
+                }),
+            };
+        case 'list':
+            return { status: 'ok', graphs: listRegisteredGraphs(workflowRoot(flags)) };
+        default:
+            throw new RipplegraphError('E_UNKNOWN_COMMAND', `unknown graph command: ${subcommand ?? '<missing>'}`);
     }
 }
 main(process.argv.slice(2)).catch((error) => {
