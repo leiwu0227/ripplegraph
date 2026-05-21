@@ -269,6 +269,20 @@ export function makeInvalidGraphMetadataWorkflowRoot(): string {
   });
 }
 
+export function makeInvalidEntryGraphWorkflowRoot(): string {
+  return createWorkflowRoot({
+    prefix: 'ripplegraph-invalid-entry-graph-',
+    workflow: {
+      id: 'invalid-entry-graph-demo',
+      version: '0.1.0',
+      entryGraph: 'daily',
+      graphs: {
+        daily: dailyReviewGraph([{ to: 'done', when: { decision: 'proceed' } }]),
+      },
+    },
+  });
+}
+
 export function makeCoachWorkflowRoot(): string {
   return createWorkflowRoot({
     prefix: 'ripplegraph-coach-',

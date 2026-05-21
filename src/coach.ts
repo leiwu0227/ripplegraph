@@ -286,6 +286,7 @@ export function decideGate(opts: DecideGateOptions): DecideGateResponse {
   const from = checkpoint.position;
   const to = { graph: checkpoint.rootGraph, node: nextNodeId };
   checkpoint.gateDecisions[checkpoint.position.node] = opts.decision;
+  checkpoint.outputs[checkpoint.position.node] = opts.decision;
   checkpoint.position = to;
   checkpoint.updatedAt = new Date().toISOString();
   appendTransition(opts.workflowRoot, checkpoint.runId, {

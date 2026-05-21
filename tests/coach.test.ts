@@ -23,7 +23,9 @@ import {
   makeGatedWorkflowRoot,
   makeGraphMetadataWorkflowRoot,
   makeHiddenStorageWorkflowRoot,
+  makeInvalidEntryGraphWorkflowRoot,
   makeInvalidGraphMetadataWorkflowRoot,
+  makeDemoWorkflowRoot,
   makeStorageWorkflowRoot,
 } from './helpers/workflows.js';
 
@@ -67,6 +69,13 @@ describe('coach runtime storage', () => {
       expect(() => loadWorkflow(invalidRoot)).toThrow();
     } finally {
       fs.rmSync(invalidRoot, { recursive: true, force: true });
+    }
+
+    const invalidEntryRoot = makeInvalidEntryGraphWorkflowRoot();
+    try {
+      expect(() => loadWorkflow(invalidEntryRoot)).toThrow(/entryGraph must reference a dispatcher graph/);
+    } finally {
+      fs.rmSync(invalidEntryRoot, { recursive: true, force: true });
     }
   });
 
@@ -243,6 +252,32 @@ describe('coach operations', () => {
           { id: 'review', purpose: 'Completed node', output: { decision: 'proceed' } },
         ]);
         expect(state.context.next).toEqual([{ id: 'done', purpose: 'Complete', when: undefined }]);
+      }
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('includes gate decisions in recent context after gated routing', () => {
+    const root = makeDemoWorkflowRoot();
+    try {
+      startRun({ workflowRoot: root, graph: 'support-triage', runId: 'triage-a' });
+      stepRun({ workflowRoot: root, output: { category: 'bug', priority: 'urgent', rationale: 'checkout is blocked' } });
+      const state = decideGate({ workflowRoot: root, decision: { decision: 'approved-bug', reason: 'classification is right' } });
+      expect(state.status).toBe('ok');
+      if (state.status === 'ok') {
+        expect(state.context.previous).toEqual([
+          {
+            id: 'classify-ticket',
+            purpose: 'Completed node',
+            output: { category: 'bug', priority: 'urgent', rationale: 'checkout is blocked' },
+          },
+          {
+            id: 'review-classification',
+            purpose: 'Completed node',
+            output: { decision: 'approved-bug', reason: 'classification is right' },
+          },
+        ]);
       }
     } finally {
       fs.rmSync(root, { recursive: true, force: true });

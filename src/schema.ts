@@ -109,6 +109,13 @@ export const workflowSchema = z
         message: `entryGraph references unknown graph: ${workflow.entryGraph}`,
       });
     }
+    if (workflow.entryGraph && workflow.graphs[workflow.entryGraph]?.kind !== 'dispatcher') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['entryGraph'],
+        message: `entryGraph must reference a dispatcher graph: ${workflow.entryGraph}`,
+      });
+    }
   });
 
 export const runStatusSchema = z.enum(['active', 'suspended', 'completed', 'abandoned']);
