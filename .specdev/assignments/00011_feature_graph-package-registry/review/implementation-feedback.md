@@ -7,3 +7,13 @@
 
 ### Addressed from changelog
 - (none -- first round)
+
+## Round 2
+
+**Verdict:** approved
+
+### Findings
+1. (none)
+
+### Addressed from changelog
+- F1.1 resolved: tracked `dist/` outputs now include the graph registry CLI and public exports, `node bin/ripplegraph graph list --workflow-root /tmp/ripplegraph-review-root` returns an ok JSON response, and `tests/cli.test.ts` includes a built-bin regression assertion for `bin/ripplegraph graph list`.
