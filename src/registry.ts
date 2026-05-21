@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
-import { loadGraphPackage } from './graph-package.js';
+import { loadGraphPackage, type GraphPackage } from './graph-package.js';
 import { registryPath } from './storage.js';
 import { idSchema, RipplegraphError } from './schema.js';
 
@@ -34,6 +34,12 @@ export interface RegisterGraphPackageOptions {
   packageRoot: string;
   force?: boolean;
   now?: string;
+}
+
+export interface ResolveRegisteredGraphPackageOptions {
+  workflowRoot: string;
+  graphId: string;
+  kind?: RegistryEntry['kind'];
 }
 
 function readJson(filePath: string): unknown {
@@ -114,4 +120,24 @@ export function registerGraphPackage(options: RegisterGraphPackageOptions): Regi
   registry.graphs[entry.id] = entry;
   writeRegistry(options.workflowRoot, registry);
   return entry;
+}
+
+export function resolveRegisteredGraphPackage(options: ResolveRegisteredGraphPackageOptions): {
+  entry: RegistryEntry;
+  graphPackage: GraphPackage;
+} {
+  const entry = readRegistry(options.workflowRoot).graphs[options.graphId];
+  if (!entry) throw new RipplegraphError('E_UNKNOWN_GRAPH', `unknown registered graph: ${options.graphId}`);
+  if (options.kind && entry.kind !== options.kind) {
+    throw new RipplegraphError('E_WRONG_GRAPH_KIND', `graph ${options.graphId} is ${entry.kind}, expected ${options.kind}`);
+  }
+  const packageRoot = path.isAbsolute(entry.path) ? entry.path : path.join(options.workflowRoot, entry.path);
+  const graphPackage = loadGraphPackage(packageRoot);
+  if (graphPackage.manifest.id !== entry.id || graphPackage.manifest.kind !== entry.kind) {
+    throw new RipplegraphError(
+      'E_REGISTRY_PACKAGE_MISMATCH',
+      `registered graph ${entry.id} points to package ${graphPackage.manifest.id} (${graphPackage.manifest.kind})`,
+    );
+  }
+  return { entry, graphPackage };
 }

@@ -18,9 +18,10 @@
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-21T04:27:59Z",
+      "completed_at": "2026-05-21T04:30:25Z",
+      "summary": "Added callable package resolution plus start, state, and list APIs with input validation, gate rejection, supported-schema preflight checks, and state responses that preserve original input."
     },
     {
       "number": 4,

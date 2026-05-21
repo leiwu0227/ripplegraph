@@ -4,3 +4,4 @@ export * from './coach.js';
 export * from './graph-package.js';
 export * from './registry.js';
 export * from './dispatcher.js';
+export * from './callable.js';
