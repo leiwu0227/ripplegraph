@@ -18,9 +18,10 @@
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-21T04:01:02Z",
+      "completed_at": "2026-05-21T04:03:13Z",
+      "summary": "Wired dispatch request/action forms into the JSON CLI, added help text, argument validation, and extended the existing CLI registry test."
     },
     {
       "number": 4,

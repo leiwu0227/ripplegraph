@@ -60,6 +60,7 @@ describe('reference cli', () => {
       },
     };
     try {
+      fs.writeFileSync(path.join(root, 'workflow.json'), JSON.stringify({ id: 'cli-registry', version: '0.1.0', graphs: {} }), 'utf8');
       fs.mkdirSync(packageRoot, { recursive: true });
       fs.writeFileSync(path.join(packageRoot, 'graph.json'), JSON.stringify(manifest), 'utf8');
 
@@ -78,13 +79,43 @@ describe('reference cli', () => {
           path: '.ripplegraph/graphs/support-triage',
         },
       });
+      const dispatcherRoot = path.join(root, '.ripplegraph', 'graphs', 'workspace-dispatcher');
+      fs.mkdirSync(dispatcherRoot, { recursive: true });
+      fs.writeFileSync(
+        path.join(dispatcherRoot, 'graph.json'),
+        JSON.stringify({
+          ...manifest,
+          id: 'workspace-dispatcher',
+          kind: 'dispatcher',
+          title: 'Workspace Dispatcher',
+          activationHints: ['route workspace work'],
+        }),
+        'utf8',
+      );
+      expect(run(['graph', 'register', dispatcherRoot, '--workflow-root', root]).json.status).toBe('ok');
       expect(run(['graph', 'list', '--workflow-root', root]).json).toMatchObject({
         status: 'ok',
-        graphs: [{ id: 'support-triage', version: '0.1.0' }],
+        graphs: [
+          { id: 'support-triage', version: '0.1.0' },
+          { id: 'workspace-dispatcher', version: '0.1.0' },
+        ],
+      });
+      expect(run(['dispatch', '--request', 'triage support', '--workflow-root', root]).json).toMatchObject({
+        status: 'needs_action',
+        dispatcher: { id: 'workspace-dispatcher', kind: 'dispatcher' },
+        request: 'triage support',
+      });
+      expect(run(['dispatch', '--action', '{"action":"list_runs"}', '--workflow-root', root]).json).toMatchObject({
+        status: 'ok',
+        action: 'list_runs',
+        availableGraphs: [{ id: 'support-triage' }, { id: 'workspace-dispatcher' }],
       });
       expect(runBuilt(['graph', 'list', '--workflow-root', root]).json).toMatchObject({
         status: 'ok',
-        graphs: [{ id: 'support-triage', version: '0.1.0' }],
+        graphs: [
+          { id: 'support-triage', version: '0.1.0' },
+          { id: 'workspace-dispatcher', version: '0.1.0' },
+        ],
       });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
