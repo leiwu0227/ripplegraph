@@ -196,6 +196,79 @@ export function makeHiddenStorageWorkflowRoot(): string {
   });
 }
 
+export function makeGraphMetadataWorkflowRoot(): string {
+  return createWorkflowRoot({
+    prefix: 'ripplegraph-metadata-',
+    workflow: {
+      id: 'metadata-demo',
+      version: '0.1.0',
+      entryGraph: 'dispatcher',
+      title: 'Metadata Demo',
+      description: 'Workflow package with graph metadata.',
+      graphs: {
+        dispatcher: {
+          kind: 'dispatcher',
+          title: 'Workspace Dispatcher',
+          description: 'Selects the right workflow.',
+          activationHints: ['route user requests'],
+          inputSchema: {
+            type: 'object',
+            required: ['request'],
+            properties: { request: { type: 'string' } },
+          },
+          outputSchema: {
+            type: 'object',
+            required: ['action'],
+            properties: { action: { type: 'string' } },
+          },
+          effects: ['read_workspace'],
+          entry: 'route',
+          nodes: {
+            route: {
+              purpose: 'Route a user request',
+              exec: 'inline',
+              outputSchema: {
+                type: 'object',
+                required: ['action'],
+                properties: { action: { type: 'string' } },
+              },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Complete', terminal: true },
+          },
+        },
+        legacy: dailyReviewGraph([{ to: 'done', when: { decision: 'proceed' } }]),
+      },
+    },
+  });
+}
+
+export function makeInvalidGraphMetadataWorkflowRoot(): string {
+  return createWorkflowRoot({
+    prefix: 'ripplegraph-invalid-metadata-',
+    workflow: {
+      id: 'invalid-metadata-demo',
+      version: '0.1.0',
+      graphs: {
+        broken: {
+          kind: 'tool',
+          effects: [''],
+          entry: 'review',
+          nodes: {
+            review: {
+              purpose: 'Review generated intents',
+              exec: 'inline',
+              outputSchema: { type: 'object' },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Complete', terminal: true },
+          },
+        },
+      },
+    },
+  });
+}
+
 export function makeCoachWorkflowRoot(): string {
   return createWorkflowRoot({
     prefix: 'ripplegraph-coach-',

@@ -18,7 +18,14 @@ import {
   writeCurrent,
   writeNodeOutput,
 } from '../src/index.js';
-import { makeCoachWorkflowRoot, makeGatedWorkflowRoot, makeHiddenStorageWorkflowRoot, makeStorageWorkflowRoot } from './helpers/workflows.js';
+import {
+  makeCoachWorkflowRoot,
+  makeGatedWorkflowRoot,
+  makeGraphMetadataWorkflowRoot,
+  makeHiddenStorageWorkflowRoot,
+  makeInvalidGraphMetadataWorkflowRoot,
+  makeStorageWorkflowRoot,
+} from './helpers/workflows.js';
 
 describe('coach runtime storage', () => {
   it('loads workflow definitions from the hidden runtime directory', () => {
@@ -27,6 +34,39 @@ describe('coach runtime storage', () => {
       expect(loadWorkflow(root).id).toBe('demo');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('loads graph package metadata while preserving legacy graph defaults', () => {
+    const root = makeGraphMetadataWorkflowRoot();
+    try {
+      const workflow = loadWorkflow(root);
+      expect(workflow).toMatchObject({
+        entryGraph: 'dispatcher',
+        title: 'Metadata Demo',
+        description: 'Workflow package with graph metadata.',
+      });
+      expect(workflow.graphs.dispatcher).toMatchObject({
+        kind: 'dispatcher',
+        title: 'Workspace Dispatcher',
+        description: 'Selects the right workflow.',
+        activationHints: ['route user requests'],
+        inputSchema: { required: ['request'] },
+        outputSchema: { required: ['action'] },
+        effects: ['read_workspace'],
+      });
+      expect(workflow.graphs.legacy).toMatchObject({
+        kind: 'workflow',
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+
+    const invalidRoot = makeInvalidGraphMetadataWorkflowRoot();
+    try {
+      expect(() => loadWorkflow(invalidRoot)).toThrow();
+    } finally {
+      fs.rmSync(invalidRoot, { recursive: true, force: true });
     }
   });
 
