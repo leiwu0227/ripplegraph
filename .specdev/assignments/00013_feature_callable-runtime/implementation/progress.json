@@ -1,0 +1,43 @@
+{
+  "plan_file": ".specdev/assignments/00013_feature_callable-runtime/breakdown/plan.md",
+  "total_tasks": 6,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-05-21T04:23:11Z",
+      "completed_at": "2026-05-21T04:25:16Z",
+      "summary": "Added callable JSON-schema validation support for const, oneOf, array items, additionalProperties false, unsupported keyword rejection, and focused validator coverage."
+    },
+    {
+      "number": 2,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 3,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 4,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 5,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 6,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    }
+  ]
+}
