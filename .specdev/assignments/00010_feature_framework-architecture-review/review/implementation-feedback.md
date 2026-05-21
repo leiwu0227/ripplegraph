@@ -8,3 +8,18 @@
 
 ### Addressed from changelog
 - (none -- first round)
+
+## Round 2
+
+**Verdict:** approved
+
+### Findings
+1. (none)
+
+### Addressed from changelog
+- Accepted [F1.1]. `entryGraph` now must reference a dispatcher graph, with regression coverage for a non-dispatcher `entryGraph`.
+- Accepted [F1.2]. Valid gate decisions are now also included in `checkpoint.outputs`, so recent context includes the decision that selected the route.
+
+### Verification
+- `npm run typecheck`
+- `npm test -- --run tests/coach.test.ts tests/cli.test.ts tests/demo-cli.test.ts`
