@@ -110,9 +110,76 @@ describe('reference cli', () => {
         action: 'list_runs',
         availableGraphs: [{ id: 'support-triage' }, { id: 'workspace-dispatcher' }],
       });
+      const callableRoot = path.join(root, '.ripplegraph', 'graphs', 'summarize-ticket');
+      fs.mkdirSync(callableRoot, { recursive: true });
+      fs.writeFileSync(
+        path.join(callableRoot, 'graph.json'),
+        JSON.stringify({
+          ...manifest,
+          id: 'summarize-ticket',
+          kind: 'callable',
+          inputSchema: {
+            type: 'object',
+            required: ['ticketId'],
+            properties: { ticketId: { type: 'string' } },
+          },
+          outputSchema: {
+            type: 'object',
+            required: ['summary'],
+            properties: { summary: { type: 'string' } },
+          },
+          entry: 'summarize',
+          nodes: {
+            summarize: {
+              purpose: 'Summarize a ticket',
+              exec: 'inline',
+              outputSchema: {
+                type: 'object',
+                required: ['summary'],
+                properties: { summary: { type: 'string' } },
+              },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        }),
+        'utf8',
+      );
+      expect(run(['graph', 'register', callableRoot, '--workflow-root', root]).json.status).toBe('ok');
+      expect(
+        run([
+          'call',
+          '--graph',
+          'summarize-ticket',
+          '--call-id',
+          'call-cli',
+          '--input',
+          '{"ticketId":"TCK-1007"}',
+          '--workflow-root',
+          root,
+        ]).json,
+      ).toMatchObject({
+        status: 'active',
+        call: { id: 'call-cli', graphId: 'summarize-ticket' },
+      });
+      expect(run(['call-state', '--call-id', 'call-cli', '--workflow-root', root]).json).toMatchObject({
+        status: 'active',
+        input: { ticketId: 'TCK-1007' },
+      });
+      expect(
+        run(['call-step', '--call-id', 'call-cli', '--output', '{"summary":"Checkout failure."}', '--workflow-root', root]).json,
+      ).toMatchObject({
+        status: 'completed',
+        output: { summary: 'Checkout failure.' },
+      });
+      expect(run(['call-list', '--workflow-root', root]).json).toMatchObject({
+        status: 'ok',
+        calls: [{ id: 'call-cli', status: 'completed', graphId: 'summarize-ticket' }],
+      });
       expect(runBuilt(['graph', 'list', '--workflow-root', root]).json).toMatchObject({
         status: 'ok',
         graphs: [
+          { id: 'summarize-ticket', version: '0.1.0' },
           { id: 'support-triage', version: '0.1.0' },
           { id: 'workspace-dispatcher', version: '0.1.0' },
         ],

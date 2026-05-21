@@ -74,6 +74,20 @@ describe('dispatcher runtime', () => {
         nextAllowedCommand: expect.stringContaining('ripplegraph dispatch --action'),
         helpCommand: 'ripplegraph explain',
       });
+      expect(
+        getDispatchRequest({ workflowRoot: root, request: 'triage support' }).actionSchema.oneOf?.find(
+          (schema) =>
+            typeof schema === 'object' &&
+            schema !== null &&
+            'properties' in schema &&
+            (schema.properties as Record<string, unknown>)?.action &&
+            JSON.stringify((schema.properties as Record<string, unknown>).action).includes('call_graph'),
+        ),
+      ).toMatchObject({
+        properties: {
+          callId: { type: 'string' },
+        },
+      });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
@@ -174,18 +188,57 @@ describe('dispatcher runtime', () => {
       );
       registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });
       registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'package-only', { kind: 'workflow' }) });
-      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'summarize', { kind: 'callable' }) });
+      registerGraphPackage({
+        workflowRoot: root,
+        packageRoot: writePackage(root, 'summarize', {
+          kind: 'callable',
+          inputSchema: {
+            type: 'object',
+            required: ['ticketId'],
+            properties: { ticketId: { type: 'string' } },
+          },
+          outputSchema: {
+            type: 'object',
+            required: ['summary'],
+            properties: { summary: { type: 'string' } },
+          },
+          entry: 'summarize',
+          nodes: {
+            summarize: {
+              purpose: 'Summarize a ticket',
+              exec: 'inline',
+              outputSchema: {
+                type: 'object',
+                required: ['summary'],
+                properties: { summary: { type: 'string' } },
+              },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        }),
+      });
 
       expect(
         errorCode(() =>
           applyDispatchAction({ workflowRoot: root, action: { action: 'start_run', graphId: 'package-only', runId: 'pkg-a' } }),
         ),
       ).toBe('E_GRAPH_NOT_EXECUTABLE_YET');
-      expect(errorCode(() => applyDispatchAction({ workflowRoot: root, action: { action: 'call_graph', graphId: 'summarize' } }))).toBe(
-        'E_CALLABLE_RUNTIME_NOT_IMPLEMENTED',
-      );
+      expect(
+        applyDispatchAction({
+          workflowRoot: root,
+          action: { action: 'call_graph', graphId: 'summarize', callId: 'call-from-dispatch', input: { ticketId: 'TCK-1007' } },
+        }),
+      ).toMatchObject({
+        status: 'active',
+        call: { id: 'call-from-dispatch', graphId: 'summarize' },
+        input: { ticketId: 'TCK-1007' },
+      });
       expect(errorCode(() => applyDispatchAction({ workflowRoot: root, action: { action: 'start_run', graphId: 'missing' } }))).toBe(
         'E_UNKNOWN_GRAPH',
+      );
+      expect(errorCode(() => applyDispatchAction({ workflowRoot: root, action: { action: 'call_graph', graphId: 'package-only' } }))).toBe(
+        'E_WRONG_GRAPH_KIND',
       );
     } finally {
       fs.rmSync(root, { recursive: true, force: true });

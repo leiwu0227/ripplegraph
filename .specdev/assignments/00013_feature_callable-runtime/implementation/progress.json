@@ -32,9 +32,10 @@
     },
     {
       "number": 5,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-21T04:32:20Z",
+      "completed_at": "2026-05-21T04:34:59Z",
+      "summary": "Wired dispatcher call_graph actions to start callable calls with optional callId and added JSON CLI call, call-state, call-step, and call-list commands with focused integration coverage."
     },
     {
       "number": 6,

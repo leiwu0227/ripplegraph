@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { startCallableCall, type StartCallableCallResponse } from './callable.js';
 import { listRuns, resumeRun, startRun, type RunList, type StateOk } from './coach.js';
 import { listRegisteredGraphs, type RegistryEntry } from './registry.js';
 import { RipplegraphError, type JsonSchema } from './schema.js';
@@ -41,6 +42,7 @@ export interface DispatchRequestState {
 export type DispatchActionResult =
   | (RunList & { action: 'list_runs'; availableGraphs: RegisteredGraphSummary[] })
   | { status: 'needs_user_input'; question: string; choices?: string[] }
+  | StartCallableCallResponse
   | StateOk;
 
 const startRunActionSchema = z
@@ -79,6 +81,7 @@ const callGraphActionSchema = z
   .object({
     action: z.literal('call_graph'),
     graphId: z.string().min(1),
+    callId: z.string().min(1).optional(),
     input: z.unknown().optional(),
     reason: z.string().min(1).optional(),
   })
@@ -138,6 +141,7 @@ const dispatchActionSchema: JsonSchema = {
       properties: {
         action: { const: 'call_graph' },
         graphId: { type: 'string' },
+        callId: { type: 'string' },
         input: {},
         reason: { type: 'string' },
       },
@@ -192,7 +196,12 @@ export function applyDispatchAction(options: DispatchActionOptions): DispatchAct
     }
     case 'call_graph':
       requireRegisteredGraph(graphs, action.graphId, 'callable');
-      throw new RipplegraphError('E_CALLABLE_RUNTIME_NOT_IMPLEMENTED', `callable graph execution is not implemented: ${action.graphId}`);
+      return startCallableCall({
+        workflowRoot: options.workflowRoot,
+        graphId: action.graphId,
+        callId: action.callId,
+        input: action.input,
+      });
   }
 }
 
