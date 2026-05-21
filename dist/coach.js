@@ -42,11 +42,18 @@ export function getState(opts) {
     ensureWorkflowRoot(opts.workflowRoot);
     const current = readCurrent(opts.workflowRoot);
     if (!current.focusedRunId) {
+        const dispatcher = workflow.entryGraph ? { graph: workflow.entryGraph, available: true } : undefined;
         return {
             status: 'no_focused_run',
             workflow: { id: workflow.id, version: workflow.version },
             availableGraphs: Object.keys(workflow.graphs),
             resumableRuns: resumableRuns(opts.workflowRoot),
+            dispatcher,
+            orientation: dispatcher ? 'No run is focused. Submit user intent to the dispatcher.' : 'No run is focused. Start or resume a run.',
+            nextAllowedCommand: dispatcher
+                ? 'ripplegraph dispatch --request "<user request>"'
+                : `ripplegraph start --graph ${Object.keys(workflow.graphs)[0] ?? '<graph-id>'} --run-id <run-id>`,
+            helpCommand: 'ripplegraph explain',
         };
     }
     return stateForCheckpoint(workflow, readCheckpoint(opts.workflowRoot, current.focusedRunId));
@@ -111,6 +118,15 @@ export function stepRun(opts) {
     }
     writeCheckpoint(opts.workflowRoot, checkpoint);
     return stateForCheckpoint(workflow, checkpoint);
+}
+export function advanceRun(opts) {
+    const workflow = loadWorkflow(opts.workflowRoot);
+    const checkpoint = focusedCheckpoint(opts.workflowRoot);
+    const graph = getGraph(workflow, checkpoint.rootGraph);
+    const node = getNode(graph, checkpoint.position.node);
+    if (node.gate)
+        return decideGate({ workflowRoot: opts.workflowRoot, decision: opts.input });
+    return stepRun({ workflowRoot: opts.workflowRoot, output: opts.input });
 }
 export function decideGate(opts) {
     const workflow = loadWorkflow(opts.workflowRoot);

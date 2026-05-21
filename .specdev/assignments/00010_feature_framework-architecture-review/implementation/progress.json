@@ -1,0 +1,41 @@
+{
+  "plan_file": ".specdev/assignments/00010_feature_framework-architecture-review/breakdown/plan.md",
+  "total_tasks": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-05-21T02:18:43Z",
+      "completed_at": "2026-05-21T02:19:49Z",
+      "summary": "Aligned big_picture.md and README with the graph repository, dispatcher, callable graph, activationHints, and simplified command model; removed stale demo and subgraph/latch language."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-05-21T02:19:54Z",
+      "completed_at": "2026-05-21T02:22:04Z",
+      "summary": "Added backward-compatible workflow and graph metadata schema fields with defaults, plus focused tests for metadata-rich and invalid graph definitions."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "started_at": "2026-05-21T02:22:08Z",
+      "completed_at": "2026-05-21T02:25:34Z",
+      "summary": "Added structured orientation, nextAllowedCommand, helpCommand, dispatcher-ready no-focus guidance, recent context outputs, and route rendering for agent re-anchoring."
+    },
+    {
+      "number": 4,
+      "status": "completed",
+      "started_at": "2026-05-21T02:25:41Z",
+      "completed_at": "2026-05-21T02:28:46Z",
+      "summary": "Added advanceRun plus low-level and demo advance/explain commands, kept compatibility aliases, and updated command help/tests for the canonical host-agent loop."
+    },
+    {
+      "number": 5,
+      "status": "completed",
+      "started_at": "2026-05-21T02:28:51Z",
+      "completed_at": "2026-05-21T02:29:45Z",
+      "summary": "Ran typecheck, full tests, build, and a demo smoke through advance/explain; verified gate output includes orientation, recent context, routes, and next allowed command."
+    }
+  ]
+}

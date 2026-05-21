@@ -1,11 +1,15 @@
-import { abandonRun, decideGate, getState, resumeRun, RipplegraphError, startRun, stepRun, suspendRun, validateWorkflowRoot, } from './index.js';
+import { abandonRun, advanceRun, decideGate, getState, resumeRun, RipplegraphError, startRun, stepRun, suspendRun, validateWorkflowRoot, } from './index.js';
 import { emitJson, jsonErrorPayload, parseArgs, parseJson, requiredFlag, stringFlag, workflowRoot } from './internal/cli-helpers.js';
 const HELP = `ripplegraph — focused-run Coach runtime POC
 
-Commands:
+Canonical commands:
+  state [--workflow-root <path>]
+  explain [--workflow-root <path>]
+  advance --input <json> [--workflow-root <path>]
+
+Compatibility/debug commands:
   validate --workflow-root <path>
   start --graph <graph-id> --run-id <id> [--workflow-root <path>]
-  state [--workflow-root <path>]
   step --output <json> [--workflow-root <path>]
   decide --decision <json> [--workflow-root <path>]
   suspend [--note <text>] [--workflow-root <path>]
@@ -31,6 +35,12 @@ async function main(argv) {
             return;
         case 'state':
             emitJson(getState({ workflowRoot: workflowRoot(flags) }));
+            return;
+        case 'explain':
+            emitJson(getState({ workflowRoot: workflowRoot(flags) }));
+            return;
+        case 'advance':
+            emitJson(advanceRun({ workflowRoot: workflowRoot(flags), input: parseJson(stringFlag(flags, 'input'), 'missing --input', '--input is not valid JSON') }));
             return;
         case 'step':
             emitJson(stepRun({ workflowRoot: workflowRoot(flags), output: parseJson(stringFlag(flags, 'output'), 'missing --output', '--output is not valid JSON') }));

@@ -1,4 +1,4 @@
-import { decideGate, getState, listRuns, resumeRun, RipplegraphError, startRun, stepRun, suspendRun, } from './index.js';
+import { advanceRun, decideGate, getState, listRuns, resumeRun, RipplegraphError, startRun, stepRun, suspendRun, } from './index.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,10 +7,14 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const minimalTemplateDir = path.join(packageRoot, 'templates', 'minimal');
 function parseOutput(args) {
     const file = stringFlag(args.flags, 'file');
-    return parseJsonFromFileOrValue(file, args.positional[0], 'missing submit JSON or --file', 'submit payload is not valid JSON');
+    return parseJsonFromFileOrValue(file, args.positional[0], 'missing JSON or --file', 'payload is not valid JSON');
 }
 function renderNoFocusedRun(state, runs) {
-    const lines = ['No focused run.', '', 'Available graphs:'];
+    const lines = ['No focused run.', '', 'Orientation:', `  ${state.orientation}`, '', 'If unsure:', '  ripplegraph-demo explain'];
+    if (state.dispatcher) {
+        lines.push('', 'Dispatcher:', `  ${state.dispatcher.graph}`, '', 'Next allowed command:', '  ripplegraph-demo dispatch --request "<user request>"');
+    }
+    lines.push('', 'Available graphs:');
     for (const graph of state.availableGraphs)
         lines.push(`  ${graph}`);
     const resumable = runs.runs.filter((run) => run.status === 'suspended');
@@ -34,20 +38,52 @@ function renderActiveState(state) {
         `Graph: ${state.position.graph}`,
         `Node: ${state.position.node}`,
         '',
+        'Orientation:',
+        `  ${state.orientation}`,
+        '',
+        'If unsure:',
+        '  ripplegraph-demo explain',
+        '',
         state.node.purpose,
     ];
     if (state.node.instructions)
         lines.push(state.node.instructions);
+    lines.push(...renderNeighborhood(state));
     if (state.responseContract.command === 'decide') {
         lines.push('', 'External decision required:');
         lines.push(...renderOutputSchema(state.responseContract.schema));
-        lines.push('', 'Next:', `  ripplegraph-demo decide '${exampleOutput(state.responseContract.schema)}'`);
+        lines.push('', 'Next allowed command:', `  ripplegraph-demo advance '${exampleOutput(state.responseContract.schema)}'`);
         return lines.join('\n');
     }
     lines.push('', 'Required output:');
     lines.push(...renderOutputSchema(state.node.outputSchema));
-    lines.push('', 'Next:', `  ripplegraph-demo submit '${exampleOutput(state.node.outputSchema)}'`);
+    lines.push('', 'Next allowed command:', `  ripplegraph-demo advance '${exampleOutput(state.node.outputSchema)}'`);
     return lines.join('\n');
+}
+function renderNeighborhood(state) {
+    const lines = [];
+    if (state.context.previous.length > 0) {
+        lines.push('', 'Recent context:');
+        for (const previous of state.context.previous) {
+            lines.push(`  ${previous.id}: ${previous.purpose}`);
+            if (previous.output !== undefined)
+                lines.push(`    output: ${compactJson(previous.output)}`);
+        }
+    }
+    if (state.context.next.length > 0) {
+        lines.push('', 'Available routes:');
+        for (const next of state.context.next) {
+            const condition = next.when ? ` when ${compactJson(next.when)}` : '';
+            lines.push(`  -> ${next.id}: ${next.purpose}${condition}`);
+        }
+    }
+    return lines;
+}
+function compactJson(value) {
+    const text = JSON.stringify(value);
+    if (!text)
+        return String(value);
+    return text.length > 220 ? `${text.slice(0, 217)}...` : text;
 }
 function renderOutputSchema(schema) {
     const properties = schema.properties ?? {};
@@ -130,9 +166,13 @@ function initDemoProject(targetPath, force) {
 }
 const HELP = `ripplegraph-demo — reference agent-facing Ripplegraph CLI
 
-Commands:
-  init <path> [--force]
+Canonical commands:
   status [--workflow-root <path>]
+  explain [--workflow-root <path>]
+  advance <json> [--file <path>] [--workflow-root <path>]
+
+Compatibility/debug commands:
+  init <path> [--force]
   runs [--workflow-root <path>]
   start <graph-id> --run <run-id> [--workflow-root <path>]
   pause [note] [--workflow-root <path>]
@@ -157,6 +197,11 @@ async function main(argv) {
             emitLine(state.status === 'no_focused_run' ? renderNoFocusedRun(state, listRuns({ workflowRoot: root })) : renderActiveState(state));
             return;
         }
+        case 'explain': {
+            const state = getState({ workflowRoot: root });
+            emitLine(state.status === 'no_focused_run' ? renderNoFocusedRun(state, listRuns({ workflowRoot: root })) : renderActiveState(state));
+            return;
+        }
         case 'runs':
             emitLine(renderRuns(listRuns({ workflowRoot: root })));
             return;
@@ -168,6 +213,9 @@ async function main(argv) {
             return;
         case 'resume':
             emitLine(renderActiveState(resumeRun({ workflowRoot: root, runId: required(args.positional[0], 'missing run id') })));
+            return;
+        case 'advance':
+            emitLine(renderStep(advanceRun({ workflowRoot: root, input: parseOutput(args) })));
             return;
         case 'submit':
             emitLine(renderStep(stepRun({ workflowRoot: root, output: parseOutput(args) })));
