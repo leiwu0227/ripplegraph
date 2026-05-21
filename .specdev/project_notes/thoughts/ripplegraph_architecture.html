@@ -240,7 +240,7 @@
       <span class="pill">Architecture note</span>
       <span class="pill">Generated diagrams in <code>assets/</code></span>
       <span class="pill">Script: <code>generate_architecture_diagrams.py</code></span>
-      <span class="pill">Status: framework foundation implemented, repository runtime planned</span>
+      <span class="pill">Status: registry, dispatcher, callable runtime, and effect enforcement implemented</span>
     </div>
   </header>
 
@@ -308,9 +308,9 @@
   <section>
     <h2>3. Workspace Repository Model</h2>
     <p>
-      The target workspace layout treats <code>.ripplegraph/</code> as an installed graph repository and runtime state
-      directory. Graphs become drag-and-drop packages. The registry indexes them, the dispatcher uses their metadata,
-      and runs remain durable evidence.
+      The workspace layout treats <code>.ripplegraph/</code> as an installed graph repository and runtime state
+      directory. Graph packages can be dropped into the workspace, validated, registered, and exposed to the dispatcher
+      catalog. Runs and callable calls remain durable evidence.
     </p>
 
     <figure>
@@ -337,11 +337,17 @@
     specdev-2026-05-21-001/
       checkpoint.json
       transition-log.jsonl
+      artifacts/
+  calls/
+    summarize-ticket-call-001/
+      checkpoint.json
+      transition-log.jsonl
       artifacts/</code></pre>
 
     <p>
-      The current implementation still supports the compact <code>workflow.json</code> format for demos and tests. The
-      folder package model is the intended next runtime contract, not yet the fully wired default.
+      The compact <code>workflow.json</code> format remains the executable workflow runtime for demos, tests, and direct
+      workflow starts. Registered package folders are live for validation, registry catalog, dispatcher action targets,
+      and callable execution. Package-folder workflow execution is the remaining runtime gap.
     </p>
   </section>
 
@@ -417,7 +423,7 @@
         <tr>
           <td><code>effects</code></td>
           <td>Declared side effect capabilities, such as file writes or network.</td>
-          <td>Future enforcement and permission surface.</td>
+          <td>Enforced at workflow start and callable start boundaries with explicit runtime policy.</td>
         </tr>
         <tr>
           <td><code>entry</code> and <code>nodes</code></td>
@@ -464,7 +470,9 @@
 
     <p>
       This keeps routing flexible without giving the host agent unbounded authority. <code>activationHints</code> help
-      the dispatcher decide, while registry validation decides what is actually allowed.
+      the dispatcher decide, while registry validation and effect policy decide what is actually allowed. Read-only
+      dispatcher requests expose the catalog without grants; executable <code>start_run</code> and
+      <code>call_graph</code> actions must satisfy graph kind, registry, and effect checks before state changes.
     </p>
   </section>
 
@@ -616,14 +624,51 @@
         </tr>
         <tr>
           <td>Side effects</td>
-          <td>No hidden caller-state mutation. File, network, or domain effects must be declared.</td>
+          <td>No hidden caller-state mutation. File, network, or domain effects must be declared and explicitly allowed at call start.</td>
         </tr>
       </tbody>
     </table>
   </section>
 
   <section>
-    <h2>11. Implementation Status</h2>
+    <h2>11. Effect Policy</h2>
+    <p>
+      Effects are graph-level capability declarations. The runtime does not infer effects from code or instructions; it
+      enforces the declared <code>effects</code> array at execution boundaries. Effect-free graphs run without policy.
+      Effectful graphs require an explicit allow-list for the current start or call.
+    </p>
+
+    <pre><code>ripplegraph start --graph daily --run-id daily-a \
+  --allow-effects read_repo,write_files --workflow-root .
+
+ripplegraph call --graph summarize-ticket --input '{"ticketId":"TCK-1007"}' \
+  --allow-effect read_repo --allow-effect network --workflow-root .
+
+ripplegraph dispatch --action '{"action":"call_graph","graphId":"summarize-ticket"}' \
+  --allow-effects read_repo,network --workflow-root .</code></pre>
+
+    <div class="grid two">
+      <article class="card">
+        <h3>Enforced</h3>
+        <p>
+          Direct workflow <code>start</code>, dispatcher <code>start_run</code>, dispatcher
+          <code>call_graph</code>, and direct <code>call</code> fail with
+          <code>E_EFFECT_NOT_ALLOWED</code> unless all declared effects are allowed. Denial happens before run or call
+          state is created.
+        </p>
+      </article>
+      <article class="card">
+        <h3>Not a sandbox</h3>
+        <p>
+          The policy is an explicit contract check, not OS isolation. It does not block network syscalls, execute
+          scripts, infer undeclared effects, or persist reusable grants.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>12. Implementation Status</h2>
     <table>
       <thead>
         <tr>
@@ -655,43 +700,48 @@
         </tr>
         <tr>
           <td>Graph folder registry</td>
-          <td><span class="status planned">Planned</span></td>
-          <td>Needed for drag-and-drop packages, registration, validation, and dispatcher catalog.</td>
+          <td><span class="status done">Implemented</span></td>
+          <td><code>graph validate</code>, <code>graph register</code>, and <code>graph list</code> operate on package folders and <code>.ripplegraph/registry.json</code>.</td>
         </tr>
         <tr>
           <td>Real <code>dispatch</code> execution</td>
-          <td><span class="status planned">Planned</span></td>
-          <td>Current architecture defines the contract; runtime needs command support and registry-backed action application.</td>
+          <td><span class="status done">Implemented</span></td>
+          <td><code>dispatch --request</code> returns a catalog-backed action contract; <code>dispatch --action</code> validates and applies supported actions.</td>
         </tr>
         <tr>
           <td>Callable graph invocation</td>
-          <td><span class="status planned">Planned</span></td>
-          <td>Needed to make graph-shaped pure tools available to workflows and dispatchers.</td>
+          <td><span class="status done">Implemented</span></td>
+          <td>Registered callable packages can be started, stepped, listed, completed, and audited under <code>.ripplegraph/calls/</code>.</td>
         </tr>
         <tr>
           <td>Effect permission enforcement</td>
+          <td><span class="status done">Implemented</span></td>
+          <td>Effectful workflow and callable starts are denied by default unless runtime policy allows every declared effect.</td>
+        </tr>
+        <tr>
+          <td>Package-folder workflow execution</td>
           <td><span class="status planned">Planned</span></td>
-          <td>Effects are declared now; enforcement should come with callable and package execution support.</td>
+          <td>Registered workflow packages are catalog entries; executable workflow runs still use compact <code>workflow.json</code>.</td>
         </tr>
       </tbody>
     </table>
   </section>
 
   <section>
-    <h2>12. Design Invariants</h2>
+    <h2>13. Design Invariants</h2>
     <ul>
       <li>Graph flow must be deterministic over validated data.</li>
       <li>The host agent may choose content, but runtime validation chooses whether that content can advance the graph.</li>
       <li>A focused run is mutable; completed historical runs are evidence and should not be rewritten casually.</li>
       <li>Dispatcher hints are advisory. Registry validation is authoritative.</li>
-      <li>Callable graphs should look pure to callers unless effects are explicit.</li>
+      <li>Callable graphs should look pure to callers unless effects are explicit and explicitly allowed.</li>
       <li>Normal use should fit in <code>status</code>, <code>dispatch</code>, <code>explain</code>, and <code>advance</code>.</li>
       <li>When context gets long, the runtime must serve enough state to recover without guessing.</li>
     </ul>
   </section>
 
   <section>
-    <h2>13. Suggested Roadmap</h2>
+    <h2>14. Suggested Roadmap</h2>
     <table>
       <thead>
         <tr>
@@ -704,27 +754,32 @@
         <tr>
           <td>Graph package loader</td>
           <td>Turns the architecture from metadata fields into installable packages.</td>
-          <td><code>graph validate</code> can validate a package folder and load it into a catalog.</td>
+          <td><span class="status done">Done</span> <code>graph validate</code> validates package folders and loads manifests.</td>
         </tr>
         <tr>
           <td>Registry commands</td>
           <td>Makes drag-and-drop graphs discoverable and auditable.</td>
-          <td><code>graph register</code> and <code>graph list</code> operate on <code>.ripplegraph/registry.json</code>.</td>
+          <td><span class="status done">Done</span> <code>graph register</code> and <code>graph list</code> operate on <code>.ripplegraph/registry.json</code>.</td>
         </tr>
         <tr>
           <td>Dispatcher runtime</td>
           <td>Provides the normal entry path for multi-graph workspaces.</td>
-          <td><code>dispatch</code> returns and applies validated actions.</td>
+          <td><span class="status done">Done</span> <code>dispatch</code> returns and applies validated actions.</td>
         </tr>
         <tr>
           <td>Callable runtime</td>
           <td>Enables typed graph-shaped tools that workflows can call.</td>
-          <td><code>call &lt;graph-id&gt; '{...}'</code> validates input/output and records an audit trace.</td>
+          <td><span class="status done">Done</span> <code>call</code> validates input/output and records an audit trace.</td>
         </tr>
         <tr>
           <td>Effect enforcement</td>
           <td>Prevents pure-looking packages from hiding risky behavior.</td>
-          <td>Runtime can reject or require approval for undeclared effects.</td>
+          <td><span class="status done">Done</span> Runtime rejects effectful starts unless policy allows declared effects.</td>
+        </tr>
+        <tr>
+          <td>Package workflow execution</td>
+          <td>Lets registered workflow packages run without copying them into compact <code>workflow.json</code>.</td>
+          <td><span class="status planned">Next</span> <code>start_run</code> can execute registered workflow package definitions directly.</td>
         </tr>
       </tbody>
     </table>
