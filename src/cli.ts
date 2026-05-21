@@ -20,7 +20,17 @@ import {
   validateWorkflowRoot,
   type GraphPackageManifest,
 } from './index.js';
-import { emitJson, jsonErrorPayload, parseArgs, parseJson, required, requiredFlag, stringFlag, workflowRoot } from './internal/cli-helpers.js';
+import {
+  effectPolicyFromFlags,
+  emitJson,
+  jsonErrorPayload,
+  parseArgs,
+  parseJson,
+  required,
+  requiredFlag,
+  stringFlag,
+  workflowRoot,
+} from './internal/cli-helpers.js';
 
 const HELP = `ripplegraph — focused-run Coach runtime POC
 
@@ -68,6 +78,7 @@ async function main(argv: string[]): Promise<void> {
           workflowRoot: workflowRoot(flags),
           graph: requiredFlag(flags, 'graph'),
           runId: requiredFlag(flags, 'run-id'),
+          effectPolicy: effectPolicyFromFlags(flags),
         }),
       );
       return;
@@ -90,6 +101,7 @@ async function main(argv: string[]): Promise<void> {
           graphId: requiredFlag(flags, 'graph'),
           callId: stringFlag(flags, 'call-id'),
           input: parseJson(stringFlag(flags, 'input'), 'missing --input', '--input is not valid JSON'),
+          effectPolicy: effectPolicyFromFlags(flags),
         }),
       );
       return;
@@ -141,6 +153,7 @@ function handleDispatchCommand(flags: ReturnType<typeof parseArgs>['flags']): un
     return applyDispatchAction({
       workflowRoot: workflowRoot(flags),
       action: parseJson(action, 'missing --action', '--action is not valid JSON'),
+      effectPolicy: effectPolicyFromFlags(flags),
     });
   }
   throw new RipplegraphError('E_MISSING_ARG', 'missing --request or --action');

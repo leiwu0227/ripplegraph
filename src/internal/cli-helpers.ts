@@ -1,10 +1,11 @@
 import fs from 'node:fs';
+import type { EffectPolicy } from '../effects.js';
 import { RipplegraphError } from '../schema.js';
 
 export interface ParsedArgs {
   command: string;
   positional: string[];
-  flags: Record<string, string | boolean>;
+  flags: Record<string, string | string[] | boolean>;
 }
 
 export function parseArgs(argv: string[]): ParsedArgs {
@@ -20,22 +21,57 @@ export function parseArgs(argv: string[]): ParsedArgs {
     const key = arg.slice(2);
     const next = rest[i + 1];
     if (next === undefined || next.startsWith('--')) {
-      flags[key] = true;
+      appendFlag(flags, key, true);
     } else {
-      flags[key] = next;
+      appendFlag(flags, key, next);
       i++;
     }
   }
   return { command, positional, flags };
 }
 
+function appendFlag(flags: ParsedArgs['flags'], key: string, value: string | boolean): void {
+  const existing = flags[key];
+  if (existing === undefined) {
+    flags[key] = value;
+    return;
+  }
+  if (Array.isArray(existing)) {
+    if (typeof value === 'string') existing.push(value);
+    return;
+  }
+  if (typeof existing === 'string' && typeof value === 'string') {
+    flags[key] = [existing, value];
+    return;
+  }
+  flags[key] = value;
+}
+
 export function stringFlag(flags: ParsedArgs['flags'], name: string): string | undefined {
   const value = flags[name];
+  if (Array.isArray(value)) return value.at(-1);
   return typeof value === 'string' ? value : undefined;
+}
+
+export function stringFlags(flags: ParsedArgs['flags'], name: string): string[] {
+  const value = flags[name];
+  if (Array.isArray(value)) return value;
+  return typeof value === 'string' ? [value] : [];
 }
 
 export function workflowRoot(flags: ParsedArgs['flags']): string {
   return stringFlag(flags, 'workflow-root') ?? process.cwd();
+}
+
+export function effectPolicyFromFlags(flags: ParsedArgs['flags']): EffectPolicy {
+  const repeated = stringFlags(flags, 'allow-effect');
+  const commaSeparated = stringFlags(flags, 'allow-effects').flatMap((value) =>
+    value
+      .split(',')
+      .map((effect) => effect.trim())
+      .filter(Boolean),
+  );
+  return { allowedEffects: [...repeated, ...commaSeparated] };
 }
 
 export function required(value: string | undefined, message: string): string {

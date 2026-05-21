@@ -118,6 +118,7 @@ describe('reference cli', () => {
           ...manifest,
           id: 'summarize-ticket',
           kind: 'callable',
+          effects: ['read_workspace', 'network'],
           inputSchema: {
             type: 'object',
             required: ['ticketId'],
@@ -155,6 +156,10 @@ describe('reference cli', () => {
           'call-cli',
           '--input',
           '{"ticketId":"TCK-1007"}',
+          '--allow-effect',
+          'read_workspace',
+          '--allow-effect',
+          'network',
           '--workflow-root',
           root,
         ]).json,
@@ -167,15 +172,30 @@ describe('reference cli', () => {
         input: { ticketId: 'TCK-1007' },
       });
       expect(
+        run([
+          'dispatch',
+          '--action',
+          '{"action":"call_graph","graphId":"summarize-ticket","callId":"call-dispatch","input":{"ticketId":"TCK-1008"}}',
+          '--allow-effects',
+          'read_workspace,network',
+          '--workflow-root',
+          root,
+        ]).json,
+      ).toMatchObject({
+        status: 'active',
+        call: { id: 'call-dispatch', graphId: 'summarize-ticket' },
+      });
+      expect(
         run(['call-step', '--call-id', 'call-cli', '--output', '{"summary":"Checkout failure."}', '--workflow-root', root]).json,
       ).toMatchObject({
         status: 'completed',
         output: { summary: 'Checkout failure.' },
       });
-      expect(run(['call-list', '--workflow-root', root]).json).toMatchObject({
-        status: 'ok',
-        calls: [{ id: 'call-cli', status: 'completed', graphId: 'summarize-ticket' }],
-      });
+      const callList = run(['call-list', '--workflow-root', root]).json;
+      expect(callList.status).toBe('ok');
+      expect(callList.calls).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: 'call-cli', status: 'completed', graphId: 'summarize-ticket' })]),
+      );
       expect(runBuilt(['graph', 'list', '--workflow-root', root]).json).toMatchObject({
         status: 'ok',
         graphs: [
@@ -210,8 +230,19 @@ describe('reference cli', () => {
   it('starts, reads, steps, suspends, and resumes with JSON commands', () => {
     const root = makeCliWorkflowRoot();
     try {
+      const workflowPath = path.join(root, 'workflow.json');
+      const workflow = JSON.parse(fs.readFileSync(workflowPath, 'utf8')) as { graphs: { daily: { effects?: string[] } } };
+      workflow.graphs.daily.effects = ['read_workspace'];
+      fs.writeFileSync(workflowPath, JSON.stringify(workflow), 'utf8');
+
       expect(run(['validate', '--workflow-root', root]).json.status).toBe('ok');
-      expect(run(['start', '--workflow-root', root, '--graph', 'daily', '--run-id', 'daily-a']).json.status).toBe('ok');
+      expect(run(['start', '--workflow-root', root, '--graph', 'daily', '--run-id', 'daily-a']).json).toMatchObject({
+        status: 'error',
+        code: 'E_EFFECT_NOT_ALLOWED',
+      });
+      expect(
+        run(['start', '--workflow-root', root, '--graph', 'daily', '--run-id', 'daily-a', '--allow-effects', 'read_workspace']).json.status,
+      ).toBe('ok');
       expect(run(['state', '--workflow-root', root]).json.position).toEqual({ graph: 'daily', node: 'review' });
       expect(run(['step', '--workflow-root', root, '--output', '{"decision":"maybe"}']).json.status).toBe(
         'validation_error',
@@ -220,7 +251,9 @@ describe('reference cli', () => {
         'completed',
       );
       expect(run(['state', '--workflow-root', root]).json.status).toBe('no_focused_run');
-      expect(run(['start', '--workflow-root', root, '--graph', 'daily', '--run-id', 'daily-b']).json.status).toBe('ok');
+      expect(
+        run(['start', '--workflow-root', root, '--graph', 'daily', '--run-id', 'daily-b', '--allow-effect', 'read_workspace']).json.status,
+      ).toBe('ok');
       expect(run(['suspend', '--workflow-root', root, '--note', 'pause']).json.run).toMatchObject({
         id: 'daily-b',
         status: 'suspended',
