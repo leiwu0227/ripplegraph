@@ -1,3 +1,5 @@
+import path from 'node:path';
+import { loadGraphPackage } from './graph-package.js';
 import { appendCallableTransition, createCallableCheckpoint, listCallIds, readCallableCheckpoint, writeCallableCheckpoint, writeCallableOutput, } from './storage.js';
 import { resolveRegisteredGraphPackage } from './registry.js';
 import { RipplegraphError, } from './schema.js';
@@ -50,26 +52,16 @@ export function startCallableCall(opts) {
 }
 export function getCallableCall(opts) {
     const checkpoint = readCallableCheckpoint(opts.workflowRoot, opts.callId);
-    const { graphPackage } = resolveRegisteredGraphPackage({
-        workflowRoot: opts.workflowRoot,
-        graphId: checkpoint.graphId,
-        kind: 'callable',
-    });
     if (checkpoint.status === 'completed')
         return completedForCallable(checkpoint);
-    return stateForCallable(graphPackage.manifest, checkpoint);
+    return stateForCallable(loadCheckpointedCallablePackage(opts.workflowRoot, checkpoint), checkpoint);
 }
 export function stepCallableCall(opts) {
     const checkpoint = readCallableCheckpoint(opts.workflowRoot, opts.callId);
     if (checkpoint.status !== 'active') {
         throw new RipplegraphError('E_CALL_NOT_ACTIVE', `call ${opts.callId} is not active: ${checkpoint.status}`);
     }
-    const { graphPackage } = resolveRegisteredGraphPackage({
-        workflowRoot: opts.workflowRoot,
-        graphId: checkpoint.graphId,
-        kind: 'callable',
-    });
-    const manifest = graphPackage.manifest;
+    const manifest = loadCheckpointedCallablePackage(opts.workflowRoot, checkpoint);
     const node = getNode(manifest, checkpoint.position.node);
     const errors = validateOutput(node.outputSchema, opts.output);
     if (errors.length > 0) {
@@ -181,6 +173,17 @@ function assertCallableSupported(manifest) {
             throw new RipplegraphError('E_CALLABLE_GATE_UNSUPPORTED', `callable node ${nodeId} uses a gate`);
         assertSupportedCallableSchema(node.outputSchema);
     }
+}
+function loadCheckpointedCallablePackage(workflowRoot, checkpoint) {
+    const packageRoot = path.isAbsolute(checkpoint.packagePath)
+        ? checkpoint.packagePath
+        : path.join(workflowRoot, checkpoint.packagePath);
+    const manifest = loadGraphPackage(packageRoot).manifest;
+    if (manifest.id !== checkpoint.graphId || manifest.kind !== 'callable' || manifest.version !== checkpoint.graphVersion) {
+        throw new RipplegraphError('E_CALL_PACKAGE_MISMATCH', `call ${checkpoint.callId} was started with ${checkpoint.graphId}@${checkpoint.graphVersion}, but ${checkpoint.packagePath} is ${manifest.id}@${manifest.version} (${manifest.kind})`);
+    }
+    assertCallableSupported(manifest);
+    return manifest;
 }
 function stateForCallable(manifest, checkpoint) {
     const node = getNode(manifest, checkpoint.position.node);

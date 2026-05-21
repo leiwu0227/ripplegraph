@@ -23,11 +23,11 @@ function makeRoot(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-callable-'));
 }
 
-function writeGraphPackage(root: string, folder: string, manifest: Record<string, unknown>): string {
+function writeGraphPackage(root: string, folder: string, manifest: Record<string, unknown>, force = false): string {
   const packageRoot = path.join(root, folder);
   fs.mkdirSync(packageRoot, { recursive: true });
   fs.writeFileSync(path.join(packageRoot, 'graph.json'), JSON.stringify(manifest), 'utf8');
-  registerGraphPackage({ workflowRoot: root, packageRoot, now: '2026-05-21T00:00:00.000Z' });
+  registerGraphPackage({ workflowRoot: root, packageRoot, force, now: '2026-05-21T00:00:00.000Z' });
   return packageRoot;
 }
 
@@ -196,6 +196,63 @@ describe('callable start and state', () => {
         calls: [{ id: 'call-start', status: 'active', graphId: 'summarize-ticket' }],
       });
       expect(readCurrent(root)).toEqual({ focusedRunId: null });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('continues active calls against the checkpointed package after registry replacement', () => {
+    const root = makeRoot();
+    try {
+      writeGraphPackage(root, 'graphs/summarize-ticket-v1', callableManifest());
+      startCallableCall({
+        workflowRoot: root,
+        graphId: 'summarize-ticket',
+        callId: 'call-pinned-package',
+        input: { ticketId: 'TCK-1007' },
+      });
+      writeGraphPackage(
+        root,
+        'graphs/summarize-ticket-v2',
+        callableManifest({
+          version: '0.2.0',
+          outputSchema: {
+            type: 'object',
+            required: ['title'],
+            properties: { title: { type: 'string' } },
+          },
+          nodes: {
+            summarize: {
+              purpose: 'Changed summarizer',
+              exec: 'inline',
+              outputSchema: {
+                type: 'object',
+                required: ['title'],
+                properties: { title: { type: 'string' } },
+              },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        }),
+        true,
+      );
+
+      expect(getCallableCall({ workflowRoot: root, callId: 'call-pinned-package' })).toMatchObject({
+        status: 'active',
+        call: { graphVersion: '0.1.0' },
+        node: { purpose: 'Summarize a support ticket' },
+      });
+      expect(
+        stepCallableCall({
+          workflowRoot: root,
+          callId: 'call-pinned-package',
+          output: { summary: 'Checkout failure.' },
+        }),
+      ).toMatchObject({
+        status: 'completed',
+        output: { summary: 'Checkout failure.' },
+      });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
