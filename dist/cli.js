@@ -1,4 +1,4 @@
-import { abandonRun, advanceRun, decideGate, getState, listRegisteredGraphs, loadGraphPackage, registerGraphPackage, resumeRun, RipplegraphError, startRun, stepRun, suspendRun, validateWorkflowRoot, } from './index.js';
+import { abandonRun, advanceRun, applyDispatchAction, decideGate, getDispatchRequest, getState, listRegisteredGraphs, loadGraphPackage, registerGraphPackage, resumeRun, RipplegraphError, startRun, stepRun, suspendRun, validateWorkflowRoot, } from './index.js';
 import { emitJson, jsonErrorPayload, parseArgs, parseJson, required, requiredFlag, stringFlag, workflowRoot } from './internal/cli-helpers.js';
 const HELP = `ripplegraph — focused-run Coach runtime POC
 
@@ -6,6 +6,8 @@ Canonical commands:
   state [--workflow-root <path>]
   explain [--workflow-root <path>]
   advance --input <json> [--workflow-root <path>]
+  dispatch --request <text> [--workflow-root <path>]
+  dispatch --action <json> [--workflow-root <path>]
 
 Compatibility/debug commands:
   validate --workflow-root <path>
@@ -48,6 +50,9 @@ async function main(argv) {
         case 'advance':
             emitJson(advanceRun({ workflowRoot: workflowRoot(flags), input: parseJson(stringFlag(flags, 'input'), 'missing --input', '--input is not valid JSON') }));
             return;
+        case 'dispatch':
+            emitJson(handleDispatchCommand(flags));
+            return;
         case 'step':
             emitJson(stepRun({ workflowRoot: workflowRoot(flags), output: parseJson(stringFlag(flags, 'output'), 'missing --output', '--output is not valid JSON') }));
             return;
@@ -66,6 +71,23 @@ async function main(argv) {
         default:
             throw new RipplegraphError('E_UNKNOWN_COMMAND', `unknown command: ${command}`);
     }
+}
+function handleDispatchCommand(flags) {
+    const request = stringFlag(flags, 'request');
+    const action = stringFlag(flags, 'action');
+    if (request && action) {
+        throw new RipplegraphError('E_INVALID_ARGS', '--request and --action are mutually exclusive');
+    }
+    if (request) {
+        return getDispatchRequest({ workflowRoot: workflowRoot(flags), request });
+    }
+    if (action) {
+        return applyDispatchAction({
+            workflowRoot: workflowRoot(flags),
+            action: parseJson(action, 'missing --action', '--action is not valid JSON'),
+        });
+    }
+    throw new RipplegraphError('E_MISSING_ARG', 'missing --request or --action');
 }
 function packageSummary(manifest) {
     return {

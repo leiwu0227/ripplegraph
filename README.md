@@ -67,8 +67,9 @@ Graph kinds:
 
 The current run lifecycle still uses a compact `workflow.json` format for demos
 and tests. Graph package validation and registry commands are implemented as the
-foundation for the repository model; dispatcher execution and callable graph
-invocation are still future runtime work.
+foundation for the repository model. Dispatcher request/action validation is
+implemented against the registry; package-folder workflow execution, callable
+graph invocation, and effect enforcement are still future runtime work.
 
 Graph package management through the JSON CLI:
 
@@ -95,6 +96,26 @@ the graph fields:
   }
 }
 ```
+
+Dispatcher routing is deliberately a two-step host-agent loop. Ripplegraph does
+not infer intent with an embedded LLM; it returns the contract, then validates
+the host agent's structured action:
+
+```sh
+ripplegraph dispatch --request "review and clean up this codebase" --workflow-root .
+ripplegraph dispatch --action '{"action":"list_runs"}' --workflow-root .
+```
+
+Normal dispatch requires exactly one registered graph with `kind:
+"dispatcher"`. Supported v0 actions are `start_run`, `resume_run`,
+`switch_run`, `list_runs`, `ask_user`, and `call_graph`. `call_graph` is
+recognized but returns `E_CALLABLE_RUNTIME_NOT_IMPLEMENTED` until callable
+runtime support exists.
+
+`start_run` validates that the target graph is registered as a `workflow`.
+For now it can only execute graphs that are also present in the compact
+`workflow.json` runtime; registered package-only workflows return
+`E_GRAPH_NOT_EXECUTABLE_YET`.
 
 ## Command Model
 

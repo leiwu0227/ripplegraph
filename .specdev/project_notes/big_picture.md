@@ -61,7 +61,9 @@ on Ripplegraph.
     workflow side effects beyond its returned value and audit record.
 - **Dispatcher selection is structured.** The host agent should not pick random
   graph IDs. It submits user intent through `dispatch`; Ripplegraph validates
-  the dispatcher action against the registered graph catalog.
+  the dispatcher action against the registered graph catalog. The current v0
+  dispatcher runtime uses a two-step JSON CLI flow: request state is read-only,
+  and action submission is validated before any run mutation.
 - **Runs are durable by default.** Every workflow execution is a run with
   checkpoint, transition log, artifacts, timestamps, status, and root graph.
   A workspace can have many saved runs but at most one focused run.
@@ -81,7 +83,9 @@ The normal host-agent loop should be small:
 - `status` — show focused state, or dispatcher-ready state when no run is
   focused.
 - `dispatch` — submit user intent to the dispatcher and apply or return a
-  validated structured action.
+  validated structured action. Implemented v0 actions are `start_run`,
+  `resume_run`, `switch_run`, `list_runs`, `ask_user`, and recognized
+  `call_graph`.
 - `explain` — richer re-anchor when the host agent is confused or context is
   long.
 - `advance` — submit the current node response, whether it is normal output or
@@ -116,3 +120,6 @@ remain while the canonical protocol settles.
   unless explicitly resumed/upgraded.
 - Keep the core small and boring. Prefer data schemas, explicit contracts, and
   simple filesystem state over a hidden event loop or embedded LLM runner.
+- Current dispatcher gaps are intentional: registered package folders are a
+  catalog, not executable workflow definitions yet; callable graphs are
+  recognized but not run; declared effects are captured but not enforced.

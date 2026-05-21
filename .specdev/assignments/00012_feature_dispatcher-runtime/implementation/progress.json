@@ -25,9 +25,10 @@
     },
     {
       "number": 4,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-21T04:03:25Z",
+      "completed_at": "2026-05-21T04:04:40Z",
+      "summary": "Documented the dispatcher loop and current runtime gaps, updated project notes, and regenerated dist after passing typecheck and full tests."
     }
   ]
 }
