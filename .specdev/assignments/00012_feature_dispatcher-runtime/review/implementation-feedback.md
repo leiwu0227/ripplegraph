@@ -7,3 +7,13 @@
 
 ### Addressed from changelog
 - (none -- first round)
+
+## Round 2
+
+**Verdict:** approved
+
+### Findings
+1. (none)
+
+### Addressed from changelog
+- [F1.1] Confirmed fixed. `start_run` now checks that the matching compact `workflow.json` graph is present and has `kind: "workflow"` before calling `startRun`, and the regression test covers a registered workflow whose compact graph is a dispatcher.
