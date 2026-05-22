@@ -11,9 +11,6 @@ function parseOutput(args) {
 }
 function renderNoFocusedRun(state, runs) {
     const lines = ['No focused run.', '', 'Orientation:', `  ${state.orientation}`, '', 'If unsure:', '  ripplegraph-demo explain'];
-    if (state.dispatcher) {
-        lines.push('', 'Dispatcher:', `  ${state.dispatcher.graph}`, '', 'Next allowed command:', '  ripplegraph-demo dispatch --request "<user request>"');
-    }
     lines.push('', 'Available graphs:');
     for (const graph of state.availableGraphs)
         lines.push(`  ${graph}`);
@@ -31,6 +28,16 @@ function renderNoFocusedRun(state, runs) {
     for (const run of resumable.slice(0, 3))
         lines.push(`  ripplegraph-demo resume ${run.id}`);
     return lines.join('\n');
+}
+function renderSuspendedState(state) {
+    return [
+        `Suspended run: ${state.run.id}`,
+        `Graph: ${state.position.graph}`,
+        `Node: ${state.position.node}`,
+        '',
+        'Next allowed command:',
+        `  ripplegraph-demo resume ${state.run.id}`,
+    ].join('\n');
 }
 function renderActiveState(state) {
     const lines = [
@@ -214,7 +221,7 @@ async function main(argv) {
             })));
             return;
         case 'pause':
-            emitLine(renderActiveState(suspendRun({ workflowRoot: root, note: args.positional.join(' ') || undefined })));
+            emitLine(renderSuspendedState(suspendRun({ workflowRoot: root, note: args.positional.join(' ') || undefined })));
             return;
         case 'resume':
             emitLine(renderActiveState(resumeRun({ workflowRoot: root, runId: required(args.positional[0], 'missing run id') })));

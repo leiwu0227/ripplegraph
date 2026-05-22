@@ -28,9 +28,6 @@ function parseOutput(args: ParsedArgs): unknown {
 
 function renderNoFocusedRun(state: ReturnType<typeof getState> & { status: 'no_focused_run' }, runs: RunList): string {
   const lines = ['No focused run.', '', 'Orientation:', `  ${state.orientation}`, '', 'If unsure:', '  ripplegraph-demo explain'];
-  if (state.dispatcher) {
-    lines.push('', 'Dispatcher:', `  ${state.dispatcher.graph}`, '', 'Next allowed command:', '  ripplegraph-demo dispatch --request "<user request>"');
-  }
   lines.push('', 'Available graphs:');
   for (const graph of state.availableGraphs) lines.push(`  ${graph}`);
   const resumable = runs.runs.filter((run) => run.status === 'suspended');
@@ -44,6 +41,17 @@ function renderNoFocusedRun(state: ReturnType<typeof getState> & { status: 'no_f
   lines.push(`  ripplegraph-demo start ${state.availableGraphs[0] ?? '<graph-id>'} --run <run-id>`);
   for (const run of resumable.slice(0, 3)) lines.push(`  ripplegraph-demo resume ${run.id}`);
   return lines.join('\n');
+}
+
+function renderSuspendedState(state: StateOk): string {
+  return [
+    `Suspended run: ${state.run.id}`,
+    `Graph: ${state.position.graph}`,
+    `Node: ${state.position.node}`,
+    '',
+    'Next allowed command:',
+    `  ripplegraph-demo resume ${state.run.id}`,
+  ].join('\n');
 }
 
 function renderActiveState(state: StateOk): string {
@@ -237,7 +245,7 @@ async function main(argv: string[]): Promise<void> {
       );
       return;
     case 'pause':
-      emitLine(renderActiveState(suspendRun({ workflowRoot: root, note: args.positional.join(' ') || undefined })));
+      emitLine(renderSuspendedState(suspendRun({ workflowRoot: root, note: args.positional.join(' ') || undefined })));
       return;
     case 'resume':
       emitLine(renderActiveState(resumeRun({ workflowRoot: root, runId: required(args.positional[0], 'missing run id') })));

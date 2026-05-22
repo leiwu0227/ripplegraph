@@ -149,7 +149,9 @@ describe('ripplegraph-demo cli', () => {
       expect(noFocus).toContain('architecture-sweep');
 
       run(['start', 'architecture-sweep', '--run', 'sweep-a', '--workflow-root', root]);
-      run(['pause', 'pause architecture sweep', '--workflow-root', root]);
+      const paused = run(['pause', 'pause architecture sweep', '--workflow-root', root]).stdout;
+      expect(paused).toContain('Suspended run: sweep-a');
+      expect(paused).toContain('ripplegraph-demo resume sweep-a');
       const status = run(['status', '--workflow-root', root]).stdout;
       expect(status).toContain('sweep-a  suspended  architecture-sweep  select-cleanup');
       expect(status).toContain('ripplegraph-demo resume sweep-a');

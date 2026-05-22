@@ -59,8 +59,13 @@ To test pause and resume with a second graph:
 ```sh
 npx ripplegraph-demo pause "switching workflows" --workflow-root .
 npx ripplegraph-demo start architecture-sweep --run sweep-demo --workflow-root .
+npx ripplegraph-demo pause "back to change-demo" --workflow-root .
 npx ripplegraph-demo resume change-demo --workflow-root .
 ```
+
+Only one run is focused at a time, so `sweep-demo` must be paused before
+`change-demo` can resume. Use `npx ripplegraph-demo runs --workflow-root .` to
+inspect which run is focused and which are suspended.
 
 Watch these files when debugging:
 
