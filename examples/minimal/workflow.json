@@ -1,123 +1,388 @@
 {
-  "id": "support-triage-demo",
-  "version": "0.3.0",
+  "id": "engineering-coach-demo",
+  "version": "0.4.0",
+  "entryGraph": "workspace-dispatcher",
+  "title": "Engineering Coach Demo",
+  "description": "A branched engineering workflow that demonstrates classification, a human gate, routing, pause/resume, and recovery context.",
   "graphs": {
-    "support-triage": {
-      "entry": "classify-ticket",
+    "change-intake": {
+      "kind": "workflow",
+      "title": "Change Intake",
+      "description": "Classify a codebase change request, pause for human routing approval, then branch into the right planning task.",
+      "activationHints": [
+        "triage a change request",
+        "review a bugfix feature refactor or question"
+      ],
+      "effects": [
+        "read_repo"
+      ],
+      "entry": "classify-change",
       "nodes": {
-        "classify-ticket": {
-          "purpose": "Classify the newest support ticket",
-          "instructions": "Read tickets/inbox.json and support-playbook.md. Classify ticket TCK-1007 as bug, feature, or question; choose a priority; explain the rationale.",
+        "classify-change": {
+          "purpose": "Classify the queued engineering change",
+          "instructions": "Read work-items/inbox.json, engineering-playbook.md, and repo-brief.md. Classify CHG-2042 as bugfix, feature, refactor, or question; choose a risk level; explain the rationale.",
           "exec": "inline",
           "outputSchema": {
             "type": "object",
-            "required": ["category", "priority", "rationale"],
+            "required": [
+              "changeType",
+              "risk",
+              "rationale"
+            ],
             "properties": {
-              "category": { "type": "string", "enum": ["bug", "feature", "question"] },
-              "priority": { "type": "string", "enum": ["low", "normal", "urgent"] },
-              "rationale": { "type": "string" }
+              "changeType": {
+                "type": "string",
+                "enum": [
+                  "bugfix",
+                  "feature",
+                  "refactor",
+                  "question"
+                ]
+              },
+              "risk": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              }
             }
           },
           "edges": [
-            { "to": "review-classification" }
+            {
+              "to": "review-routing"
+            }
           ]
         },
-        "review-classification": {
-          "purpose": "External review gate for the classification",
-          "instructions": "Stop here and ask the user or external operator to review the previous classification. Use ripplegraph-demo decide, not submit. Choose approved-bug, approved-feature, or approved-question when the classification is accepted, or rejected to route back for reclassification.",
+        "review-routing": {
+          "purpose": "Human review gate for the routing decision",
+          "instructions": "Stop here and ask the user or operator to review the previous classification. Use ripplegraph-demo advance with a decision. Choose approved-bugfix, approved-feature, approved-refactor, or approved-question when accepted, or rejected to route back for reclassification.",
           "exec": "inline",
           "gate": {
             "type": "external_decision",
             "decisionSchema": {
               "type": "object",
-              "required": ["decision", "reason"],
+              "required": [
+                "decision",
+                "reason"
+              ],
               "properties": {
                 "decision": {
                   "type": "string",
-                  "enum": ["approved-bug", "approved-feature", "approved-question", "rejected"]
+                  "enum": [
+                    "approved-bugfix",
+                    "approved-feature",
+                    "approved-refactor",
+                    "approved-question",
+                    "rejected"
+                  ]
                 },
-                "reason": { "type": "string" }
+                "reason": {
+                  "type": "string"
+                }
               }
             }
           },
           "edges": [
-            { "to": "reproduce-bug", "when": { "decision": "approved-bug" } },
-            { "to": "scope-feature", "when": { "decision": "approved-feature" } },
-            { "to": "answer-question", "when": { "decision": "approved-question" } },
-            { "to": "classify-ticket", "when": { "decision": "rejected" } }
+            {
+              "to": "plan-bugfix",
+              "when": {
+                "decision": "approved-bugfix"
+              }
+            },
+            {
+              "to": "shape-feature",
+              "when": {
+                "decision": "approved-feature"
+              }
+            },
+            {
+              "to": "simplify-design",
+              "when": {
+                "decision": "approved-refactor"
+              }
+            },
+            {
+              "to": "answer-question",
+              "when": {
+                "decision": "approved-question"
+              }
+            },
+            {
+              "to": "classify-change",
+              "when": {
+                "decision": "rejected"
+              }
+            }
           ]
         },
-        "reproduce-bug": {
-          "purpose": "Draft a bug reproduction plan",
-          "instructions": "Use the ticket details and support playbook to write a concise reproduction plan for the support engineer.",
+        "plan-bugfix": {
+          "purpose": "Plan a bugfix",
+          "instructions": "Create a concise bugfix plan from CHG-2042 only if the approved route is bugfix. Include reproduction, expected behavior, likely files, and verification.",
           "exec": "inline",
           "outputSchema": {
             "type": "object",
-            "required": ["steps", "expected", "actual", "nextOwner"],
+            "required": [
+              "reproduction",
+              "expectedBehavior",
+              "likelyFiles",
+              "verification"
+            ],
             "properties": {
-              "steps": { "type": "array" },
-              "expected": { "type": "string" },
-              "actual": { "type": "string" },
-              "nextOwner": { "type": "string", "enum": ["support", "engineering"] }
+              "reproduction": {
+                "type": "string"
+              },
+              "expectedBehavior": {
+                "type": "string"
+              },
+              "likelyFiles": {
+                "type": "array"
+              },
+              "verification": {
+                "type": "array"
+              }
             }
           },
-          "edges": [{ "to": "done" }]
+          "edges": [
+            {
+              "to": "done"
+            }
+          ]
         },
-        "scope-feature": {
-          "purpose": "Scope a feature request",
-          "instructions": "Turn the ticket into a small product brief with a user story and acceptance criteria.",
+        "shape-feature": {
+          "purpose": "Shape a feature",
+          "instructions": "Turn CHG-2042 into a small feature brief with non-goals and acceptance criteria.",
           "exec": "inline",
           "outputSchema": {
             "type": "object",
-            "required": ["userStory", "acceptanceCriteria", "nextOwner"],
+            "required": [
+              "summary",
+              "nonGoals",
+              "acceptanceCriteria"
+            ],
             "properties": {
-              "userStory": { "type": "string" },
-              "acceptanceCriteria": { "type": "array" },
-              "nextOwner": { "type": "string", "enum": ["product", "support"] }
+              "summary": {
+                "type": "string"
+              },
+              "nonGoals": {
+                "type": "array"
+              },
+              "acceptanceCriteria": {
+                "type": "array"
+              }
             }
           },
-          "edges": [{ "to": "done" }]
+          "edges": [
+            {
+              "to": "done"
+            }
+          ]
+        },
+        "simplify-design": {
+          "purpose": "Plan a behavior-preserving simplification",
+          "instructions": "Use CHG-2042 to propose the smallest simplification. Include what behavior must stay unchanged and how to verify it.",
+          "exec": "inline",
+          "outputSchema": {
+            "type": "object",
+            "required": [
+              "simplificationTarget",
+              "preservedBehavior",
+              "verification"
+            ],
+            "properties": {
+              "simplificationTarget": {
+                "type": "string"
+              },
+              "preservedBehavior": {
+                "type": "array"
+              },
+              "verification": {
+                "type": "array"
+              }
+            }
+          },
+          "edges": [
+            {
+              "to": "done"
+            }
+          ]
         },
         "answer-question": {
-          "purpose": "Prepare a customer answer",
-          "instructions": "Answer the customer's question using only support-playbook.md and note any uncertainty.",
+          "purpose": "Answer an engineering question",
+          "instructions": "Answer the request using the local files and state any uncertainty.",
           "exec": "inline",
           "outputSchema": {
             "type": "object",
-            "required": ["answer", "confidence", "needsFollowup"],
+            "required": [
+              "answer",
+              "confidence",
+              "needsFollowup"
+            ],
             "properties": {
-              "answer": { "type": "string" },
-              "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
-              "needsFollowup": { "type": "boolean" }
+              "answer": {
+                "type": "string"
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "needsFollowup": {
+                "type": "boolean"
+              }
             }
           },
-          "edges": [{ "to": "done" }]
+          "edges": [
+            {
+              "to": "done"
+            }
+          ]
         },
         "done": {
-          "purpose": "Support triage complete",
+          "purpose": "Change intake complete",
           "terminal": true
         }
       }
     },
-    "policy-refresh": {
-      "entry": "audit-playbook",
+    "architecture-sweep": {
+      "kind": "workflow",
+      "title": "Architecture Sweep",
+      "description": "Review the demo repository brief and propose one small cleanup assignment.",
+      "activationHints": [
+        "review architecture",
+        "find cleanup work",
+        "scan for simplification"
+      ],
+      "effects": [
+        "read_repo"
+      ],
+      "entry": "select-cleanup",
       "nodes": {
-        "audit-playbook": {
-          "purpose": "Find one improvement to the support playbook",
-          "instructions": "Read support-playbook.md and tickets/inbox.json. Suggest one concrete playbook improvement based on the sample ticket.",
+        "select-cleanup": {
+          "purpose": "Select one cleanup candidate",
+          "instructions": "Read repo-brief.md, engineering-playbook.md, and work-items/inbox.json. Choose one small cleanup that would improve maintainability without reducing behavior.",
           "exec": "inline",
           "outputSchema": {
             "type": "object",
-            "required": ["gap", "suggestedChange"],
+            "required": [
+              "candidate",
+              "whyNow",
+              "verification"
+            ],
             "properties": {
-              "gap": { "type": "string" },
-              "suggestedChange": { "type": "string" }
+              "candidate": {
+                "type": "string"
+              },
+              "whyNow": {
+                "type": "string"
+              },
+              "verification": {
+                "type": "array"
+              }
             }
           },
-          "edges": [{ "to": "done" }]
+          "edges": [
+            {
+              "to": "done"
+            }
+          ]
         },
         "done": {
-          "purpose": "Policy refresh complete",
+          "purpose": "Architecture sweep complete",
+          "terminal": true
+        }
+      }
+    },
+    "workspace-dispatcher": {
+      "kind": "dispatcher",
+      "title": "Workspace Dispatcher",
+      "description": "Routes user requests to the right demo graph.",
+      "activationHints": [
+        "route engineering work",
+        "choose a workflow",
+        "triage a codebase request"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "request"
+        ],
+        "properties": {
+          "request": {
+            "type": "string"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "action",
+          "graphId",
+          "reason"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "start_run",
+              "list_runs",
+              "ask_user"
+            ]
+          },
+          "graphId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "effects": [],
+      "entry": "route",
+      "nodes": {
+        "route": {
+          "purpose": "Choose the best graph for an engineering request",
+          "instructions": "Use repo-brief.md, engineering-playbook.md, and work-items/inbox.json to choose change-intake for a specific change request or architecture-sweep for a broad cleanup request.",
+          "exec": "inline",
+          "outputSchema": {
+            "type": "object",
+            "required": [
+              "action",
+              "graphId",
+              "reason"
+            ],
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": [
+                  "start_run",
+                  "list_runs",
+                  "ask_user"
+                ]
+              },
+              "graphId": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          },
+          "edges": [
+            {
+              "to": "done"
+            }
+          ]
+        },
+        "done": {
+          "purpose": "Dispatcher recommendation complete",
           "terminal": true
         }
       }

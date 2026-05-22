@@ -286,21 +286,21 @@ describe('coach operations', () => {
   it('includes gate decisions in recent context after gated routing', () => {
     const root = makeDemoWorkflowRoot();
     try {
-      startRun({ workflowRoot: root, graph: 'support-triage', runId: 'triage-a' });
-      stepRun({ workflowRoot: root, output: { category: 'bug', priority: 'urgent', rationale: 'checkout is blocked' } });
-      const state = decideGate({ workflowRoot: root, decision: { decision: 'approved-bug', reason: 'classification is right' } });
+      startRun({ workflowRoot: root, graph: 'change-intake', runId: 'change-a', effectPolicy: { allowedEffects: ['read_repo'] } });
+      stepRun({ workflowRoot: root, output: { changeType: 'refactor', risk: 'medium', rationale: 'duplicated helpers' } });
+      const state = decideGate({ workflowRoot: root, decision: { decision: 'approved-refactor', reason: 'routing is right' } });
       expect(state.status).toBe('ok');
       if (state.status === 'ok') {
         expect(state.context.previous).toEqual([
           {
-            id: 'classify-ticket',
+            id: 'classify-change',
             purpose: 'Completed node',
-            output: { category: 'bug', priority: 'urgent', rationale: 'checkout is blocked' },
+            output: { changeType: 'refactor', risk: 'medium', rationale: 'duplicated helpers' },
           },
           {
-            id: 'review-classification',
+            id: 'review-routing',
             purpose: 'Completed node',
-            output: { decision: 'approved-bug', reason: 'classification is right' },
+            output: { decision: 'approved-refactor', reason: 'routing is right' },
           },
         ]);
       }

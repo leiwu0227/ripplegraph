@@ -1,0 +1,18 @@
+[
+  {
+    "id": "CHG-2042",
+    "requester": "Runtime maintainers",
+    "subject": "Simplify duplicated CLI routing helpers",
+    "reportedAt": "2026-05-21T09:15:00Z",
+    "message": "The JSON CLI and demo CLI both normalize command flags and render next-step guidance in slightly different ways. Review whether we can simplify the shared helpers without changing command behavior.",
+    "constraints": [
+      "Do not reduce existing command coverage.",
+      "Keep output stable for host agents.",
+      "Prefer small module-level simplifications over a new framework layer."
+    ],
+    "evidence": {
+      "files": ["src/cli.ts", "src/demo-cli.ts", "src/internal/cli-helpers.ts"],
+      "verification": ["npm test -- tests/cli.test.ts tests/demo-cli.test.ts", "npm run typecheck"]
+    }
+  }
+]

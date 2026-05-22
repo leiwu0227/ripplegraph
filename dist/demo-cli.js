@@ -206,7 +206,12 @@ async function main(argv) {
             emitLine(renderRuns(listRuns({ workflowRoot: root })));
             return;
         case 'start':
-            emitLine(renderActiveState(startRun({ workflowRoot: root, graph: required(args.positional[0], 'missing graph id'), runId: required(stringFlag(args.flags, 'run'), 'missing --run') })));
+            emitLine(renderActiveState(startRun({
+                workflowRoot: root,
+                graph: required(args.positional[0], 'missing graph id'),
+                runId: required(stringFlag(args.flags, 'run'), 'missing --run'),
+                effectPolicy: { allowedEffects: ['read_repo'] },
+            })));
             return;
         case 'pause':
             emitLine(renderActiveState(suspendRun({ workflowRoot: root, note: args.positional.join(' ') || undefined })));

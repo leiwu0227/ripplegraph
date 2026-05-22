@@ -53,31 +53,32 @@ function mockcopyGraph(outputSchema: unknown, instructions = 'Submit the mockcop
   };
 }
 
-function supportTriageGraph(): unknown {
+function changeIntakeGraph(): unknown {
   return {
-    entry: 'classify-ticket',
+    kind: 'workflow',
+    title: 'Change Intake',
+    effects: ['read_repo'],
+    entry: 'classify-change',
     nodes: {
-      'classify-ticket': {
-        purpose: 'Classify the newest support ticket',
-        instructions: 'Read tickets/inbox.json and support-playbook.md.',
+      'classify-change': {
+        purpose: 'Classify the queued engineering change',
+        instructions: 'Read work-items/inbox.json, engineering-playbook.md, and repo-brief.md.',
         exec: 'inline',
         outputSchema: {
           type: 'object',
-          required: ['category', 'priority', 'rationale'],
+          required: ['changeType', 'risk', 'rationale'],
           properties: {
-            category: { type: 'string', enum: ['bug', 'feature', 'question'] },
-            priority: { type: 'string', enum: ['low', 'normal', 'urgent'] },
+            changeType: { type: 'string', enum: ['bugfix', 'feature', 'refactor', 'question'] },
+            risk: { type: 'string', enum: ['low', 'medium', 'high'] },
             rationale: { type: 'string' },
           },
         },
-        edges: [
-          { to: 'review-classification' },
-        ],
+        edges: [{ to: 'review-routing' }],
       },
-      'review-classification': {
-        purpose: 'External review gate for the classification',
+      'review-routing': {
+        purpose: 'Human review gate for the routing decision',
         instructions:
-          'Stop here and ask the user or external operator to review the previous classification. Use ripplegraph-demo decide, not submit.',
+          'Stop here and ask the user or external operator to review the previous classification. Use ripplegraph-demo advance with a decision.',
         exec: 'inline',
         gate: {
           type: 'external_decision',
@@ -87,71 +88,82 @@ function supportTriageGraph(): unknown {
             properties: {
               decision: {
                 type: 'string',
-                enum: ['approved-bug', 'approved-feature', 'approved-question', 'rejected'],
+                enum: ['approved-bugfix', 'approved-feature', 'approved-refactor', 'approved-question', 'rejected'],
               },
               reason: { type: 'string' },
             },
           },
         },
         edges: [
-          { to: 'reproduce-bug', when: { decision: 'approved-bug' } },
-          { to: 'scope-feature', when: { decision: 'approved-feature' } },
+          { to: 'plan-bugfix', when: { decision: 'approved-bugfix' } },
+          { to: 'shape-feature', when: { decision: 'approved-feature' } },
+          { to: 'simplify-design', when: { decision: 'approved-refactor' } },
           { to: 'answer-question', when: { decision: 'approved-question' } },
-          { to: 'classify-ticket', when: { decision: 'rejected' } },
+          { to: 'classify-change', when: { decision: 'rejected' } },
         ],
       },
-      'reproduce-bug': {
-        purpose: 'Draft a bug reproduction plan',
-        instructions: 'Write reproduction details.',
+      'plan-bugfix': {
+        purpose: 'Plan a bugfix',
+        instructions: 'Create a concise bugfix plan.',
         exec: 'inline',
         outputSchema: {
           type: 'object',
-          required: ['steps', 'expected', 'actual', 'nextOwner'],
+          required: ['reproduction', 'expectedBehavior', 'likelyFiles', 'verification'],
           properties: {
-            steps: { type: 'array' },
-            expected: { type: 'string' },
-            actual: { type: 'string' },
-            nextOwner: { type: 'string', enum: ['support', 'engineering'] },
+            reproduction: { type: 'string' },
+            expectedBehavior: { type: 'string' },
+            likelyFiles: { type: 'array' },
+            verification: { type: 'array' },
           },
         },
         edges: [{ to: 'done' }],
       },
-      'scope-feature': {
-        purpose: 'Scope a feature request',
+      'shape-feature': {
+        purpose: 'Shape a feature',
+        exec: 'inline',
+        outputSchema: { type: 'object' },
+        edges: [{ to: 'done' }],
+      },
+      'simplify-design': {
+        purpose: 'Plan a behavior-preserving simplification',
         exec: 'inline',
         outputSchema: { type: 'object' },
         edges: [{ to: 'done' }],
       },
       'answer-question': {
-        purpose: 'Prepare a customer answer',
+        purpose: 'Answer an engineering question',
         exec: 'inline',
         outputSchema: { type: 'object' },
         edges: [{ to: 'done' }],
       },
-      done: { purpose: 'Support triage complete', terminal: true },
+      done: { purpose: 'Change intake complete', terminal: true },
     },
   };
 }
 
-function policyRefreshGraph(): unknown {
+function architectureSweepGraph(): unknown {
   return {
-    entry: 'audit-playbook',
+    kind: 'workflow',
+    title: 'Architecture Sweep',
+    effects: ['read_repo'],
+    entry: 'select-cleanup',
     nodes: {
-      'audit-playbook': {
-        purpose: 'Find one improvement to the support playbook',
-        instructions: 'Suggest one concrete playbook improvement.',
+      'select-cleanup': {
+        purpose: 'Select one cleanup candidate',
+        instructions: 'Choose one small cleanup that would improve maintainability without reducing behavior.',
         exec: 'inline',
         outputSchema: {
           type: 'object',
-          required: ['gap', 'suggestedChange'],
+          required: ['candidate', 'whyNow', 'verification'],
           properties: {
-            gap: { type: 'string' },
-            suggestedChange: { type: 'string' },
+            candidate: { type: 'string' },
+            whyNow: { type: 'string' },
+            verification: { type: 'array' },
           },
         },
         edges: [{ to: 'done' }],
       },
-      done: { purpose: 'Policy refresh complete', terminal: true },
+      done: { purpose: 'Architecture sweep complete', terminal: true },
     },
   };
 }
@@ -357,11 +369,26 @@ export function makeDemoWorkflowRoot(): string {
   return createWorkflowRoot({
     prefix: 'ripplegraph-demo-cli-',
     workflow: {
-      id: 'support-triage-demo',
-      version: '0.3.0',
+      id: 'engineering-coach-demo',
+      version: '0.4.0',
+      entryGraph: 'workspace-dispatcher',
+      title: 'Engineering Coach Demo',
       graphs: {
-        'support-triage': supportTriageGraph(),
-        'policy-refresh': policyRefreshGraph(),
+        'change-intake': changeIntakeGraph(),
+        'architecture-sweep': architectureSweepGraph(),
+        'workspace-dispatcher': {
+          kind: 'dispatcher',
+          entry: 'route',
+          nodes: {
+            route: {
+              purpose: 'Choose the best graph for an engineering request',
+              exec: 'inline',
+              outputSchema: { type: 'object' },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Dispatcher recommendation complete', terminal: true },
+          },
+        },
       },
     },
   });
