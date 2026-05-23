@@ -258,6 +258,91 @@ describe('coach runtime storage', () => {
       fs.rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it('persists workflow-ref stack frames and scoped node artifacts', () => {
+    const root = makeStorageWorkflowRoot();
+    try {
+      fs.writeFileSync(
+        path.join(root, 'workflow.json'),
+        JSON.stringify({
+          id: 'workflow-ref-valid',
+          version: '0.1.0',
+          graphs: {
+            parent: {
+              entry: 'review',
+              nodes: {
+                review: { purpose: 'Run child review', workflowRef: { graphId: 'child-flow' }, edges: [{ to: 'done' }] },
+                done: { purpose: 'Done', terminal: true },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+      expect(loadWorkflow(root).graphs.parent!.nodes.review!.workflowRef).toEqual({ graphId: 'child-flow' });
+
+      fs.writeFileSync(
+        path.join(root, 'workflow.json'),
+        JSON.stringify({
+          id: 'workflow-ref-invalid',
+          version: '0.1.0',
+          graphs: {
+            parent: {
+              entry: 'review',
+              nodes: {
+                review: {
+                  purpose: 'Invalid ref gate',
+                  workflowRef: { graphId: 'child-flow' },
+                  gate: { type: 'external_decision', decisionSchema: { type: 'object' } },
+                },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+      expect(() => loadWorkflow(root)).toThrow(/workflowRef.*gate/);
+
+      ensureWorkflowRoot(root);
+      writeCheckpoint(root, {
+        runId: 'stacked-run',
+        status: 'active',
+        rootGraph: 'parent',
+        workflow: { id: 'workflow-ref-valid', version: '0.1.0' },
+        position: { graph: 'child-flow', node: 'review' },
+        createdAt: '2026-05-23T00:00:00.000Z',
+        updatedAt: '2026-05-23T00:00:00.000Z',
+        outputs: {},
+        gateDecisions: {},
+        stack: [
+          {
+            parent: {
+              graph: 'parent',
+              node: 'review',
+              scope: '',
+            },
+            child: {
+              kind: 'package',
+              graphId: 'child-flow',
+              graphVersion: '0.1.0',
+              packagePath: '.ripplegraph/graphs/child-flow',
+            },
+            scope: 'f1',
+            enteredAt: '2026-05-23T00:00:00.000Z',
+          },
+        ],
+      });
+
+      const artifact = writeNodeOutput(root, 'stacked-run', 'review', { decision: 'ok' }, 'f1');
+      expect(artifact).toBe('artifacts/f1/review/output.json');
+      expect(JSON.parse(fs.readFileSync(path.join(root, '.ripplegraph', 'runs', 'stacked-run', artifact), 'utf8'))).toEqual({
+        decision: 'ok',
+      });
+      expect(readCheckpoint(root, 'stacked-run').stack).toHaveLength(1);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('coach operations', () => {
