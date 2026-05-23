@@ -52,7 +52,7 @@ describe('effect policy', () => {
     try {
       expect(() =>
         startRun({ workflowRoot: overrideRoot, graph: 'main', runId: 'r', effectPolicy: { allowedEffects: ['read_repo'] } }),
-      ).toThrow(/write_repo/);
+      ).toThrow(/write_repo \(node: a\)/);
       expect(
         startRun({
           workflowRoot: overrideRoot,

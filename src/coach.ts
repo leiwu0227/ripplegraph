@@ -22,7 +22,7 @@ import { resumableRuns, runSummary, stateForCheckpoint } from './internal/coach-
 import { validateOutput } from './internal/output-validation.js';
 import { getGraph, getNode, selectEdge } from './internal/runtime-graph.js';
 import { transitionEntry } from './internal/transitions.js';
-import { assertEffectsAllowed, type EffectPolicy } from './effects.js';
+import { type EffectPolicy } from './effects.js';
 
 export interface WorkflowRootOptions {
   workflowRoot: string;
@@ -134,18 +134,31 @@ function effectsForNode(graph: Graph, node: Node): string[] {
   return node.effects ?? graph.effects;
 }
 
-function unionOfNodeEffects(graph: Graph): string[] {
-  const set = new Set<string>();
-  for (const node of Object.values(graph.nodes)) {
-    for (const effect of effectsForNode(graph, node)) set.add(effect);
+function assertGraphEffectsAllowed(graph: Graph, graphId: string, policy?: EffectPolicy): void {
+  const allowed = new Set(policy?.allowedEffects ?? []);
+  const missing = new Map<string, string[]>();
+  for (const [nodeId, node] of Object.entries(graph.nodes)) {
+    for (const effect of effectsForNode(graph, node)) {
+      if (allowed.has(effect)) continue;
+      const owners = missing.get(effect) ?? [];
+      if (!owners.includes(nodeId)) owners.push(nodeId);
+      missing.set(effect, owners);
+    }
   }
-  return [...set];
+  if (missing.size === 0) return;
+  const parts = [...missing.entries()].map(
+    ([effect, nodes]) => `${effect} (${nodes.length > 1 ? 'nodes' : 'node'}: ${nodes.join(', ')})`,
+  );
+  throw new RipplegraphError(
+    'E_EFFECT_NOT_ALLOWED',
+    `graph ${graphId} requires effects not allowed by policy: ${parts.join(', ')}`,
+  );
 }
 
 export function startRun(opts: StartRunOptions): StateOk {
   const workflow = loadWorkflow(opts.workflowRoot);
   const graph = getGraph(workflow, opts.graph);
-  assertEffectsAllowed(unionOfNodeEffects(graph), opts.effectPolicy, `graph ${opts.graph}`);
+  assertGraphEffectsAllowed(graph, opts.graph, opts.effectPolicy);
   ensureWorkflowRoot(opts.workflowRoot);
   const current = readCurrent(opts.workflowRoot);
   if (current.focusedRunId) {
