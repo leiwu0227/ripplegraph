@@ -179,6 +179,38 @@ describe('coach runtime storage', () => {
       fs.rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it('persists optional package source metadata on workflow checkpoints', () => {
+    const root = makeStorageWorkflowRoot();
+    try {
+      ensureWorkflowRoot(root);
+      writeCheckpoint(root, {
+        runId: 'package-run',
+        status: 'active',
+        rootGraph: 'package-flow',
+        workflow: { id: 'demo', version: '0.1.0' },
+        position: { graph: 'package-flow', node: 'review' },
+        createdAt: '2026-05-23T00:00:00.000Z',
+        updatedAt: '2026-05-23T00:00:00.000Z',
+        outputs: {},
+        graphSource: {
+          kind: 'package',
+          graphId: 'package-flow',
+          graphVersion: '0.1.0',
+          packagePath: '.ripplegraph/graphs/package-flow',
+        },
+      } as Parameters<typeof writeCheckpoint>[1]);
+
+      expect(readCheckpoint(root, 'package-run').graphSource).toEqual({
+        kind: 'package',
+        graphId: 'package-flow',
+        graphVersion: '0.1.0',
+        packagePath: '.ripplegraph/graphs/package-flow',
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('coach operations', () => {
