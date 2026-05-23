@@ -4,6 +4,7 @@ import {
   ensureWorkflowRoot,
   listRunIds,
   loadWorkflow,
+  nodeOutputKey,
   readCheckpoint,
   readCurrent,
   writeCheckpoint,
@@ -17,6 +18,7 @@ import {
   type Checkpoint,
   type Gate,
   type Graph,
+  type GraphSource,
   type JsonSchema,
   type Node,
   type Position,
@@ -73,6 +75,7 @@ export interface StateOk {
   workflow: { id: string; version: string };
   run: { id: string; status: Checkpoint['status']; rootGraph: string };
   position: Position;
+  stack: Checkpoint['stack'];
   orientation: string;
   nextAllowedCommand: string;
   helpCommand: string;
@@ -180,6 +183,7 @@ export function startRun(opts: StartRunOptions): StateOk {
     updatedAt: now,
     outputs: {},
     gateDecisions: {},
+    stack: [],
   };
   return createRun(opts.workflowRoot, workflow, graph, checkpoint);
 }
@@ -204,6 +208,7 @@ export function startRegisteredWorkflowRun(opts: StartRegisteredWorkflowRunOptio
     updatedAt: now,
     outputs: {},
     gateDecisions: {},
+    stack: [],
     graphSource: {
       kind: 'package',
       graphId: manifest.id,
@@ -249,7 +254,7 @@ export function getState(opts: WorkflowRootOptions): CoachState {
     };
   }
   const checkpoint = readCheckpoint(opts.workflowRoot, current.focusedRunId);
-  return stateForCheckpoint(workflow, checkpoint, graphForCheckpoint(opts.workflowRoot, workflow, checkpoint));
+  return stateForCheckpoint(workflow, checkpoint, activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint));
 }
 
 export function listRuns(opts: WorkflowRootOptions): RunList {
@@ -270,8 +275,8 @@ export function stepRun(opts: StepRunOptions): StepRunResponse {
   if (checkpoint.status !== 'active') {
     throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
   }
-  const graph = graphForCheckpoint(opts.workflowRoot, workflow, checkpoint);
-  const node = getNode(graph, checkpoint.position.node);
+  const active = activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint);
+  const node = getNode(active.graph, checkpoint.position.node);
   if (node.terminal) {
     return completeRun(opts.workflowRoot, checkpoint, checkpoint.position);
   }
@@ -293,14 +298,14 @@ export function stepRun(opts: StepRunOptions): StepRunResponse {
     };
   }
 
-  const artifact = writeNodeOutput(opts.workflowRoot, checkpoint.runId, checkpoint.position.node, opts.output);
+  const artifact = writeNodeOutput(opts.workflowRoot, checkpoint.runId, checkpoint.position.node, opts.output, active.scope);
   const nextNodeId = selectEdge(node.edges, opts.output)?.to;
   if (!nextNodeId) {
     throw new RipplegraphError('E_NO_EDGE', `node ${checkpoint.position.node} has no matching edge`);
   }
   const from = checkpoint.position;
-  const to = { graph: checkpoint.rootGraph, node: nextNodeId };
-  checkpoint.outputs[checkpoint.position.node] = opts.output;
+  const to = { graph: active.graphId, node: nextNodeId };
+  checkpoint.outputs[nodeOutputKey(active.scope, checkpoint.position.node)] = opts.output;
   checkpoint.position = to;
   checkpoint.updatedAt = new Date().toISOString();
   appendTransition(opts.workflowRoot, checkpoint.runId, {
@@ -308,19 +313,19 @@ export function stepRun(opts: StepRunOptions): StepRunResponse {
     input: { artifact },
     output: { artifact },
   });
-  const nextNode = getNode(graph, nextNodeId);
+  const nextNode = getNode(active.graph, nextNodeId);
   if (nextNode.terminal) {
     return completeRun(opts.workflowRoot, checkpoint, to);
   }
   writeCheckpoint(opts.workflowRoot, checkpoint);
-  return stateForCheckpoint(workflow, checkpoint, graph);
+  return stateForCheckpoint(workflow, checkpoint, active);
 }
 
 export function advanceRun(opts: AdvanceRunOptions): AdvanceRunResponse {
   const workflow = loadWorkflow(opts.workflowRoot);
   const checkpoint = focusedCheckpoint(opts.workflowRoot);
-  const graph = graphForCheckpoint(opts.workflowRoot, workflow, checkpoint);
-  const node = getNode(graph, checkpoint.position.node);
+  const active = activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint);
+  const node = getNode(active.graph, checkpoint.position.node);
   if (node.gate) return decideGate({ workflowRoot: opts.workflowRoot, decision: opts.input });
   return stepRun({ workflowRoot: opts.workflowRoot, output: opts.input });
 }
@@ -331,8 +336,8 @@ export function decideGate(opts: DecideGateOptions): DecideGateResponse {
   if (checkpoint.status !== 'active') {
     throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
   }
-  const graph = graphForCheckpoint(opts.workflowRoot, workflow, checkpoint);
-  const node = getNode(graph, checkpoint.position.node);
+  const active = activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint);
+  const node = getNode(active.graph, checkpoint.position.node);
   if (!node.gate) {
     throw new RipplegraphError('E_NODE_NOT_GATED', `node ${checkpoint.position.node} is not gated`);
   }
@@ -352,15 +357,15 @@ export function decideGate(opts: DecideGateOptions): DecideGateResponse {
     };
   }
 
-  const artifact = writeNodeOutput(opts.workflowRoot, checkpoint.runId, checkpoint.position.node, opts.decision);
+  const artifact = writeNodeOutput(opts.workflowRoot, checkpoint.runId, checkpoint.position.node, opts.decision, active.scope);
   const nextNodeId = selectEdge(node.edges, opts.decision)?.to;
   if (!nextNodeId) {
     throw new RipplegraphError('E_NO_EDGE', `node ${checkpoint.position.node} has no matching edge`);
   }
   const from = checkpoint.position;
-  const to = { graph: checkpoint.rootGraph, node: nextNodeId };
-  checkpoint.gateDecisions[checkpoint.position.node] = opts.decision;
-  checkpoint.outputs[checkpoint.position.node] = opts.decision;
+  const to = { graph: active.graphId, node: nextNodeId };
+  checkpoint.gateDecisions[nodeOutputKey(active.scope, checkpoint.position.node)] = opts.decision;
+  checkpoint.outputs[nodeOutputKey(active.scope, checkpoint.position.node)] = opts.decision;
   checkpoint.position = to;
   checkpoint.updatedAt = new Date().toISOString();
   appendTransition(opts.workflowRoot, checkpoint.runId, {
@@ -369,18 +374,18 @@ export function decideGate(opts: DecideGateOptions): DecideGateResponse {
     output: null,
     gateDecision: opts.decision,
   });
-  const nextNode = getNode(graph, nextNodeId);
+  const nextNode = getNode(active.graph, nextNodeId);
   if (nextNode.terminal) {
     return completeRun(opts.workflowRoot, checkpoint, to);
   }
   writeCheckpoint(opts.workflowRoot, checkpoint);
-  return stateForCheckpoint(workflow, checkpoint, graph);
+  return stateForCheckpoint(workflow, checkpoint, active);
 }
 
 export function suspendRun(opts: SuspendRunOptions): StateOk {
   const workflow = loadWorkflow(opts.workflowRoot);
   const checkpoint = focusedCheckpoint(opts.workflowRoot);
-  const graph = graphForCheckpoint(opts.workflowRoot, workflow, checkpoint);
+  const active = activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint);
   if (checkpoint.status !== 'active') {
     throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
   }
@@ -393,7 +398,7 @@ export function suspendRun(opts: SuspendRunOptions): StateOk {
     ...transitionEntry('suspend', checkpoint.runId, checkpoint.position, checkpoint.position),
     reason: opts.note ?? null,
   });
-  return stateForCheckpoint(workflow, checkpoint, graph);
+  return stateForCheckpoint(workflow, checkpoint, active);
 }
 
 export function resumeRun(opts: ResumeRunOptions): StateOk {
@@ -404,7 +409,7 @@ export function resumeRun(opts: ResumeRunOptions): StateOk {
     throw new RipplegraphError('E_FOCUSED_RUN_EXISTS', `focused run already exists: ${current.focusedRunId}`);
   }
   const checkpoint = readCheckpoint(opts.workflowRoot, opts.runId);
-  const graph = graphForCheckpoint(opts.workflowRoot, workflow, checkpoint);
+  const active = activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint);
   if (checkpoint.status !== 'suspended') {
     throw new RipplegraphError('E_RUN_NOT_RESUMABLE', `run ${opts.runId} is not suspended`);
   }
@@ -413,7 +418,7 @@ export function resumeRun(opts: ResumeRunOptions): StateOk {
   writeCheckpoint(opts.workflowRoot, checkpoint);
   writeCurrent(opts.workflowRoot, { focusedRunId: opts.runId });
   appendTransition(opts.workflowRoot, checkpoint.runId, transitionEntry('resume', checkpoint.runId, checkpoint.position, checkpoint.position));
-  return stateForCheckpoint(workflow, checkpoint, graph);
+  return stateForCheckpoint(workflow, checkpoint, active);
 }
 
 export function abandonRun(opts: AbandonRunOptions): { status: 'abandoned'; run: { id: string; status: 'abandoned'; rootGraph: string }; position: Position } {
@@ -442,20 +447,45 @@ function focusedCheckpoint(rootPath: string): Checkpoint {
   return readCheckpoint(rootPath, current.focusedRunId);
 }
 
+interface ActiveContext {
+  graph: Graph;
+  graphSource?: GraphSource;
+  graphId: string;
+  scope: string;
+}
+
+function activeContextForCheckpoint(rootPath: string, workflow: Workflow, checkpoint: Checkpoint): ActiveContext {
+  const frame = checkpoint.stack.at(-1);
+  if (frame) {
+    return {
+      graph: graphForSource(rootPath, checkpoint, frame.child),
+      graphSource: frame.child,
+      graphId: frame.child.graphId,
+      scope: frame.scope,
+    };
+  }
+  if (checkpoint.graphSource) {
+    return {
+      graph: graphForSource(rootPath, checkpoint, checkpoint.graphSource),
+      graphSource: checkpoint.graphSource,
+      graphId: checkpoint.graphSource.graphId,
+      scope: '',
+    };
+  }
+  return { graph: getGraph(workflow, checkpoint.rootGraph), graphId: checkpoint.rootGraph, scope: '' };
+}
+
 function graphForCheckpoint(rootPath: string, workflow: Workflow, checkpoint: Checkpoint): Graph {
-  if (!checkpoint.graphSource) return getGraph(workflow, checkpoint.rootGraph);
-  const packageRoot = path.isAbsolute(checkpoint.graphSource.packagePath)
-    ? checkpoint.graphSource.packagePath
-    : path.join(rootPath, checkpoint.graphSource.packagePath);
+  return activeContextForCheckpoint(rootPath, workflow, checkpoint).graph;
+}
+
+function graphForSource(rootPath: string, checkpoint: Checkpoint, source: GraphSource): Graph {
+  const packageRoot = path.isAbsolute(source.packagePath) ? source.packagePath : path.join(rootPath, source.packagePath);
   const manifest = loadGraphPackage(packageRoot).manifest;
-  if (
-    manifest.id !== checkpoint.graphSource.graphId ||
-    manifest.kind !== 'workflow' ||
-    manifest.version !== checkpoint.graphSource.graphVersion
-  ) {
+  if (manifest.id !== source.graphId || manifest.kind !== 'workflow' || manifest.version !== source.graphVersion) {
     throw new RipplegraphError(
       'E_RUN_PACKAGE_MISMATCH',
-      `run ${checkpoint.runId} was started with ${checkpoint.graphSource.graphId}@${checkpoint.graphSource.graphVersion}, but ${checkpoint.graphSource.packagePath} is ${manifest.id}@${manifest.version} (${manifest.kind})`,
+      `run ${checkpoint.runId} was started with ${source.graphId}@${source.graphVersion}, but ${source.packagePath} is ${manifest.id}@${manifest.version} (${manifest.kind})`,
     );
   }
   return manifest;

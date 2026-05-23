@@ -530,6 +530,53 @@ describe('coach operations', () => {
     }
   });
 
+  it('renders stacked run state from the active child graph and scope', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackage(root, 'graphs/package-flow-v1', workflowPackageManifest());
+      ensureWorkflowRoot(root);
+      writeCheckpoint(root, {
+        runId: 'stacked-a',
+        status: 'active',
+        rootGraph: 'parent-flow',
+        workflow: { id: 'package-workspace', version: '0.1.0' },
+        position: { graph: 'package-flow', node: 'review' },
+        createdAt: '2026-05-23T00:00:00.000Z',
+        updatedAt: '2026-05-23T00:00:00.000Z',
+        outputs: {
+          review: { parent: true },
+          'f1/review': { child: true },
+        },
+        gateDecisions: {},
+        stack: [
+          {
+            parent: { graph: 'parent-flow', node: 'review', scope: '' },
+            child: {
+              kind: 'package',
+              graphId: 'package-flow',
+              graphVersion: '0.1.0',
+              packagePath: 'graphs/package-flow-v1',
+            },
+            scope: 'f1',
+            enteredAt: '2026-05-23T00:00:00.000Z',
+          },
+        ],
+      });
+      writeCurrent(root, { focusedRunId: 'stacked-a' });
+
+      const state = getState({ workflowRoot: root });
+      expect(state).toMatchObject({
+        status: 'ok',
+        position: { graph: 'package-flow', node: 'review' },
+        node: { purpose: 'Review package workflow v1' },
+        stack: [{ parent: { graph: 'parent-flow', node: 'review', scope: '' }, child: { graphId: 'package-flow' }, scope: 'f1' }],
+        context: { previous: [{ id: 'review', output: { child: true } }] },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('decides a gated node, stores the external decision, and logs a decide transition', () => {
     const root = makeGatedWorkflowRoot();
     try {
