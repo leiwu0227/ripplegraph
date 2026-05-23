@@ -1,16 +1,15 @@
 import { listRunIds, readCheckpoint } from '../storage.js';
 import type { Checkpoint, Graph, Workflow } from '../schema.js';
 import type { RunSummary, StateNoFocusedRun, StateOk } from '../coach.js';
-import { getGraph, getNode } from './runtime-graph.js';
+import { getNode } from './runtime-graph.js';
 
 interface StateGraphContext {
   graph: Graph;
   scope: string;
 }
 
-export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint, context?: Graph | StateGraphContext): StateOk {
-  const active = activeContext(workflow, checkpoint, context);
-  const activeGraph = active.graph;
+export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint, context: StateGraphContext): StateOk {
+  const activeGraph = context.graph;
   const node = getNode(activeGraph, checkpoint.position.node);
   return {
     status: 'ok',
@@ -30,7 +29,7 @@ export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint, c
       gate: node.gate,
     },
     context: {
-      previous: previousNodes(checkpoint, active.scope),
+      previous: previousNodes(checkpoint, context.scope),
       next: node.edges.map((edge) => {
         const next = getNode(activeGraph, edge.to);
         return { id: edge.to, purpose: next.purpose, when: edge.when };
@@ -47,12 +46,6 @@ export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint, c
         }
       : { command: 'step', acceptedFormats: ['json'] },
   };
-}
-
-function activeContext(workflow: Workflow, checkpoint: Checkpoint, context?: Graph | StateGraphContext): StateGraphContext {
-  if (!context) return { graph: getGraph(workflow, checkpoint.rootGraph), scope: '' };
-  if ('graph' in context) return context;
-  return { graph: context, scope: '' };
 }
 
 function exampleOutput(schema: { properties?: Record<string, { enum?: unknown[]; type?: string }> }): string {

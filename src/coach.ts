@@ -12,7 +12,8 @@ import {
   writeNodeOutput,
 } from './storage.js';
 import { loadGraphPackage } from './graph-package.js';
-import { resolveRegisteredGraphPackage } from './registry.js';
+import { listRegisteredGraphs, resolveRegisteredGraphPackage, type RegistryEntry } from './registry.js';
+import { resolveDispatcherEntry } from './internal/dispatcher-resolution.js';
 import {
   RipplegraphError,
   type Checkpoint,
@@ -26,7 +27,7 @@ import {
 } from './schema.js';
 import { resumableRuns, runSummary, stateForCheckpoint } from './internal/coach-responses.js';
 import { validateOutput } from './internal/output-validation.js';
-import { getGraph, getNode, selectEdge } from './internal/runtime-graph.js';
+import { getNode, selectEdge } from './internal/runtime-graph.js';
 import { transitionEntry } from './internal/transitions.js';
 import { type EffectPolicy } from './effects.js';
 
@@ -35,12 +36,6 @@ export interface WorkflowRootOptions {
 }
 
 export interface StartRunOptions extends WorkflowRootOptions {
-  graph: string;
-  runId: string;
-  effectPolicy?: EffectPolicy;
-}
-
-export interface StartRegisteredWorkflowRunOptions extends WorkflowRootOptions {
   graphId: string;
   runId: string;
   effectPolicy?: EffectPolicy;
@@ -101,7 +96,7 @@ export interface StateOk {
 export interface StateNoFocusedRun {
   status: 'no_focused_run';
   workflow: { id: string; version: string };
-  availableGraphs: string[];
+  availableGraphs: RegistryEntry[];
   resumableRuns: Array<{ id: string; status: 'suspended'; rootGraph: string }>;
   dispatcher?: { graph: string; available: true };
   orientation: string;
@@ -140,7 +135,11 @@ export type DecideGateResponse = AdvanceResponse;
 export function validateWorkflowRoot(rootPath: string): { status: 'ok'; workflow: { id: string; version: string }; graphs: string[] } {
   const workflow = loadWorkflow(rootPath);
   ensureWorkflowRoot(rootPath);
-  return { status: 'ok', workflow: { id: workflow.id, version: workflow.version }, graphs: Object.keys(workflow.graphs) };
+  return {
+    status: 'ok',
+    workflow: { id: workflow.id, version: workflow.version },
+    graphs: listRegisteredGraphs(rootPath).map((entry) => entry.id),
+  };
 }
 
 function effectsForNode(graph: Graph, node: Node): string[] {
@@ -201,19 +200,6 @@ function collectMissingChildEffects(
 
 export function startRun(opts: StartRunOptions): StateOk {
   const workflow = loadWorkflow(opts.workflowRoot);
-  const graph = getGraph(workflow, opts.graph);
-  assertGraphAndChildEffectsAllowed(opts.workflowRoot, graph, opts.graph, opts.effectPolicy);
-  const checkpoint = buildInitialCheckpoint({
-    runId: opts.runId,
-    rootGraph: opts.graph,
-    entryNode: graph.entry,
-    workflow,
-  });
-  return createRun(opts.workflowRoot, workflow, graph, checkpoint);
-}
-
-export function startRegisteredWorkflowRun(opts: StartRegisteredWorkflowRunOptions): StateOk {
-  const workflow = loadWorkflow(opts.workflowRoot);
   const { entry, graphPackage } = resolveRegisteredGraphPackage({
     workflowRoot: opts.workflowRoot,
     graphId: opts.graphId,
@@ -241,7 +227,7 @@ function buildInitialCheckpoint(args: {
   rootGraph: string;
   entryNode: string;
   workflow: Workflow;
-  graphSource?: GraphSource;
+  graphSource: GraphSource;
 }): Checkpoint {
   const now = new Date().toISOString();
   return {
@@ -256,7 +242,7 @@ function buildInitialCheckpoint(args: {
     gateDecisions: {},
     stack: [],
     frameCounter: 0,
-    ...(args.graphSource ? { graphSource: args.graphSource } : {}),
+    graphSource: args.graphSource,
   };
 }
 
@@ -280,22 +266,42 @@ export function getState(opts: WorkflowRootOptions): CoachState {
   ensureWorkflowRoot(opts.workflowRoot);
   const current = readCurrent(opts.workflowRoot);
   if (!current.focusedRunId) {
-    const dispatcher = workflow.entryGraph ? { graph: workflow.entryGraph, available: true as const } : undefined;
+    const availableGraphs = listRegisteredGraphs(opts.workflowRoot);
+    const dispatcher = tryResolveDispatcher(opts.workflowRoot);
     return {
       status: 'no_focused_run',
       workflow: { id: workflow.id, version: workflow.version },
-      availableGraphs: Object.keys(workflow.graphs),
+      availableGraphs,
       resumableRuns: resumableRuns(opts.workflowRoot),
-      dispatcher,
-      orientation: dispatcher ? 'No run is focused. Submit user intent to the dispatcher.' : 'No run is focused. Start or resume a run.',
+      ...(dispatcher ? { dispatcher: { graph: dispatcher.id, available: true as const } } : {}),
+      orientation: dispatcher
+        ? 'No run is focused. Submit user intent to the dispatcher.'
+        : 'No run is focused. Start or resume a run.',
       nextAllowedCommand: dispatcher
         ? 'ripplegraph dispatch --request "<user request>"'
-        : `ripplegraph start --graph ${Object.keys(workflow.graphs)[0] ?? '<graph-id>'} --run-id <run-id>`,
+        : `ripplegraph start --graph ${availableGraphs[0]?.id ?? '<graph-id>'} --run-id <run-id>`,
       helpCommand: 'ripplegraph explain',
     };
   }
   const checkpoint = readCheckpoint(opts.workflowRoot, current.focusedRunId);
   return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint);
+}
+
+function tryResolveDispatcher(workflowRoot: string): RegistryEntry | undefined {
+  try {
+    return resolveDispatcherEntry(workflowRoot);
+  } catch (error) {
+    if (error instanceof RipplegraphError) {
+      if (
+        error.code === 'E_MISSING_DISPATCHER' ||
+        error.code === 'E_AMBIGUOUS_DISPATCHER' ||
+        error.code === 'E_ENTRY_GRAPH_MISMATCH'
+      ) {
+        return undefined;
+      }
+    }
+    throw error;
+  }
 }
 
 export function listRuns(opts: WorkflowRootOptions): RunList {
@@ -316,7 +322,7 @@ export function stepRun(opts: StepRunOptions): StepRunResponse {
   if (checkpoint.status !== 'active') {
     throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
   }
-  const active = activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint);
+  const active = activeContextForCheckpoint(opts.workflowRoot, checkpoint);
   const node = getNode(active.graph, checkpoint.position.node);
   if (node.terminal) {
     return completeRun(opts.workflowRoot, checkpoint, checkpoint.position);
@@ -366,9 +372,8 @@ export function stepRun(opts: StepRunOptions): StepRunResponse {
 }
 
 export function advanceRun(opts: AdvanceRunOptions): AdvanceRunResponse {
-  const workflow = loadWorkflow(opts.workflowRoot);
   const checkpoint = focusedCheckpoint(opts.workflowRoot);
-  const active = activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint);
+  const active = activeContextForCheckpoint(opts.workflowRoot, checkpoint);
   const node = getNode(active.graph, checkpoint.position.node);
   if (node.gate) return decideGate({ workflowRoot: opts.workflowRoot, decision: opts.input });
   return stepRun({ workflowRoot: opts.workflowRoot, output: opts.input });
@@ -380,7 +385,7 @@ export function decideGate(opts: DecideGateOptions): DecideGateResponse {
   if (checkpoint.status !== 'active') {
     throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
   }
-  const active = activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint);
+  const active = activeContextForCheckpoint(opts.workflowRoot, checkpoint);
   const node = getNode(active.graph, checkpoint.position.node);
   if (!node.gate) {
     throw new RipplegraphError('E_NODE_NOT_GATED', `node ${checkpoint.position.node} is not gated`);
@@ -432,7 +437,7 @@ export function decideGate(opts: DecideGateOptions): DecideGateResponse {
 export function suspendRun(opts: SuspendRunOptions): StateOk {
   const workflow = loadWorkflow(opts.workflowRoot);
   const checkpoint = focusedCheckpoint(opts.workflowRoot);
-  const active = activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint);
+  const active = activeContextForCheckpoint(opts.workflowRoot, checkpoint);
   if (checkpoint.status !== 'active') {
     throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
   }
@@ -445,7 +450,7 @@ export function suspendRun(opts: SuspendRunOptions): StateOk {
     ...transitionEntry('suspend', checkpoint.runId, checkpoint.position, checkpoint.position),
     reason: opts.note ?? null,
   });
-  return stateForCheckpoint(workflow, checkpoint, active);
+  return stateForCheckpoint(workflow, checkpoint, { graph: active.graph, scope: active.scope });
 }
 
 export function resumeRun(opts: ResumeRunOptions): StateOk {
@@ -494,13 +499,13 @@ function focusedCheckpoint(rootPath: string): Checkpoint {
 }
 
 function enterWorkflowRefs(rootPath: string, workflow: Workflow, checkpoint: Checkpoint): StateOk {
-  let active = activeContextForCheckpoint(rootPath, workflow, checkpoint);
+  let active = activeContextForCheckpoint(rootPath, checkpoint);
   ensureFrameCounter(checkpoint);
   const entered = new Set<string>();
   while (true) {
     const node = getNode(active.graph, checkpoint.position.node);
     const graphId = node.workflowRef?.graphId;
-    if (!graphId) return stateForCheckpoint(workflow, checkpoint, active);
+    if (!graphId) return stateForCheckpoint(workflow, checkpoint, { graph: active.graph, scope: active.scope });
     const cycleKey = `${active.graphId}/${checkpoint.position.node}->${graphId}`;
     if (entered.has(cycleKey)) {
       throw new RipplegraphError('E_WORKFLOW_REF_CYCLE', `workflowRef cycle while entering ${graphId}`);
@@ -582,7 +587,14 @@ function exitChildWorkflow(
   if (!frame) {
     return completeRun(rootPath, checkpoint, childTerminalPosition);
   }
-  const parentGraph = frame.parent.graphSource ? graphForSource(rootPath, checkpoint, frame.parent.graphSource) : getGraph(workflow, frame.parent.graph);
+  const parentGraphSource = frame.parent.graphSource ?? checkpoint.graphSource;
+  if (!parentGraphSource) {
+    throw new RipplegraphError(
+      'E_MISSING_GRAPH_SOURCE',
+      `run ${checkpoint.runId} has a stack frame without a resolvable parent graph source`,
+    );
+  }
+  const parentGraph = graphForSource(rootPath, checkpoint, parentGraphSource);
   const parentNode = getNode(parentGraph, frame.parent.node);
   const artifact = writeNodeOutput(rootPath, checkpoint.runId, frame.parent.node, childResult, frame.parent.scope);
   checkpoint.outputs[nodeOutputKey(frame.parent.scope, frame.parent.node)] = childResult;
@@ -606,7 +618,7 @@ function exitChildWorkflow(
         rootPath,
         workflow,
         checkpoint,
-        { graph: parentGraph, graphSource: frame.parent.graphSource, graphId: frame.parent.graph, scope: frame.parent.scope },
+        { graph: parentGraph, graphSource: parentGraphSource, graphId: frame.parent.graph, scope: frame.parent.scope },
         childResult,
         to,
       );
@@ -619,12 +631,12 @@ function exitChildWorkflow(
 
 interface ActiveContext {
   graph: Graph;
-  graphSource?: GraphSource;
+  graphSource: GraphSource;
   graphId: string;
   scope: string;
 }
 
-function activeContextForCheckpoint(rootPath: string, workflow: Workflow, checkpoint: Checkpoint): ActiveContext {
+function activeContextForCheckpoint(rootPath: string, checkpoint: Checkpoint): ActiveContext {
   const frame = checkpoint.stack.at(-1);
   if (frame) {
     return {
@@ -634,15 +646,18 @@ function activeContextForCheckpoint(rootPath: string, workflow: Workflow, checkp
       scope: frame.scope,
     };
   }
-  if (checkpoint.graphSource) {
-    return {
-      graph: graphForSource(rootPath, checkpoint, checkpoint.graphSource),
-      graphSource: checkpoint.graphSource,
-      graphId: checkpoint.graphSource.graphId,
-      scope: '',
-    };
+  if (!checkpoint.graphSource) {
+    throw new RipplegraphError(
+      'E_MISSING_GRAPH_SOURCE',
+      `run ${checkpoint.runId} has no graphSource; the workspace must register a graph package for ${checkpoint.rootGraph}`,
+    );
   }
-  return { graph: getGraph(workflow, checkpoint.rootGraph), graphId: checkpoint.rootGraph, scope: '' };
+  return {
+    graph: graphForSource(rootPath, checkpoint, checkpoint.graphSource),
+    graphSource: checkpoint.graphSource,
+    graphId: checkpoint.graphSource.graphId,
+    scope: '',
+  };
 }
 
 function graphForSource(rootPath: string, checkpoint: Checkpoint, source: GraphSource): Graph {

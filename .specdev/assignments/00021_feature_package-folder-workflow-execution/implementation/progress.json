@@ -1,0 +1,41 @@
+{
+  "plan_file": ".specdev/assignments/00021_feature_package-folder-workflow-execution/breakdown/plan.md",
+  "total_tasks": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": null,
+      "completed_at": "2026-05-23T08:59:37Z",
+      "summary": "Migrated test fixtures to createTestWorkspace helper"
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": null,
+      "completed_at": "2026-05-23T08:59:38Z",
+      "summary": "Shrunk workspace manifest schema, consolidated startRun, added resolveDispatcher"
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "started_at": null,
+      "completed_at": "2026-05-23T08:59:40Z",
+      "summary": "Updated CLI start, demo-cli, and minimal template for registry-only resolution"
+    },
+    {
+      "number": 4,
+      "status": "completed",
+      "started_at": null,
+      "completed_at": "2026-05-23T09:01:05Z",
+      "summary": "Added unknown-graph rejection test and bundled-template parity check"
+    },
+    {
+      "number": 5,
+      "status": "completed",
+      "started_at": null,
+      "completed_at": "2026-05-23T09:01:38Z",
+      "summary": "Documented package-folder execution as the runtime model in README"
+    }
+  ]
+}

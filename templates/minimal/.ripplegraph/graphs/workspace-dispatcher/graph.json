@@ -1,0 +1,51 @@
+{
+  "id": "workspace-dispatcher",
+  "version": "0.4.0",
+  "kind": "dispatcher",
+  "title": "Workspace Dispatcher",
+  "description": "Routes user requests to the right demo graph.",
+  "activationHints": [
+    "route engineering work",
+    "choose a workflow",
+    "triage a codebase request"
+  ],
+  "inputSchema": {
+    "type": "object",
+    "required": ["request"],
+    "properties": {
+      "request": { "type": "string" }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "required": ["action", "graphId", "reason"],
+    "properties": {
+      "action": { "type": "string", "enum": ["start_run", "list_runs", "ask_user"] },
+      "graphId": { "type": "string" },
+      "reason": { "type": "string" }
+    }
+  },
+  "effects": [],
+  "entry": "route",
+  "nodes": {
+    "route": {
+      "purpose": "Choose the best graph for an engineering request",
+      "instructions": "Use repo-brief.md, engineering-playbook.md, and work-items/inbox.json to choose change-intake for a specific change request or architecture-sweep for a broad cleanup request.",
+      "exec": "inline",
+      "outputSchema": {
+        "type": "object",
+        "required": ["action", "graphId", "reason"],
+        "properties": {
+          "action": { "type": "string", "enum": ["start_run", "list_runs", "ask_user"] },
+          "graphId": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      },
+      "edges": [{ "to": "done" }]
+    },
+    "done": {
+      "purpose": "Dispatcher recommendation complete",
+      "terminal": true
+    }
+  }
+}

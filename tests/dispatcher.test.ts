@@ -28,7 +28,9 @@ const baseManifest = {
 };
 
 function makeRoot(prefix = 'ripplegraph-dispatcher-'): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  fs.writeFileSync(path.join(root, 'workflow.json'), JSON.stringify({ id: 'dispatcher-demo', version: '0.1.0' }), 'utf8');
+  return root;
 }
 
 function writePackage(root: string, id: string, overrides: Record<string, unknown> = {}): string {
@@ -165,25 +167,9 @@ describe('dispatcher runtime', () => {
   it('enforces graph effects before dispatcher start and call actions mutate state', () => {
     const runRoot = makeRoot('ripplegraph-dispatcher-effects-start-');
     try {
-      // Compact workflow + registered package both declare the same effects so the
-      // start path is denied at startRun's union check, before any state is written.
       fs.writeFileSync(
         path.join(runRoot, 'workflow.json'),
-        JSON.stringify({
-          id: 'effects-demo',
-          version: '0.1.0',
-          graphs: {
-            daily: {
-              kind: 'workflow',
-              effects: ['write_files'],
-              entry: 'review',
-              nodes: {
-                review: { purpose: 'Review', exec: 'inline', edges: [{ to: 'done' }] },
-                done: { purpose: 'Done', terminal: true },
-              },
-            },
-          },
-        }),
+        JSON.stringify({ id: 'effects-demo', version: '0.1.0' }),
         'utf8',
       );
       registerGraphPackage({ workflowRoot: runRoot, packageRoot: writePackage(runRoot, 'workspace-dispatcher') });
@@ -299,24 +285,7 @@ describe('dispatcher runtime', () => {
     try {
       fs.writeFileSync(
         path.join(root, 'workflow.json'),
-        JSON.stringify({
-          id: 'unsupported-demo',
-          version: '0.1.0',
-          graphs: {
-            'package-only': {
-              kind: 'dispatcher',
-              entry: 'route',
-              nodes: {
-                route: {
-                  purpose: 'Route a request',
-                  exec: 'inline',
-                  outputSchema: { type: 'object' },
-                  terminal: true,
-                },
-              },
-            },
-          },
-        }),
+        JSON.stringify({ id: 'unsupported-demo', version: '0.1.0' }),
         'utf8',
       );
       registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });

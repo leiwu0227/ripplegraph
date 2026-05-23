@@ -1,10 +1,4 @@
 import { RipplegraphError } from '../schema.js';
-export function getGraph(workflow, graphId) {
-    const graph = workflow.graphs[graphId];
-    if (!graph)
-        throw new RipplegraphError('E_UNKNOWN_GRAPH', `unknown graph: ${graphId}`);
-    return graph;
-}
 export function getNode(graph, nodeId) {
     const node = graph.nodes[nodeId];
     if (!node)

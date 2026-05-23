@@ -1,0 +1,37 @@
+{
+  "id": "architecture-sweep",
+  "version": "0.4.0",
+  "kind": "workflow",
+  "title": "Architecture Sweep",
+  "description": "Review the demo repository brief and propose one small cleanup assignment.",
+  "activationHints": [
+    "review architecture",
+    "find cleanup work",
+    "scan for simplification"
+  ],
+  "effects": [
+    "read_repo"
+  ],
+  "entry": "select-cleanup",
+  "nodes": {
+    "select-cleanup": {
+      "purpose": "Select one cleanup candidate",
+      "instructions": "Read repo-brief.md, engineering-playbook.md, and work-items/inbox.json. Choose one small cleanup that would improve maintainability without reducing behavior.",
+      "exec": "inline",
+      "outputSchema": {
+        "type": "object",
+        "required": ["candidate", "whyNow", "verification"],
+        "properties": {
+          "candidate": { "type": "string" },
+          "whyNow": { "type": "string" },
+          "verification": { "type": "array" }
+        }
+      },
+      "edges": [{ "to": "done" }]
+    },
+    "done": {
+      "purpose": "Architecture sweep complete",
+      "terminal": true
+    }
+  }
+}

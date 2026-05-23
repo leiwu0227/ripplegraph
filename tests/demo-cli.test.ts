@@ -47,18 +47,21 @@ describe('ripplegraph-demo cli', () => {
     }
   });
 
-  it('initializes a project with hidden workflow files and next-step guidance', () => {
+  it('initializes a project with a workspace manifest, registry, and graph packages', () => {
     const root = makeTempRoot();
     try {
       const result = run(['init', root]);
       expect(result.status).toBe(0);
       expect(result.stdout).toContain(`ripplegraph-demo status --workflow-root ${root}`);
-      expect(fs.existsSync(path.join(root, '.ripplegraph', 'workflow.json'))).toBe(true);
+      expect(fs.existsSync(path.join(root, 'workflow.json'))).toBe(true);
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'registry.json'))).toBe(true);
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'graphs', 'workspace-dispatcher', 'graph.json'))).toBe(true);
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'graphs', 'change-intake', 'graph.json'))).toBe(true);
       expect(fs.existsSync(path.join(root, 'AGENT.md'))).toBe(true);
       expect(fs.existsSync(path.join(root, 'work-items', 'inbox.json'))).toBe(true);
       expect(fs.existsSync(path.join(root, 'engineering-playbook.md'))).toBe(true);
       expect(fs.existsSync(path.join(root, 'repo-brief.md'))).toBe(true);
-      expect(fs.existsSync(path.join(root, 'workflow.json'))).toBe(false);
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'workflow.json'))).toBe(false);
       expect(run(['status', '--workflow-root', root]).stdout).toContain('No focused run.');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
@@ -71,7 +74,7 @@ describe('ripplegraph-demo cli', () => {
       expect(run(['init', root]).status).toBe(0);
       const result = run(['init', root]);
       expect(result.status).toBe(1);
-      expect(result.stderr).toContain(path.join(root, '.ripplegraph', 'workflow.json'));
+      expect(result.stderr).toContain('already exists');
       expect(result.stderr).toContain('--force');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
@@ -145,8 +148,9 @@ describe('ripplegraph-demo cli', () => {
     try {
       const noFocus = run(['status', '--workflow-root', root]).stdout;
       expect(noFocus).toContain('No focused run.');
-      expect(noFocus).toContain('change-intake');
-      expect(noFocus).toContain('architecture-sweep');
+      expect(noFocus).toContain('change-intake  workflow  Change Intake');
+      expect(noFocus).toContain('architecture-sweep  workflow  Architecture Sweep');
+      expect(noFocus).toContain('workspace-dispatcher  dispatcher  Workspace Dispatcher');
 
       run(['start', 'architecture-sweep', '--run', 'sweep-a', '--workflow-root', root]);
       const paused = run(['pause', 'pause architecture sweep', '--workflow-root', root]).stdout;

@@ -1,28 +1,4 @@
 {
   "id": "replace-me",
-  "version": "0.1.0",
-  "graphs": {
-    "main": {
-      "entry": "start",
-      "nodes": {
-        "start": {
-          "purpose": "Start the workflow",
-          "instructions": "Submit the first structured result.",
-          "exec": "inline",
-          "outputSchema": {
-            "type": "object",
-            "required": ["result"],
-            "properties": {
-              "result": { "type": "string" }
-            }
-          },
-          "edges": [{ "to": "done" }]
-        },
-        "done": {
-          "purpose": "Workflow complete",
-          "terminal": true
-        }
-      }
-    }
-  }
+  "version": "0.1.0"
 }

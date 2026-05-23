@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "graphs": {
+    "architecture-sweep": {
+      "id": "architecture-sweep",
+      "version": "0.4.0",
+      "kind": "workflow",
+      "title": "Architecture Sweep",
+      "description": "Review the demo repository brief and propose one small cleanup assignment.",
+      "activationHints": [
+        "review architecture",
+        "find cleanup work",
+        "scan for simplification"
+      ],
+      "effects": [
+        "read_repo"
+      ],
+      "path": ".ripplegraph/graphs/architecture-sweep",
+      "registeredAt": "2026-01-01T00:00:00.000Z"
+    },
+    "change-intake": {
+      "id": "change-intake",
+      "version": "0.4.0",
+      "kind": "workflow",
+      "title": "Change Intake",
+      "description": "Classify a codebase change request, pause for human routing approval, then branch into the right planning task.",
+      "activationHints": [
+        "triage a change request",
+        "review a bugfix feature refactor or question"
+      ],
+      "effects": [
+        "read_repo"
+      ],
+      "path": ".ripplegraph/graphs/change-intake",
+      "registeredAt": "2026-01-01T00:00:00.000Z"
+    },
+    "workspace-dispatcher": {
+      "id": "workspace-dispatcher",
+      "version": "0.4.0",
+      "kind": "dispatcher",
+      "title": "Workspace Dispatcher",
+      "description": "Routes user requests to the right demo graph.",
+      "activationHints": [
+        "route engineering work",
+        "choose a workflow",
+        "triage a codebase request"
+      ],
+      "effects": [],
+      "path": ".ripplegraph/graphs/workspace-dispatcher",
+      "registeredAt": "2026-01-01T00:00:00.000Z"
+    }
+  }
+}

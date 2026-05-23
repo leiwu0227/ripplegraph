@@ -1,14 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 import { assertEffectsAllowed, checkEffects, RipplegraphError, startRun } from '../src/index.js';
-
-function makeWorkflowRoot(prefix: string, workflow: unknown): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-  fs.writeFileSync(path.join(root, 'workflow.json'), JSON.stringify(workflow), 'utf8');
-  return root;
-}
+import { createTestWorkspace } from './helpers/workspace.js';
 
 describe('effect policy', () => {
   it('checks declared effects against explicit allow-list policy', () => {
@@ -34,11 +27,12 @@ describe('effect policy', () => {
   });
 
   it('checks union of node effects at startRun, honoring override and opt-out', () => {
-    const overrideRoot = makeWorkflowRoot('rg-union-override-', {
-      id: 'union-override',
-      version: '0.0.1',
-      graphs: {
-        main: {
+    const overrideRoot = createTestWorkspace({
+      prefix: 'rg-union-override-',
+      workspace: { id: 'union-override' },
+      graphs: [
+        {
+          id: 'main',
           kind: 'workflow',
           entry: 'a',
           effects: ['read_repo'],
@@ -47,16 +41,16 @@ describe('effect policy', () => {
             b: { purpose: 'terminal', terminal: true },
           },
         },
-      },
+      ],
     });
     try {
       expect(() =>
-        startRun({ workflowRoot: overrideRoot, graph: 'main', runId: 'r', effectPolicy: { allowedEffects: ['read_repo'] } }),
+        startRun({ workflowRoot: overrideRoot, graphId: 'main', runId: 'r', effectPolicy: { allowedEffects: ['read_repo'] } }),
       ).toThrow(/write_repo \(node: a\)/);
       expect(
         startRun({
           workflowRoot: overrideRoot,
-          graph: 'main',
+          graphId: 'main',
           runId: 'r',
           effectPolicy: { allowedEffects: ['read_repo', 'write_repo'] },
         }).status,
@@ -65,21 +59,22 @@ describe('effect policy', () => {
       fs.rmSync(overrideRoot, { recursive: true, force: true });
     }
 
-    const optOutRoot = makeWorkflowRoot('rg-union-optout-', {
-      id: 'union-optout',
-      version: '0.0.1',
-      graphs: {
-        main: {
+    const optOutRoot = createTestWorkspace({
+      prefix: 'rg-union-optout-',
+      workspace: { id: 'union-optout' },
+      graphs: [
+        {
+          id: 'main',
           kind: 'workflow',
           entry: 'a',
           effects: ['write_repo'],
           nodes: { a: { purpose: 'first', effects: [], terminal: true } },
         },
-      },
+      ],
     });
     try {
       expect(
-        startRun({ workflowRoot: optOutRoot, graph: 'main', runId: 'r', effectPolicy: { allowedEffects: [] } }).status,
+        startRun({ workflowRoot: optOutRoot, graphId: 'main', runId: 'r', effectPolicy: { allowedEffects: [] } }).status,
       ).toBe('ok');
     } finally {
       fs.rmSync(optOutRoot, { recursive: true, force: true });

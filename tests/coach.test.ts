@@ -6,14 +6,15 @@ import {
   appendTransition,
   ensureWorkflowRoot,
   getState,
+  loadGraphPackage,
   loadWorkflow,
   decideGate,
   readCheckpoint,
   readCurrent,
+  listRegisteredGraphs,
   listRuns,
   registerGraphPackage,
   resumeRun,
-  startRegisteredWorkflowRun,
   startRun,
   stepRun,
   suspendRun,
@@ -26,11 +27,10 @@ import {
   makeGatedWorkflowRoot,
   makeGraphMetadataWorkflowRoot,
   makeHiddenStorageWorkflowRoot,
-  makeInvalidEntryGraphWorkflowRoot,
-  makeInvalidGraphMetadataWorkflowRoot,
   makeDemoWorkflowRoot,
   makeStorageWorkflowRoot,
 } from './helpers/workflows.js';
+import { createTestWorkspace } from './helpers/workspace.js';
 
 function workflowPackageManifest(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -56,17 +56,11 @@ function workflowPackageManifest(overrides: Record<string, unknown> = {}): Recor
 }
 
 function makePackageWorkflowRoot(): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-package-workflow-'));
-  fs.writeFileSync(
-    path.join(root, 'workflow.json'),
-    JSON.stringify({
-      id: 'package-workspace',
-      version: '0.1.0',
-      graphs: {},
-    }),
-    'utf8',
-  );
-  return root;
+  return createTestWorkspace({
+    prefix: 'ripplegraph-package-workflow-',
+    workspace: { id: 'package-workspace' },
+    graphs: [],
+  });
 }
 
 function writeGraphPackage(root: string, folder: string, manifest: Record<string, unknown>, force = false): string {
@@ -78,7 +72,7 @@ function writeGraphPackage(root: string, folder: string, manifest: Record<string
 }
 
 describe('coach runtime storage', () => {
-  it('loads workflow definitions from the hidden runtime directory', () => {
+  it('loads workspace manifests from the hidden runtime directory', () => {
     const root = makeHiddenStorageWorkflowRoot();
     try {
       expect(loadWorkflow(root).id).toBe('demo');
@@ -87,101 +81,36 @@ describe('coach runtime storage', () => {
     }
   });
 
-  it('loads graph package metadata while preserving legacy graph defaults', () => {
+  it('exposes registered graph metadata through the registry', () => {
     const root = makeGraphMetadataWorkflowRoot();
     try {
       const workflow = loadWorkflow(root);
       expect(workflow).toMatchObject({
+        id: 'metadata-demo',
         entryGraph: 'dispatcher',
         title: 'Metadata Demo',
         description: 'Workflow package with graph metadata.',
       });
-      expect(workflow.graphs.dispatcher).toMatchObject({
+      const registered = listRegisteredGraphs(root);
+      const dispatcher = registered.find((entry) => entry.id === 'dispatcher');
+      expect(dispatcher).toMatchObject({
+        id: 'dispatcher',
         kind: 'dispatcher',
         title: 'Workspace Dispatcher',
         description: 'Selects the right workflow.',
         activationHints: ['route user requests'],
-        inputSchema: { required: ['request'] },
-        outputSchema: { required: ['action'] },
         effects: ['read_workspace'],
       });
-      expect(workflow.graphs.legacy).toMatchObject({
-        kind: 'workflow',
-      });
+      expect(registered.find((entry) => entry.id === 'legacy')?.kind).toBe('workflow');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
-
-    const invalidRoot = makeInvalidGraphMetadataWorkflowRoot();
-    try {
-      expect(() => loadWorkflow(invalidRoot)).toThrow();
-    } finally {
-      fs.rmSync(invalidRoot, { recursive: true, force: true });
-    }
-
-    const invalidEntryRoot = makeInvalidEntryGraphWorkflowRoot();
-    try {
-      expect(() => loadWorkflow(invalidEntryRoot)).toThrow(/entryGraph must reference a dispatcher graph/);
-    } finally {
-      fs.rmSync(invalidEntryRoot, { recursive: true, force: true });
-    }
   });
 
-  it('accepts per-node effects declarations and rejects deprecated exec modes', () => {
-    const validRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'rg-node-effects-valid-'));
-    fs.writeFileSync(
-      path.join(validRoot, 'workflow.json'),
-      JSON.stringify({
-        id: 'node-effects',
-        version: '0.0.1',
-        graphs: {
-          main: {
-            kind: 'workflow',
-            entry: 'a',
-            effects: ['read_repo'],
-            nodes: {
-              a: { purpose: 'first', effects: ['read_repo', 'write_repo'], edges: [{ to: 'b' }] },
-              b: { purpose: 'last', terminal: true },
-            },
-          },
-        },
-      }),
-      'utf8',
-    );
-    try {
-      expect(loadWorkflow(validRoot).graphs.main!.nodes.a!.effects).toEqual(['read_repo', 'write_repo']);
-    } finally {
-      fs.rmSync(validRoot, { recursive: true, force: true });
-    }
-
-    const invalidRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'rg-exec-spawn-'));
-    fs.writeFileSync(
-      path.join(invalidRoot, 'workflow.json'),
-      JSON.stringify({
-        id: 'spawn-rejected',
-        version: '0.0.1',
-        graphs: {
-          main: {
-            kind: 'workflow',
-            entry: 'a',
-            nodes: { a: { purpose: 'first', exec: 'spawn', terminal: true } },
-          },
-        },
-      }),
-      'utf8',
-    );
-    try {
-      expect(() => loadWorkflow(invalidRoot)).toThrow(/exec/i);
-    } finally {
-      fs.rmSync(invalidRoot, { recursive: true, force: true });
-    }
-  });
-
-  it('loads a multi-graph workflow and persists the focused run files', () => {
+  it('lists registered graph ids and persists focused run files under .ripplegraph', () => {
     const root = makeStorageWorkflowRoot();
     try {
-      const workflow = loadWorkflow(root);
-      expect(Object.keys(workflow.graphs)).toEqual(['daily']);
+      expect(listRegisteredGraphs(root).map((entry) => entry.id)).toEqual(['daily']);
 
       ensureWorkflowRoot(root);
       writeCurrent(root, { focusedRunId: 'run-a' });
@@ -194,7 +123,13 @@ describe('coach runtime storage', () => {
         createdAt: '2026-05-15T00:00:00.000Z',
         updatedAt: '2026-05-15T00:00:00.000Z',
         outputs: {},
-      });
+        graphSource: {
+          kind: 'package',
+          graphId: 'daily',
+          graphVersion: '0.1.0',
+          packagePath: '.ripplegraph/graphs/daily',
+        },
+      } as Parameters<typeof writeCheckpoint>[1]);
       writeNodeOutput(root, 'run-a', 'review', { decision: 'proceed' });
       appendTransition(root, 'run-a', {
         ts: '2026-05-15T00:00:00.000Z',
@@ -227,7 +162,7 @@ describe('coach runtime storage', () => {
     }
   });
 
-  it('persists optional package source metadata on workflow checkpoints', () => {
+  it('persists graph source metadata on workflow checkpoints', () => {
     const root = makeStorageWorkflowRoot();
     try {
       ensureWorkflowRoot(root);
@@ -259,56 +194,43 @@ describe('coach runtime storage', () => {
     }
   });
 
+  it('rejects graph packages where workflowRef and gate are both defined', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-workflow-ref-invalid-'));
+    try {
+      const pkgRoot = path.join(root, '.ripplegraph', 'graphs', 'parent');
+      fs.mkdirSync(pkgRoot, { recursive: true });
+      fs.writeFileSync(
+        path.join(pkgRoot, 'graph.json'),
+        JSON.stringify({
+          id: 'parent',
+          version: '0.1.0',
+          kind: 'workflow',
+          entry: 'review',
+          nodes: {
+            review: {
+              purpose: 'Invalid ref gate',
+              workflowRef: { graphId: 'child-flow' },
+              gate: { type: 'external_decision', decisionSchema: { type: 'object' } },
+            },
+          },
+        }),
+        'utf8',
+      );
+      expect(() => loadGraphPackage(pkgRoot)).toThrow(/workflowRef.*gate/);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('persists workflow-ref stack frames and scoped node artifacts', () => {
     const root = makeStorageWorkflowRoot();
     try {
-      fs.writeFileSync(
-        path.join(root, 'workflow.json'),
-        JSON.stringify({
-          id: 'workflow-ref-valid',
-          version: '0.1.0',
-          graphs: {
-            parent: {
-              entry: 'review',
-              nodes: {
-                review: { purpose: 'Run child review', workflowRef: { graphId: 'child-flow' }, edges: [{ to: 'done' }] },
-                done: { purpose: 'Done', terminal: true },
-              },
-            },
-          },
-        }),
-        'utf8',
-      );
-      expect(loadWorkflow(root).graphs.parent!.nodes.review!.workflowRef).toEqual({ graphId: 'child-flow' });
-
-      fs.writeFileSync(
-        path.join(root, 'workflow.json'),
-        JSON.stringify({
-          id: 'workflow-ref-invalid',
-          version: '0.1.0',
-          graphs: {
-            parent: {
-              entry: 'review',
-              nodes: {
-                review: {
-                  purpose: 'Invalid ref gate',
-                  workflowRef: { graphId: 'child-flow' },
-                  gate: { type: 'external_decision', decisionSchema: { type: 'object' } },
-                },
-              },
-            },
-          },
-        }),
-        'utf8',
-      );
-      expect(() => loadWorkflow(root)).toThrow(/workflowRef.*gate/);
-
       ensureWorkflowRoot(root);
       writeCheckpoint(root, {
         runId: 'stacked-run',
         status: 'active',
         rootGraph: 'parent',
-        workflow: { id: 'workflow-ref-valid', version: '0.1.0' },
+        workflow: { id: 'demo', version: '0.1.0' },
         position: { graph: 'child-flow', node: 'review' },
         createdAt: '2026-05-23T00:00:00.000Z',
         updatedAt: '2026-05-23T00:00:00.000Z',
@@ -349,7 +271,7 @@ describe('coach operations', () => {
   it('exposes gated nodes as external decision contracts', () => {
     const root = makeGatedWorkflowRoot();
     try {
-      const state = startRun({ workflowRoot: root, graph: 'review', runId: 'approval-a' });
+      const state = startRun({ workflowRoot: root, graphId: 'review', runId: 'approval-a' });
       expect(state.orientation).toBe('You are at review/approval: Request external approval.');
       expect(state.nextAllowedCommand).toContain('ripplegraph advance');
       expect(state.helpCommand).toBe('ripplegraph explain');
@@ -376,38 +298,34 @@ describe('coach operations', () => {
   });
 
   it('exposes gate decision source metadata in gated state contracts', () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-gate-source-'));
-    fs.writeFileSync(
-      path.join(root, 'workflow.json'),
-      JSON.stringify({
-        id: 'gate-source-demo',
-        version: '0.1.0',
-        graphs: {
-          review: {
-            entry: 'approval',
-            nodes: {
-              approval: {
-                purpose: 'Request reviewloop approval',
-                gate: {
-                  type: 'external_decision',
-                  decisionSource: { kind: 'tool', tool: 'reviewloop', label: 'Implementation review' },
-                  decisionSchema: {
-                    type: 'object',
-                    required: ['decision'],
-                    properties: { decision: { type: 'string', enum: ['approved', 'rejected'] } },
-                  },
+    const root = createTestWorkspace({
+      prefix: 'ripplegraph-gate-source-',
+      workspace: { id: 'gate-source-demo' },
+      graphs: [
+        {
+          id: 'review',
+          entry: 'approval',
+          nodes: {
+            approval: {
+              purpose: 'Request reviewloop approval',
+              gate: {
+                type: 'external_decision',
+                decisionSource: { kind: 'tool', tool: 'reviewloop', label: 'Implementation review' },
+                decisionSchema: {
+                  type: 'object',
+                  required: ['decision'],
+                  properties: { decision: { type: 'string', enum: ['approved', 'rejected'] } },
                 },
-                edges: [{ to: 'done', when: { decision: 'approved' } }],
               },
-              done: { purpose: 'Done', terminal: true },
+              edges: [{ to: 'done', when: { decision: 'approved' } }],
             },
+            done: { purpose: 'Done', terminal: true },
           },
         },
-      }),
-      'utf8',
-    );
+      ],
+    });
     try {
-      const state = startRun({ workflowRoot: root, graph: 'review', runId: 'approval-source-a' });
+      const state = startRun({ workflowRoot: root, graphId: 'review', runId: 'approval-source-a' });
       expect(state.node.gate?.decisionSource).toEqual({
         kind: 'tool',
         tool: 'reviewloop',
@@ -440,33 +358,32 @@ describe('coach operations', () => {
     }
   });
 
-  it('rejects tool decision sources without a tool identifier', () => {
+  it('rejects graph packages with tool decision sources missing a tool identifier', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-gate-source-invalid-'));
-    fs.writeFileSync(
-      path.join(root, 'workflow.json'),
-      JSON.stringify({
-        id: 'invalid-gate-source',
-        version: '0.1.0',
-        graphs: {
-          review: {
-            entry: 'approval',
-            nodes: {
-              approval: {
-                purpose: 'Invalid source',
-                gate: {
-                  type: 'external_decision',
-                  decisionSource: { kind: 'tool' },
-                  decisionSchema: { type: 'object' },
-                },
+    try {
+      const pkgRoot = path.join(root, '.ripplegraph', 'graphs', 'review');
+      fs.mkdirSync(pkgRoot, { recursive: true });
+      fs.writeFileSync(
+        path.join(pkgRoot, 'graph.json'),
+        JSON.stringify({
+          id: 'review',
+          version: '0.1.0',
+          kind: 'workflow',
+          entry: 'approval',
+          nodes: {
+            approval: {
+              purpose: 'Invalid source',
+              gate: {
+                type: 'external_decision',
+                decisionSource: { kind: 'tool' },
+                decisionSchema: { type: 'object' },
               },
             },
           },
-        },
-      }),
-      'utf8',
-    );
-    try {
-      expect(() => loadWorkflow(root)).toThrow(/decisionSource/);
+        }),
+        'utf8',
+      );
+      expect(() => loadGraphPackage(pkgRoot)).toThrow(/decisionSource/);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
@@ -489,11 +406,26 @@ describe('coach operations', () => {
   });
 
   it('denies effectful workflow starts before creating runtime state', () => {
-    const root = makeGraphMetadataWorkflowRoot();
+    const root = createTestWorkspace({
+      prefix: 'ripplegraph-effects-deny-',
+      workspace: { id: 'effects-demo' },
+      graphs: [
+        {
+          id: 'effectful',
+          kind: 'workflow',
+          effects: ['read_workspace'],
+          entry: 'review',
+          nodes: {
+            review: { purpose: 'Review with effect', exec: 'inline', edges: [{ to: 'done' }] },
+            done: { purpose: 'Done', terminal: true },
+          },
+        },
+      ],
+    });
     try {
       let code: string | undefined;
       try {
-        startRun({ workflowRoot: root, graph: 'dispatcher', runId: 'dispatch-a' });
+        startRun({ workflowRoot: root, graphId: 'effectful', runId: 'effect-a' });
       } catch (error) {
         code = (error as { code?: string }).code;
       }
@@ -503,11 +435,11 @@ describe('coach operations', () => {
 
       const allowed = startRun({
         workflowRoot: root,
-        graph: 'dispatcher',
-        runId: 'dispatch-a',
+        graphId: 'effectful',
+        runId: 'effect-a',
         effectPolicy: { allowedEffects: ['read_workspace'] },
       });
-      expect(allowed.run.id).toBe('dispatch-a');
+      expect(allowed.run.id).toBe('effect-a');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
@@ -518,9 +450,9 @@ describe('coach operations', () => {
     try {
       expect(getState({ workflowRoot: root }).status).toBe('no_focused_run');
 
-      const started = startRun({ workflowRoot: root, graph: 'daily', runId: 'daily-a' });
+      const started = startRun({ workflowRoot: root, graphId: 'daily', runId: 'daily-a' });
       expect(started.run.id).toBe('daily-a');
-      expect(() => startRun({ workflowRoot: root, graph: 'mockcopy', runId: 'mock-a' })).toThrow(
+      expect(() => startRun({ workflowRoot: root, graphId: 'mockcopy', runId: 'mock-a' })).toThrow(
         /focused run/,
       );
 
@@ -528,7 +460,7 @@ describe('coach operations', () => {
       expect(suspended.run.status).toBe('suspended');
       expect(readCurrent(root)).toEqual({ focusedRunId: null });
 
-      startRun({ workflowRoot: root, graph: 'mockcopy', runId: 'mock-a' });
+      startRun({ workflowRoot: root, graphId: 'mockcopy', runId: 'mock-a' });
       suspendRun({ workflowRoot: root });
       const resumed = resumeRun({ workflowRoot: root, runId: 'daily-a' });
       expect(resumed.position).toEqual({ graph: 'daily', node: 'review' });
@@ -560,7 +492,7 @@ describe('coach operations', () => {
     try {
       writeGraphPackage(root, 'graphs/package-flow-v1', workflowPackageManifest());
 
-      const state = startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'package-flow', runId: 'package-a' });
+      const state = startRun({ workflowRoot: root, graphId: 'package-flow', runId: 'package-a' });
 
       expect(state).toMatchObject({
         status: 'ok',
@@ -588,7 +520,7 @@ describe('coach operations', () => {
     const root = makePackageWorkflowRoot();
     try {
       writeGraphPackage(root, 'graphs/package-flow-v1', workflowPackageManifest());
-      startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'package-flow', runId: 'package-a' });
+      startRun({ workflowRoot: root, graphId: 'package-flow', runId: 'package-a' });
       suspendRun({ workflowRoot: root });
 
       writeGraphPackage(
@@ -631,6 +563,16 @@ describe('coach operations', () => {
     const root = makePackageWorkflowRoot();
     try {
       writeGraphPackage(root, 'graphs/package-flow-v1', workflowPackageManifest());
+      writeGraphPackage(root, 'graphs/parent-flow', {
+        id: 'parent-flow',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'review',
+        nodes: {
+          review: { purpose: 'Parent ref', workflowRef: { graphId: 'package-flow' }, edges: [{ to: 'done' }] },
+          done: { purpose: 'Done', terminal: true },
+        },
+      });
       ensureWorkflowRoot(root);
       writeCheckpoint(root, {
         runId: 'stacked-a',
@@ -658,7 +600,13 @@ describe('coach operations', () => {
             enteredAt: '2026-05-23T00:00:00.000Z',
           },
         ],
-      });
+        graphSource: {
+          kind: 'package',
+          graphId: 'parent-flow',
+          graphVersion: '0.1.0',
+          packagePath: 'graphs/parent-flow',
+        },
+      } as Parameters<typeof writeCheckpoint>[1]);
       writeCurrent(root, { focusedRunId: 'stacked-a' });
 
       const state = getState({ workflowRoot: root });
@@ -702,7 +650,7 @@ describe('coach operations', () => {
         },
       });
 
-      const state = startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'parent-flow', runId: 'nested-a' });
+      const state = startRun({ workflowRoot: root, graphId: 'parent-flow', runId: 'nested-a' });
 
       expect(state).toMatchObject({
         status: 'ok',
@@ -753,7 +701,7 @@ describe('coach operations', () => {
         },
       });
 
-      expect(() => startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'effect-parent', runId: 'effect-a' })).toThrow(
+      expect(() => startRun({ workflowRoot: root, graphId: 'effect-parent', runId: 'effect-a' })).toThrow(
         /write_repo/,
       );
       expect(readCurrent(root)).toEqual({ focusedRunId: null });
@@ -795,7 +743,7 @@ describe('coach operations', () => {
           done: { purpose: 'Parent done', terminal: true },
         },
       });
-      startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'collision-parent', runId: 'collision-a' });
+      startRun({ workflowRoot: root, graphId: 'collision-parent', runId: 'collision-a' });
 
       const completed = stepRun({ workflowRoot: root, output: { decision: 'done' } });
 
@@ -926,7 +874,7 @@ describe('coach operations', () => {
           done: { purpose: 'Done', terminal: true },
         },
       });
-      startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'outer-parent', runId: 'nested-scope-a' });
+      startRun({ workflowRoot: root, graphId: 'outer-parent', runId: 'nested-scope-a' });
 
       const state = stepRun({ workflowRoot: root, output: { decision: 'done' } });
 
@@ -978,7 +926,7 @@ describe('coach operations', () => {
           done: { purpose: 'Done', terminal: true },
         },
       });
-      startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'sibling-parent', runId: 'sibling-a' });
+      startRun({ workflowRoot: root, graphId: 'sibling-parent', runId: 'sibling-a' });
       stepRun({ workflowRoot: root, output: { decision: 'done' } });
       const checkpoint = readCheckpoint(root, 'sibling-a');
       expect(checkpoint.frameCounter).toBe(2);
@@ -992,7 +940,7 @@ describe('coach operations', () => {
   it('rejects a checkpoint with position.graph mismatched against the active graph', () => {
     const root = makeCoachWorkflowRoot();
     try {
-      startRun({ workflowRoot: root, graph: 'daily', runId: 'mismatch-a' });
+      startRun({ workflowRoot: root, graphId: 'daily', runId: 'mismatch-a' });
       const checkpointPath = path.join(root, '.ripplegraph', 'runs', 'mismatch-a', 'checkpoint.json');
       const raw = JSON.parse(fs.readFileSync(checkpointPath, 'utf8')) as { position: { graph: string } };
       raw.position.graph = 'not-the-active-graph';
@@ -1006,7 +954,7 @@ describe('coach operations', () => {
   it('decides a gated node, stores the external decision, and logs a decide transition', () => {
     const root = makeGatedWorkflowRoot();
     try {
-      startRun({ workflowRoot: root, graph: 'review', runId: 'approval-a' });
+      startRun({ workflowRoot: root, graphId: 'review', runId: 'approval-a' });
       const response = decideGate({ workflowRoot: root, decision: { decision: 'approved', reason: 'classification is correct' } });
       expect(response.status).toBe('completed');
       expect(response.position).toEqual({ graph: 'review', node: 'done' });
@@ -1029,7 +977,7 @@ describe('coach operations', () => {
   it('exposes previous outputs and conditional routes as neighborhood context', () => {
     const root = makeCoachWorkflowRoot();
     try {
-      startRun({ workflowRoot: root, graph: 'daily', runId: 'daily-a' });
+      startRun({ workflowRoot: root, graphId: 'daily', runId: 'daily-a' });
       const state = stepRun({ workflowRoot: root, output: { decision: 'proceed' } });
       expect(state.status).toBe('ok');
       if (state.status === 'ok') {
@@ -1046,7 +994,7 @@ describe('coach operations', () => {
   it('includes gate decisions in recent context after gated routing', () => {
     const root = makeDemoWorkflowRoot();
     try {
-      startRun({ workflowRoot: root, graph: 'change-intake', runId: 'change-a', effectPolicy: { allowedEffects: ['read_repo'] } });
+      startRun({ workflowRoot: root, graphId: 'change-intake', runId: 'change-a', effectPolicy: { allowedEffects: ['read_repo'] } });
       stepRun({ workflowRoot: root, output: { changeType: 'refactor', risk: 'medium', rationale: 'duplicated helpers' } });
       const state = decideGate({ workflowRoot: root, decision: { decision: 'approved-refactor', reason: 'routing is right' } });
       expect(state.status).toBe('ok');
@@ -1072,7 +1020,7 @@ describe('coach operations', () => {
   it('blocks normal step on gated nodes and validates gate decisions', () => {
     const root = makeGatedWorkflowRoot();
     try {
-      startRun({ workflowRoot: root, graph: 'review', runId: 'approval-a' });
+      startRun({ workflowRoot: root, graphId: 'review', runId: 'approval-a' });
       expect(() => stepRun({ workflowRoot: root, output: { decision: 'approved' } })).toThrow(/external decision/);
       const invalid = decideGate({ workflowRoot: root, decision: { decision: 'maybe' } });
       expect(invalid.status).toBe('validation_error');
@@ -1086,7 +1034,7 @@ describe('coach operations', () => {
 
     const normalRoot = makeCoachWorkflowRoot();
     try {
-      startRun({ workflowRoot: normalRoot, graph: 'daily', runId: 'daily-a' });
+      startRun({ workflowRoot: normalRoot, graphId: 'daily', runId: 'daily-a' });
       expect(() => decideGate({ workflowRoot: normalRoot, decision: { decision: 'approved' } })).toThrow(/not gated/);
     } finally {
       fs.rmSync(normalRoot, { recursive: true, force: true });
@@ -1096,7 +1044,7 @@ describe('coach operations', () => {
   it('steps through a branch and completes at a terminal node', () => {
     const root = makeCoachWorkflowRoot();
     try {
-      startRun({ workflowRoot: root, graph: 'daily', runId: 'daily-a' });
+      startRun({ workflowRoot: root, graphId: 'daily', runId: 'daily-a' });
       const next = stepRun({ workflowRoot: root, output: { decision: 'stop' } });
       expect(next.status).toBe('completed');
       expect(readCheckpoint(root, 'daily-a').position).toEqual({ graph: 'daily', node: 'done' });
@@ -1114,10 +1062,49 @@ describe('coach operations', () => {
     }
   });
 
+  it('rejects unknown and wrong-kind graph ids on startRun', () => {
+    const root = createTestWorkspace({
+      prefix: 'ripplegraph-startrun-errors-',
+      workspace: { id: 'startrun-errors' },
+      graphs: [
+        {
+          id: 'callable-only',
+          kind: 'callable',
+          inputSchema: { type: 'object' },
+          outputSchema: { type: 'object' },
+          entry: 'work',
+          nodes: {
+            work: {
+              purpose: 'Do work',
+              exec: 'inline',
+              outputSchema: { type: 'object' },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        },
+      ],
+    });
+    try {
+      const errorCode = (fn: () => unknown): string | undefined => {
+        try {
+          fn();
+        } catch (error) {
+          return (error as { code?: string }).code;
+        }
+        return undefined;
+      };
+      expect(errorCode(() => startRun({ workflowRoot: root, graphId: 'missing', runId: 'r1' }))).toBe('E_UNKNOWN_GRAPH');
+      expect(errorCode(() => startRun({ workflowRoot: root, graphId: 'callable-only', runId: 'r2' }))).toBe('E_WRONG_GRAPH_KIND');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('rejects invalid output without advancing the checkpoint', () => {
     const root = makeCoachWorkflowRoot();
     try {
-      startRun({ workflowRoot: root, graph: 'daily', runId: 'daily-a' });
+      startRun({ workflowRoot: root, graphId: 'daily', runId: 'daily-a' });
       const response = stepRun({ workflowRoot: root, output: { decision: 'maybe' } });
       expect(response.status).toBe('validation_error');
       if (response.status === 'validation_error') {

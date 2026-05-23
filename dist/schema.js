@@ -121,25 +121,8 @@ export const workflowSchema = z
     entryGraph: idSchema.optional(),
     title: z.string().min(1).optional(),
     description: z.string().min(1).optional(),
-    graphs: z.record(idSchema, graphSchema),
 })
-    .strict()
-    .superRefine((workflow, ctx) => {
-    if (workflow.entryGraph && !workflow.graphs[workflow.entryGraph]) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['entryGraph'],
-            message: `entryGraph references unknown graph: ${workflow.entryGraph}`,
-        });
-    }
-    if (workflow.entryGraph && workflow.graphs[workflow.entryGraph]?.kind !== 'dispatcher') {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['entryGraph'],
-            message: `entryGraph must reference a dispatcher graph: ${workflow.entryGraph}`,
-        });
-    }
-});
+    .strict();
 export const runStatusSchema = z.enum(['active', 'suspended', 'completed', 'abandoned']);
 export const callStatusSchema = z.enum(['active', 'completed', 'failed']);
 export const positionSchema = z

@@ -1,44 +1,26 @@
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+import { createTestWorkspace, type GraphPackageManifestInput } from './workspace.js';
 
-interface WorkflowOptions {
-  prefix: string;
-  workflow: unknown;
-  hidden?: boolean;
-}
-
-function createWorkflowRoot({ prefix, workflow, hidden = false }: WorkflowOptions): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-  const workflowFile = hidden ? path.join(root, '.ripplegraph', 'workflow.json') : path.join(root, 'workflow.json');
-  fs.mkdirSync(path.dirname(workflowFile), { recursive: true });
-  fs.writeFileSync(workflowFile, JSON.stringify(workflow), 'utf8');
-  return root;
-}
-
-function dailyReviewGraph(edges: unknown[], extraNodes: Record<string, unknown> = {}): unknown {
+function dailyReviewNodes(edges: unknown[], extraNodes: Record<string, unknown> = {}): Record<string, unknown> {
   return {
-    entry: 'review',
-    nodes: {
-      review: {
-        purpose: 'Review generated intents',
-        instructions: 'Submit a decision.',
-        exec: 'inline',
-        outputSchema: {
-          type: 'object',
-          required: ['decision'],
-          properties: { decision: { type: 'string', enum: ['proceed', 'stop'] } },
-        },
-        edges,
+    review: {
+      purpose: 'Review generated intents',
+      instructions: 'Submit a decision.',
+      exec: 'inline',
+      outputSchema: {
+        type: 'object',
+        required: ['decision'],
+        properties: { decision: { type: 'string', enum: ['proceed', 'stop'] } },
       },
-      ...extraNodes,
-      done: { purpose: 'Complete', terminal: true },
+      edges,
     },
+    ...extraNodes,
+    done: { purpose: 'Complete', terminal: true },
   };
 }
 
-function mockcopyGraph(outputSchema: unknown, instructions = 'Submit the mockcopy plan.'): unknown {
+function mockcopyGraph(outputSchema: unknown, instructions = 'Submit the mockcopy plan.'): GraphPackageManifestInput {
   return {
+    id: 'mockcopy',
     entry: 'plan',
     nodes: {
       plan: {
@@ -53,8 +35,9 @@ function mockcopyGraph(outputSchema: unknown, instructions = 'Submit the mockcop
   };
 }
 
-function changeIntakeGraph(): unknown {
+function changeIntakeGraph(): GraphPackageManifestInput {
   return {
+    id: 'change-intake',
     kind: 'workflow',
     title: 'Change Intake',
     effects: ['read_repo'],
@@ -141,8 +124,9 @@ function changeIntakeGraph(): unknown {
   };
 }
 
-function architectureSweepGraph(): unknown {
+function architectureSweepGraph(): GraphPackageManifestInput {
   return {
+    id: 'architecture-sweep',
     kind: 'workflow',
     title: 'Architecture Sweep',
     effects: ['read_repo'],
@@ -168,141 +152,127 @@ function architectureSweepGraph(): unknown {
   };
 }
 
-export function makeCliWorkflowRoot(): string {
-  return createWorkflowRoot({
-    prefix: 'ripplegraph-cli-',
-    workflow: {
-      id: 'demo',
-      version: '0.1.0',
-      graphs: {
-        daily: dailyReviewGraph([{ to: 'done', when: { decision: 'stop' } }]),
+function workspaceDispatcherGraph(): GraphPackageManifestInput {
+  return {
+    id: 'workspace-dispatcher',
+    kind: 'dispatcher',
+    title: 'Workspace Dispatcher',
+    entry: 'route',
+    nodes: {
+      route: {
+        purpose: 'Choose the best graph for an engineering request',
+        exec: 'inline',
+        outputSchema: { type: 'object' },
+        edges: [{ to: 'done' }],
       },
+      done: { purpose: 'Dispatcher recommendation complete', terminal: true },
     },
+  };
+}
+
+export function makeCliWorkflowRoot(): string {
+  return createTestWorkspace({
+    prefix: 'ripplegraph-cli-',
+    workspace: { id: 'demo' },
+    graphs: [
+      {
+        id: 'daily',
+        entry: 'review',
+        nodes: dailyReviewNodes([{ to: 'done', when: { decision: 'stop' } }]),
+      },
+    ],
   });
 }
 
 export function makeStorageWorkflowRoot(): string {
-  return createWorkflowRoot({
+  return createTestWorkspace({
     prefix: 'ripplegraph-storage-',
-    workflow: {
-      id: 'demo',
-      version: '0.1.0',
-      graphs: {
-        daily: dailyReviewGraph([{ to: 'done', when: { decision: 'proceed' } }]),
+    workspace: { id: 'demo' },
+    graphs: [
+      {
+        id: 'daily',
+        entry: 'review',
+        nodes: dailyReviewNodes([{ to: 'done', when: { decision: 'proceed' } }]),
       },
-    },
+    ],
   });
 }
 
 export function makeHiddenStorageWorkflowRoot(): string {
-  return createWorkflowRoot({
+  return createTestWorkspace({
     prefix: 'ripplegraph-storage-hidden-',
     hidden: true,
-    workflow: {
-      id: 'demo',
-      version: '0.1.0',
-      graphs: {
-        daily: dailyReviewGraph([{ to: 'done', when: { decision: 'proceed' } }]),
+    workspace: { id: 'demo' },
+    graphs: [
+      {
+        id: 'daily',
+        entry: 'review',
+        nodes: dailyReviewNodes([{ to: 'done', when: { decision: 'proceed' } }]),
       },
-    },
+    ],
   });
 }
 
 export function makeGraphMetadataWorkflowRoot(): string {
-  return createWorkflowRoot({
+  return createTestWorkspace({
     prefix: 'ripplegraph-metadata-',
-    workflow: {
+    workspace: {
       id: 'metadata-demo',
-      version: '0.1.0',
       entryGraph: 'dispatcher',
       title: 'Metadata Demo',
       description: 'Workflow package with graph metadata.',
-      graphs: {
-        dispatcher: {
-          kind: 'dispatcher',
-          title: 'Workspace Dispatcher',
-          description: 'Selects the right workflow.',
-          activationHints: ['route user requests'],
-          inputSchema: {
-            type: 'object',
-            required: ['request'],
-            properties: { request: { type: 'string' } },
-          },
-          outputSchema: {
-            type: 'object',
-            required: ['action'],
-            properties: { action: { type: 'string' } },
-          },
-          effects: ['read_workspace'],
-          entry: 'route',
-          nodes: {
-            route: {
-              purpose: 'Route a user request',
-              exec: 'inline',
-              outputSchema: {
-                type: 'object',
-                required: ['action'],
-                properties: { action: { type: 'string' } },
-              },
-              edges: [{ to: 'done' }],
-            },
-            done: { purpose: 'Complete', terminal: true },
-          },
-        },
-        legacy: dailyReviewGraph([{ to: 'done', when: { decision: 'proceed' } }]),
-      },
     },
-  });
-}
-
-export function makeInvalidGraphMetadataWorkflowRoot(): string {
-  return createWorkflowRoot({
-    prefix: 'ripplegraph-invalid-metadata-',
-    workflow: {
-      id: 'invalid-metadata-demo',
-      version: '0.1.0',
-      graphs: {
-        broken: {
-          kind: 'tool',
-          effects: [''],
-          entry: 'review',
-          nodes: {
-            review: {
-              purpose: 'Review generated intents',
-              exec: 'inline',
-              outputSchema: { type: 'object' },
-              edges: [{ to: 'done' }],
+    graphs: [
+      {
+        id: 'dispatcher',
+        kind: 'dispatcher',
+        title: 'Workspace Dispatcher',
+        description: 'Selects the right workflow.',
+        activationHints: ['route user requests'],
+        inputSchema: {
+          type: 'object',
+          required: ['request'],
+          properties: { request: { type: 'string' } },
+        },
+        outputSchema: {
+          type: 'object',
+          required: ['action'],
+          properties: { action: { type: 'string' } },
+        },
+        effects: ['read_workspace'],
+        entry: 'route',
+        nodes: {
+          route: {
+            purpose: 'Route a user request',
+            exec: 'inline',
+            outputSchema: {
+              type: 'object',
+              required: ['action'],
+              properties: { action: { type: 'string' } },
             },
-            done: { purpose: 'Complete', terminal: true },
+            edges: [{ to: 'done' }],
           },
+          done: { purpose: 'Complete', terminal: true },
         },
       },
-    },
-  });
-}
-
-export function makeInvalidEntryGraphWorkflowRoot(): string {
-  return createWorkflowRoot({
-    prefix: 'ripplegraph-invalid-entry-graph-',
-    workflow: {
-      id: 'invalid-entry-graph-demo',
-      version: '0.1.0',
-      entryGraph: 'daily',
-      graphs: {
-        daily: dailyReviewGraph([{ to: 'done', when: { decision: 'proceed' } }]),
+      {
+        id: 'legacy',
+        entry: 'review',
+        nodes: dailyReviewNodes([{ to: 'done', when: { decision: 'proceed' } }]),
       },
-    },
+    ],
   });
 }
 
 export function makeCoachWorkflowRoot(): string {
-  return createWorkflowRoot({
+  return createTestWorkspace({
     prefix: 'ripplegraph-coach-',
-    workflow: {
-      id: 'demo',
-      version: '0.1.0',
-      graphs: {
-        daily: dailyReviewGraph(
+    workspace: { id: 'demo' },
+    graphs: [
+      {
+        id: 'daily',
+        entry: 'review',
+        nodes: dailyReviewNodes(
           [
             { to: 'execute', when: { decision: 'proceed' } },
             { to: 'done', when: { decision: 'stop' } },
@@ -321,75 +291,57 @@ export function makeCoachWorkflowRoot(): string {
             },
           },
         ),
-        mockcopy: mockcopyGraph({ type: 'object' }),
       },
-    },
+      mockcopyGraph({ type: 'object' }),
+    ],
   });
 }
 
 export function makeGatedWorkflowRoot(): string {
-  return createWorkflowRoot({
+  return createTestWorkspace({
     prefix: 'ripplegraph-gated-',
-    workflow: {
-      id: 'gated-demo',
-      version: '0.1.0',
-      graphs: {
-        review: {
-          entry: 'approval',
-          nodes: {
-            approval: {
-              purpose: 'Request external approval',
-              instructions: 'Ask for an external decision before continuing.',
-              exec: 'inline',
-              gate: {
-                type: 'external_decision',
-                decisionSchema: {
-                  type: 'object',
-                  required: ['decision'],
-                  properties: {
-                    decision: { type: 'string', enum: ['approved', 'rejected'] },
-                    reason: { type: 'string' },
-                  },
+    workspace: { id: 'gated-demo' },
+    graphs: [
+      {
+        id: 'review',
+        entry: 'approval',
+        nodes: {
+          approval: {
+            purpose: 'Request external approval',
+            instructions: 'Ask for an external decision before continuing.',
+            exec: 'inline',
+            gate: {
+              type: 'external_decision',
+              decisionSchema: {
+                type: 'object',
+                required: ['decision'],
+                properties: {
+                  decision: { type: 'string', enum: ['approved', 'rejected'] },
+                  reason: { type: 'string' },
                 },
               },
-              edges: [
-                { to: 'done', when: { decision: 'approved' } },
-                { to: 'done', when: { decision: 'rejected' } },
-              ],
             },
-            done: { purpose: 'Complete', terminal: true },
+            edges: [
+              { to: 'done', when: { decision: 'approved' } },
+              { to: 'done', when: { decision: 'rejected' } },
+            ],
           },
+          done: { purpose: 'Complete', terminal: true },
         },
       },
-    },
+    ],
   });
 }
 
 export function makeDemoWorkflowRoot(): string {
-  return createWorkflowRoot({
+  return createTestWorkspace({
     prefix: 'ripplegraph-demo-cli-',
-    workflow: {
+    workspace: {
       id: 'engineering-coach-demo',
       version: '0.4.0',
       entryGraph: 'workspace-dispatcher',
       title: 'Engineering Coach Demo',
-      graphs: {
-        'change-intake': changeIntakeGraph(),
-        'architecture-sweep': architectureSweepGraph(),
-        'workspace-dispatcher': {
-          kind: 'dispatcher',
-          entry: 'route',
-          nodes: {
-            route: {
-              purpose: 'Choose the best graph for an engineering request',
-              exec: 'inline',
-              outputSchema: { type: 'object' },
-              edges: [{ to: 'done' }],
-            },
-            done: { purpose: 'Dispatcher recommendation complete', terminal: true },
-          },
-        },
-      },
     },
+    graphs: [changeIntakeGraph(), architectureSweepGraph(), workspaceDispatcherGraph()],
   });
 }

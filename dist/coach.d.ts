@@ -1,14 +1,10 @@
+import { type RegistryEntry } from './registry.js';
 import { type Checkpoint, type Gate, type JsonSchema, type Node, type Position } from './schema.js';
 import { type EffectPolicy } from './effects.js';
 export interface WorkflowRootOptions {
     workflowRoot: string;
 }
 export interface StartRunOptions extends WorkflowRootOptions {
-    graph: string;
-    runId: string;
-    effectPolicy?: EffectPolicy;
-}
-export interface StartRegisteredWorkflowRunOptions extends WorkflowRootOptions {
     graphId: string;
     runId: string;
     effectPolicy?: EffectPolicy;
@@ -85,7 +81,7 @@ export interface StateNoFocusedRun {
         id: string;
         version: string;
     };
-    availableGraphs: string[];
+    availableGraphs: RegistryEntry[];
     resumableRuns: Array<{
         id: string;
         status: 'suspended';
@@ -150,7 +146,6 @@ export declare function validateWorkflowRoot(rootPath: string): {
     graphs: string[];
 };
 export declare function startRun(opts: StartRunOptions): StateOk;
-export declare function startRegisteredWorkflowRun(opts: StartRegisteredWorkflowRunOptions): StateOk;
 export declare function getState(opts: WorkflowRootOptions): CoachState;
 export declare function listRuns(opts: WorkflowRootOptions): RunList;
 export declare function stepRun(opts: StepRunOptions): StepRunResponse;

@@ -41,7 +41,7 @@ async function main(argv) {
         case 'start':
             emitJson(startRun({
                 workflowRoot: workflowRoot(flags),
-                graph: requiredFlag(flags, 'graph'),
+                graphId: requiredFlag(flags, 'graph'),
                 runId: requiredFlag(flags, 'run-id'),
                 effectPolicy: effectPolicyFromFlags(flags),
             }));

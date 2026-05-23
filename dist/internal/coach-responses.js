@@ -1,8 +1,7 @@
 import { listRunIds, readCheckpoint } from '../storage.js';
-import { getGraph, getNode } from './runtime-graph.js';
+import { getNode } from './runtime-graph.js';
 export function stateForCheckpoint(workflow, checkpoint, context) {
-    const active = activeContext(workflow, checkpoint, context);
-    const activeGraph = active.graph;
+    const activeGraph = context.graph;
     const node = getNode(activeGraph, checkpoint.position.node);
     return {
         status: 'ok',
@@ -22,7 +21,7 @@ export function stateForCheckpoint(workflow, checkpoint, context) {
             gate: node.gate,
         },
         context: {
-            previous: previousNodes(checkpoint, active.scope),
+            previous: previousNodes(checkpoint, context.scope),
             next: node.edges.map((edge) => {
                 const next = getNode(activeGraph, edge.to);
                 return { id: edge.to, purpose: next.purpose, when: edge.when };
@@ -39,13 +38,6 @@ export function stateForCheckpoint(workflow, checkpoint, context) {
             }
             : { command: 'step', acceptedFormats: ['json'] },
     };
-}
-function activeContext(workflow, checkpoint, context) {
-    if (!context)
-        return { graph: getGraph(workflow, checkpoint.rootGraph), scope: '' };
-    if ('graph' in context)
-        return context;
-    return { graph: context, scope: '' };
 }
 function exampleOutput(schema) {
     const payload = {};

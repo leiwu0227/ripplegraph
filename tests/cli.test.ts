@@ -38,6 +38,7 @@ function runBuilt(args: string[]): { status: number | null; json: Record<string,
 describe('reference cli', () => {
   it('validates, registers, and lists graph packages', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-cli-registry-'));
+    fs.writeFileSync(path.join(root, 'workflow.json'), JSON.stringify({ id: 'cli-registry', version: '0.1.0' }), 'utf8');
     const packageRoot = path.join(root, '.ripplegraph', 'graphs', 'support-triage');
     const manifest = {
       id: 'support-triage',
@@ -60,7 +61,6 @@ describe('reference cli', () => {
       },
     };
     try {
-      fs.writeFileSync(path.join(root, 'workflow.json'), JSON.stringify({ id: 'cli-registry', version: '0.1.0', graphs: {} }), 'utf8');
       fs.mkdirSync(packageRoot, { recursive: true });
       fs.writeFileSync(path.join(packageRoot, 'graph.json'), JSON.stringify(manifest), 'utf8');
 
@@ -230,10 +230,10 @@ describe('reference cli', () => {
   it('starts, reads, steps, suspends, and resumes with JSON commands', () => {
     const root = makeCliWorkflowRoot();
     try {
-      const workflowPath = path.join(root, 'workflow.json');
-      const workflow = JSON.parse(fs.readFileSync(workflowPath, 'utf8')) as { graphs: { daily: { effects?: string[] } } };
-      workflow.graphs.daily.effects = ['read_workspace'];
-      fs.writeFileSync(workflowPath, JSON.stringify(workflow), 'utf8');
+      const graphPath = path.join(root, '.ripplegraph', 'graphs', 'daily', 'graph.json');
+      const manifest = JSON.parse(fs.readFileSync(graphPath, 'utf8')) as Record<string, unknown>;
+      manifest.effects = ['read_workspace'];
+      fs.writeFileSync(graphPath, JSON.stringify(manifest), 'utf8');
 
       expect(run(['validate', '--workflow-root', root]).json.status).toBe('ok');
       expect(run(['start', '--workflow-root', root, '--graph', 'daily', '--run-id', 'daily-a']).json).toMatchObject({

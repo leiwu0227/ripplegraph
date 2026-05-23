@@ -14,7 +14,9 @@ npm install ripplegraph zod
 
 ## Quick Start
 
-Initialize the reference support-triage demo:
+Initialize the reference engineering-coach demo. The workspace ships three
+registered graph packages — `workspace-dispatcher`, `change-intake`, and
+`architecture-sweep`:
 
 ```sh
 ripplegraph-demo init /tmp/ripplegraph-demo
@@ -22,41 +24,44 @@ cd /tmp/ripplegraph-demo
 ripplegraph-demo status --workflow-root .
 ```
 
-Start the branched workflow:
+Start the branched change-intake workflow:
 
 ```sh
-ripplegraph-demo start support-triage --run triage-demo --workflow-root .
+ripplegraph-demo start change-intake --run change-demo --workflow-root .
 ```
 
 Submit the first node output:
 
 ```sh
-ripplegraph-demo submit '{"category":"bug","priority":"urgent","rationale":"Checkout failures block customers from completing payment."}' --workflow-root .
+ripplegraph-demo submit '{"changeType":"bugfix","risk":"high","rationale":"Checkout regression blocks payments."}' --workflow-root .
 ```
 
 The workflow stops at an external decision gate. Approve or reject it:
 
 ```sh
-ripplegraph-demo decide '{"decision":"approved-bug","reason":"The ticket describes a checkout regression."}' --workflow-root .
+ripplegraph-demo decide '{"decision":"approved-bugfix","reason":"Checkout regression is a bugfix."}' --workflow-root .
 ```
 
 Runtime state is stored under `.ripplegraph/`. To switch work:
 
 ```sh
 ripplegraph-demo pause "switching workflows" --workflow-root .
-ripplegraph-demo start policy-refresh --run policy-demo --workflow-root .
+ripplegraph-demo start architecture-sweep --run sweep-demo --workflow-root .
 ripplegraph-demo pause --workflow-root .
-ripplegraph-demo resume triage-demo --workflow-root .
+ripplegraph-demo resume change-demo --workflow-root .
 ripplegraph-demo runs --workflow-root .
 ```
 
 ## Architecture Direction
 
-Ripplegraph is evolving from a single `workflow.json` runner into a graph
-package repository for coach CLIs. Workspaces can register self-contained graph
-package folders with metadata such as `activationHints`, input/output schemas,
-and declared effects. The runtime uses that catalog for dispatcher routing,
-callable graph invocation, and effect checks at execution boundaries.
+Ripplegraph is a graph package repository for coach CLIs. A workspace is a
+folder with a thin `workflow.json` manifest (workspace identity only) and a
+package registry under `.ripplegraph/registry.json`. Each registered graph is
+a self-contained folder containing a `graph.json` manifest with metadata such
+as `activationHints`, input/output schemas, and declared effects. The runtime
+uses that registry for every graph lookup: dispatcher routing, workflow
+execution, callable graph invocation, and effect checks at execution
+boundaries.
 
 Graph kinds:
 
@@ -65,10 +70,10 @@ Graph kinds:
 - `callable` behaves like a typed function: graph-shaped internally, but no
   caller workflow side effects beyond its returned output.
 
-The current workflow run lifecycle still uses a compact `workflow.json` format
-for demos and tests. Graph package validation, registry commands, dispatcher
-request/action validation, and callable graph invocation are implemented against
-the registry. Package-folder workflow execution is still future runtime work.
+Workflow runs execute directly against the registered package folder. Every
+checkpoint pins its `graphSource` (package id, version, and path) so an
+in-flight run keeps executing against the snapshot it started with, even if
+the registry is later updated to point at a newer version of the same id.
 
 Graph package management through the JSON CLI:
 
@@ -111,10 +116,8 @@ Normal dispatch requires exactly one registered graph with `kind:
 `graphId`, optional `callId`, and optional `input`, then starts an isolated
 callable call when the target is registered with `kind: "callable"`.
 
-`start_run` validates that the target graph is registered as a `workflow`.
-For now it can only execute graphs that are also present in the compact
-`workflow.json` runtime; registered package-only workflows return
-`E_GRAPH_NOT_EXECUTABLE_YET`.
+`start_run` validates that the target graph is registered as a `workflow` and
+starts it directly from its package folder.
 
 Effectful `start_run` and `call_graph` actions are denied by default unless
 the caller explicitly allows every declared graph effect. Read-only dispatcher
@@ -145,8 +148,8 @@ keywords fail before a call starts so contracts are not silently ignored.
 
 Graphs can declare effects such as `read_repo`, `write_files`, `network`, or
 domain-specific ids. Ripplegraph enforces graph-level effects when starting a
-compact workflow run, dispatcher `start_run`, dispatcher `call_graph`, or a
-direct callable call. Effect-free graphs keep working without policy options.
+workflow run, dispatcher `start_run`, dispatcher `call_graph`, or a direct
+callable call. Effect-free graphs keep working without policy options.
 
 Effectful starts fail with `E_EFFECT_NOT_ALLOWED` unless all declared effects
 are explicitly allowed for that command:

@@ -1,10 +1,4 @@
-import { RipplegraphError, type Edge, type Graph, type Node, type Workflow } from '../schema.js';
-
-export function getGraph(workflow: Workflow, graphId: string): Graph {
-  const graph = workflow.graphs[graphId];
-  if (!graph) throw new RipplegraphError('E_UNKNOWN_GRAPH', `unknown graph: ${graphId}`);
-  return graph;
-}
+import { RipplegraphError, type Edge, type Graph, type Node } from '../schema.js';
 
 export function getNode(graph: Graph, nodeId: string): Node {
   const node = graph.nodes[nodeId];

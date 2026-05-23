@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { startCallableCall, type StartCallableCallResponse } from './callable.js';
-import { listRuns, resumeRun, startRegisteredWorkflowRun, type RunList, type StateOk } from './coach.js';
+import { listRuns, resumeRun, startRun, type RunList, type StateOk } from './coach.js';
 import { listRegisteredGraphs, type RegistryEntry } from './registry.js';
+import { resolveDispatcherEntry } from './internal/dispatcher-resolution.js';
 import { RipplegraphError, type JsonSchema } from './schema.js';
 import { assertEffectsAllowed, type EffectPolicy } from './effects.js';
 
@@ -160,7 +161,7 @@ export const dispatchActionSchema: JsonSchema = {
 
 export function getDispatchRequest(options: DispatchRequestOptions): DispatchRequestState {
   const graphs = listRegisteredGraphs(options.workflowRoot).map(graphSummary);
-  const dispatcher = selectDispatcher(graphs);
+  const dispatcher = resolveDispatcher(options.workflowRoot);
   return {
     status: 'needs_action',
     dispatcher,
@@ -175,7 +176,7 @@ export function getDispatchRequest(options: DispatchRequestOptions): DispatchReq
 
 export function applyDispatchAction(options: DispatchActionOptions): DispatchActionResult {
   const graphs = listRegisteredGraphs(options.workflowRoot).map(graphSummary);
-  selectDispatcher(graphs);
+  resolveDispatcher(options.workflowRoot);
   const result = dispatcherActionSchema.safeParse(options.action);
   if (!result.success) {
     throw new RipplegraphError('E_INVALID_DISPATCH_ACTION', formatIssues(result.error.issues));
@@ -194,7 +195,7 @@ export function applyDispatchAction(options: DispatchActionOptions): DispatchAct
       return resumeRun({ workflowRoot: options.workflowRoot, runId: action.runId });
     case 'start_run': {
       requireRegisteredGraph(graphs, action.graphId, 'workflow');
-      return startRegisteredWorkflowRun({
+      return startRun({
         workflowRoot: options.workflowRoot,
         graphId: action.graphId,
         runId: action.runId ?? generatedRunId(action.graphId),
@@ -228,17 +229,8 @@ function graphSummary(entry: RegistryEntry): RegisteredGraphSummary {
   };
 }
 
-function selectDispatcher(graphs: RegisteredGraphSummary[]): RegisteredGraphSummary {
-  const dispatchers = graphs.filter((entry) => entry.kind === 'dispatcher');
-  if (dispatchers.length === 0) {
-    throw new RipplegraphError('E_MISSING_DISPATCHER', 'no registered dispatcher graph found');
-  }
-  if (dispatchers.length > 1) {
-    throw new RipplegraphError('E_AMBIGUOUS_DISPATCHER', `multiple registered dispatcher graphs: ${dispatchers.map((entry) => entry.id).join(', ')}`);
-  }
-  const dispatcher = dispatchers[0];
-  if (!dispatcher) throw new RipplegraphError('E_MISSING_DISPATCHER', 'no registered dispatcher graph found');
-  return dispatcher;
+export function resolveDispatcher(workflowRoot: string): RegisteredGraphSummary {
+  return graphSummary(resolveDispatcherEntry(workflowRoot));
 }
 
 function requireRegisteredGraph(graphs: RegisteredGraphSummary[], graphId: string, kind: RegisteredGraphSummary['kind']): RegisteredGraphSummary {

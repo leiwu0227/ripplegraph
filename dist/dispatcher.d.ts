@@ -112,3 +112,4 @@ export declare const dispatcherActionSchema: z.ZodDiscriminatedUnion<"action", [
 export declare const dispatchActionSchema: JsonSchema;
 export declare function getDispatchRequest(options: DispatchRequestOptions): DispatchRequestState;
 export declare function applyDispatchAction(options: DispatchActionOptions): DispatchActionResult;
+export declare function resolveDispatcher(workflowRoot: string): RegisteredGraphSummary;

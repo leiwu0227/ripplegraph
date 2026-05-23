@@ -12,8 +12,10 @@ function parseOutput(args) {
 function renderNoFocusedRun(state, runs) {
     const lines = ['No focused run.', '', 'Orientation:', `  ${state.orientation}`, '', 'If unsure:', '  ripplegraph-demo explain'];
     lines.push('', 'Available graphs:');
-    for (const graph of state.availableGraphs)
-        lines.push(`  ${graph}`);
+    for (const graph of state.availableGraphs) {
+        const title = graph.title ? `  ${graph.title}` : '';
+        lines.push(`  ${graph.id}  ${graph.kind}${title}`);
+    }
     const resumable = runs.runs.filter((run) => run.status === 'suspended');
     lines.push('', 'Resumable runs:');
     if (resumable.length === 0) {
@@ -24,7 +26,7 @@ function renderNoFocusedRun(state, runs) {
             lines.push(`  ${formatRun(run)}`);
     }
     lines.push('', 'Next:');
-    lines.push(`  ripplegraph-demo start ${state.availableGraphs[0] ?? '<graph-id>'} --run <run-id>`);
+    lines.push(`  ripplegraph-demo start ${state.availableGraphs[0]?.id ?? '<graph-id>'} --run <run-id>`);
     for (const run of resumable.slice(0, 3))
         lines.push(`  ripplegraph-demo resume ${run.id}`);
     return lines.join('\n');
@@ -150,16 +152,13 @@ function listTemplateFiles(dir, baseDir = dir) {
 }
 function initDemoProject(targetPath, force) {
     const root = path.resolve(targetPath);
-    const workflowFile = path.join(root, '.ripplegraph', 'workflow.json');
-    const workspaceFiles = listTemplateFiles(minimalTemplateDir).filter((filePath) => filePath !== 'workflow.json');
-    const protectedFiles = [workflowFile, ...workspaceFiles.map((filePath) => path.join(root, filePath))];
+    const templateFiles = listTemplateFiles(minimalTemplateDir);
+    const protectedFiles = templateFiles.map((filePath) => path.join(root, filePath));
     const existingFile = protectedFiles.find((filePath) => fs.existsSync(filePath));
     if (existingFile && !force) {
         throw new RipplegraphError('E_ALREADY_EXISTS', `${existingFile} already exists; rerun with --force to replace demo files`);
     }
-    fs.mkdirSync(path.dirname(workflowFile), { recursive: true });
-    fs.copyFileSync(path.join(minimalTemplateDir, 'workflow.json'), workflowFile);
-    for (const filePath of workspaceFiles) {
+    for (const filePath of templateFiles) {
         const targetFile = path.join(root, filePath);
         fs.mkdirSync(path.dirname(targetFile), { recursive: true });
         fs.copyFileSync(path.join(minimalTemplateDir, filePath), targetFile);
@@ -215,7 +214,7 @@ async function main(argv) {
         case 'start':
             emitLine(renderActiveState(startRun({
                 workflowRoot: root,
-                graph: required(args.positional[0], 'missing graph id'),
+                graphId: required(args.positional[0], 'missing graph id'),
                 runId: required(stringFlag(args.flags, 'run'), 'missing --run'),
                 effectPolicy: { allowedEffects: ['read_repo'] },
             })));
