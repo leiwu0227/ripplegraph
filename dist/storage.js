@@ -46,9 +46,19 @@ export function transitionLogPath(rootPath, runId) {
 export function callableTransitionLogPath(rootPath, callId) {
     return path.join(callDir(rootPath, callId), 'transition-log.jsonl');
 }
-export function artifactPath(rootPath, runId, nodeId) {
+export function nodeOutputKey(scope, nodeId) {
     assertPathSegment(nodeId, 'nodeId');
-    return path.join(runDir(rootPath, runId), 'artifacts', nodeId, 'output.json');
+    if (!scope)
+        return nodeId;
+    assertPathSegment(scope, 'scope');
+    return `${scope}/${nodeId}`;
+}
+export function artifactPath(rootPath, runId, nodeId, scope = '') {
+    assertPathSegment(nodeId, 'nodeId');
+    if (!scope)
+        return path.join(runDir(rootPath, runId), 'artifacts', nodeId, 'output.json');
+    assertPathSegment(scope, 'scope');
+    return path.join(runDir(rootPath, runId), 'artifacts', scope, nodeId, 'output.json');
 }
 export function callableArtifactPath(rootPath, callId, nodeId) {
     assertPathSegment(nodeId, 'nodeId');
@@ -153,8 +163,8 @@ export function writeCallableCheckpoint(rootPath, checkpoint) {
     fs.mkdirSync(path.join(callPath, 'scratch'), { recursive: true });
     writeJson(callableCheckpointPath(rootPath, checkpoint.callId), callableCheckpointSchema.parse(checkpoint));
 }
-export function writeNodeOutput(rootPath, runId, nodeId, output) {
-    const filePath = artifactPath(rootPath, runId, nodeId);
+export function writeNodeOutput(rootPath, runId, nodeId, output, scope = '') {
+    const filePath = artifactPath(rootPath, runId, nodeId, scope);
     writeJson(filePath, output);
     return path.relative(runDir(rootPath, runId), filePath).replaceAll(path.sep, '/');
 }

@@ -149,7 +149,7 @@ function effectsForNode(graph: Graph, node: Node): string[] {
 
 function assertGraphEffectsAllowed(graph: Graph, graphId: string, policy?: EffectPolicy): void {
   const allowed = new Set(policy?.allowedEffects ?? []);
-  const missing = missingEffectsForGraph(graph, graphId, allowed);
+  const missing = missingEffectsForGraph(graph, allowed);
   if (missing.size === 0) return;
   const parts = [...missing.entries()].map(
     ([effect, nodes]) => `${effect} (${nodes.length > 1 ? 'nodes' : 'node'}: ${nodes.join(', ')})`,
@@ -162,7 +162,7 @@ function assertGraphEffectsAllowed(graph: Graph, graphId: string, policy?: Effec
 
 function assertGraphAndChildEffectsAllowed(rootPath: string, graph: Graph, graphId: string, policy?: EffectPolicy): void {
   const allowed = new Set(policy?.allowedEffects ?? []);
-  const missing = missingEffectsForGraph(graph, graphId, allowed);
+  const missing = missingEffectsForGraph(graph, allowed);
   collectMissingChildEffects(rootPath, graph, allowed, missing, new Set([graphId]));
   if (missing.size === 0) return;
   const parts = [...missing.entries()].map(
@@ -174,13 +174,13 @@ function assertGraphAndChildEffectsAllowed(rootPath: string, graph: Graph, graph
   );
 }
 
-function missingEffectsForGraph(graph: Graph, graphId: string, allowed: Set<string>): Map<string, string[]> {
+function missingEffectsForGraph(graph: Graph, allowed: Set<string>, ownerPrefix = ''): Map<string, string[]> {
   const missing = new Map<string, string[]>();
   for (const [nodeId, node] of Object.entries(graph.nodes)) {
     for (const effect of effectsForNode(graph, node)) {
       if (allowed.has(effect)) continue;
       const owners = missing.get(effect) ?? [];
-      const owner = `${graphId}/${nodeId}`;
+      const owner = `${ownerPrefix}${nodeId}`;
       if (!owners.includes(owner)) owners.push(owner);
       missing.set(effect, owners);
     }
@@ -200,7 +200,7 @@ function collectMissingChildEffects(
     if (!graphId || visited.has(graphId)) continue;
     visited.add(graphId);
     const { graphPackage } = resolveRegisteredGraphPackage({ workflowRoot: rootPath, graphId, kind: 'workflow' });
-    const childMissing = missingEffectsForGraph(graphPackage.manifest, graphId, allowed);
+    const childMissing = missingEffectsForGraph(graphPackage.manifest, allowed, `${graphId}/`);
     for (const [effect, owners] of childMissing) {
       const existing = missing.get(effect) ?? [];
       for (const owner of owners) {

@@ -22,6 +22,11 @@ export const gateSchema = z
     decisionSchema: jsonSchemaSchema,
 })
     .strict();
+export const workflowRefSchema = z
+    .object({
+    graphId: idSchema,
+})
+    .strict();
 export const edgeSchema = z
     .object({
     to: idSchema,
@@ -35,12 +40,22 @@ export const nodeSchema = z
     exec: z.literal('inline').default('inline'),
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
     gate: gateSchema.optional(),
+    workflowRef: workflowRefSchema.optional(),
     edges: z.array(edgeSchema).default([]),
     terminal: z.boolean().default(false),
     // undefined inherits graph.effects; [] overrides to require nothing; non-empty array overrides with that set.
     effects: z.array(idSchema).optional(),
 })
-    .strict();
+    .strict()
+    .superRefine((node, ctx) => {
+    if (node.workflowRef && node.gate) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['workflowRef'],
+            message: 'workflowRef nodes cannot also define gate',
+        });
+    }
+});
 const graphFieldsSchema = z
     .object({
     kind: z.enum(['dispatcher', 'workflow', 'callable']).default('workflow'),
@@ -125,6 +140,21 @@ export const graphSourceSchema = z
     packagePath: z.string().min(1),
 })
     .strict();
+export const checkpointStackFrameSchema = z
+    .object({
+    parent: z
+        .object({
+        graph: idSchema,
+        node: idSchema,
+        graphSource: graphSourceSchema.optional(),
+        scope: z.string(),
+    })
+        .strict(),
+    child: graphSourceSchema,
+    scope: idSchema,
+    enteredAt: z.string().min(1),
+})
+    .strict();
 export const checkpointSchema = z
     .object({
     runId: idSchema,
@@ -137,6 +167,7 @@ export const checkpointSchema = z
     outputs: z.record(z.string(), z.unknown()).default({}),
     gateDecisions: z.record(z.string(), z.unknown()).default({}),
     graphSource: graphSourceSchema.optional(),
+    stack: z.array(checkpointStackFrameSchema).default([]),
     resumeNote: z.string().optional(),
 })
     .strict();

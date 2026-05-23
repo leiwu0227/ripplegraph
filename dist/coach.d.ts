@@ -43,6 +43,7 @@ export interface StateOk {
         rootGraph: string;
     };
     position: Position;
+    stack: Checkpoint['stack'];
     orientation: string;
     nextAllowedCommand: string;
     helpCommand: string;

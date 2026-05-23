@@ -10,7 +10,8 @@ export declare function checkpointPath(rootPath: string, runId: string): string;
 export declare function callableCheckpointPath(rootPath: string, callId: string): string;
 export declare function transitionLogPath(rootPath: string, runId: string): string;
 export declare function callableTransitionLogPath(rootPath: string, callId: string): string;
-export declare function artifactPath(rootPath: string, runId: string, nodeId: string): string;
+export declare function nodeOutputKey(scope: string, nodeId: string): string;
+export declare function artifactPath(rootPath: string, runId: string, nodeId: string, scope?: string): string;
 export declare function callableArtifactPath(rootPath: string, callId: string, nodeId: string): string;
 export declare function ensureWorkflowRoot(rootPath: string): void;
 export declare function loadWorkflow(rootPath: string): Workflow;
@@ -21,7 +22,7 @@ export declare function writeCheckpoint(rootPath: string, checkpoint: Checkpoint
 export declare function createCallableCheckpoint(rootPath: string, checkpoint: CallableCheckpoint): void;
 export declare function readCallableCheckpoint(rootPath: string, callId: string): CallableCheckpoint;
 export declare function writeCallableCheckpoint(rootPath: string, checkpoint: CallableCheckpoint): void;
-export declare function writeNodeOutput(rootPath: string, runId: string, nodeId: string, output: unknown): string;
+export declare function writeNodeOutput(rootPath: string, runId: string, nodeId: string, output: unknown, scope?: string): string;
 export declare function writeCallableOutput(rootPath: string, callId: string, nodeId: string, output: unknown): string;
 export declare function appendTransition(rootPath: string, runId: string, entry: TransitionLogEntry): void;
 export declare function appendCallableTransition(rootPath: string, callId: string, entry: CallableTransitionLogEntry): void;
