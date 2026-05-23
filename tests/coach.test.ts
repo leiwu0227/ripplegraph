@@ -732,6 +732,126 @@ describe('coach operations', () => {
     }
   });
 
+  it('enters workflow-ref nodes when restored state is already positioned on the ref', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackage(root, 'graphs/recovery-child', {
+        id: 'recovery-child',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'work',
+        nodes: {
+          work: { purpose: 'Recovered child work', edges: [{ to: 'done' }] },
+          done: { purpose: 'Done', terminal: true },
+        },
+      });
+      writeGraphPackage(root, 'graphs/recovery-parent', {
+        id: 'recovery-parent',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'review',
+        nodes: {
+          review: { purpose: 'Recovered parent ref', workflowRef: { graphId: 'recovery-child' }, edges: [{ to: 'done' }] },
+          done: { purpose: 'Done', terminal: true },
+        },
+      });
+      ensureWorkflowRoot(root);
+      writeCheckpoint(root, {
+        runId: 'recovery-a',
+        status: 'active',
+        rootGraph: 'recovery-parent',
+        workflow: { id: 'package-workspace', version: '0.1.0' },
+        position: { graph: 'recovery-parent', node: 'review' },
+        createdAt: '2026-05-23T00:00:00.000Z',
+        updatedAt: '2026-05-23T00:00:00.000Z',
+        outputs: {},
+        gateDecisions: {},
+        stack: [],
+        graphSource: {
+          kind: 'package',
+          graphId: 'recovery-parent',
+          graphVersion: '0.1.0',
+          packagePath: 'graphs/recovery-parent',
+        },
+      });
+      writeCurrent(root, { focusedRunId: 'recovery-a' });
+
+      const state = getState({ workflowRoot: root });
+
+      expect(state).toMatchObject({
+        status: 'ok',
+        position: { graph: 'recovery-child', node: 'work' },
+        node: { purpose: 'Recovered child work' },
+        stack: [{ parent: { graph: 'recovery-parent', node: 'review', scope: '' }, child: { graphId: 'recovery-child' } }],
+      });
+      expect(readCheckpoint(root, 'recovery-a').position).toEqual({ graph: 'recovery-child', node: 'work' });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps outer child scope after an inner workflow-ref exits to a non-terminal parent node', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackage(root, 'graphs/leaf-child', {
+        id: 'leaf-child',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'review',
+        outputSchema: { type: 'object', required: ['decision'], properties: { decision: { type: 'string', enum: ['done'] } } },
+        nodes: {
+          review: {
+            purpose: 'Leaf review',
+            outputSchema: { type: 'object', required: ['decision'], properties: { decision: { type: 'string', enum: ['done'] } } },
+            edges: [{ to: 'done', when: { decision: 'done' } }],
+          },
+          done: { purpose: 'Done', terminal: true },
+        },
+      });
+      writeGraphPackage(root, 'graphs/middle-child', {
+        id: 'middle-child',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'inner',
+        nodes: {
+          inner: { purpose: 'Middle inner ref', workflowRef: { graphId: 'leaf-child' }, edges: [{ to: 'after', when: { decision: 'done' } }] },
+          after: { purpose: 'Middle after child', edges: [{ to: 'done' }] },
+          done: { purpose: 'Done', terminal: true },
+        },
+      });
+      writeGraphPackage(root, 'graphs/outer-parent', {
+        id: 'outer-parent',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'review',
+        nodes: {
+          review: { purpose: 'Outer parent ref', workflowRef: { graphId: 'middle-child' }, edges: [{ to: 'done' }] },
+          done: { purpose: 'Done', terminal: true },
+        },
+      });
+      startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'outer-parent', runId: 'nested-scope-a' });
+
+      const state = stepRun({ workflowRoot: root, output: { decision: 'done' } });
+
+      expect(state).toMatchObject({
+        status: 'ok',
+        position: { graph: 'middle-child', node: 'after' },
+        stack: [{ scope: 'f1' }],
+        context: { previous: [{ id: 'inner', output: { decision: 'done' } }] },
+      });
+      expect(readCheckpoint(root, 'nested-scope-a')).toMatchObject({
+        position: { graph: 'middle-child', node: 'after' },
+        stack: [{ scope: 'f1' }],
+        outputs: {
+          'f1/inner': { decision: 'done' },
+          'f2/review': { decision: 'done' },
+        },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('decides a gated node, stores the external decision, and logs a decide transition', () => {
     const root = makeGatedWorkflowRoot();
     try {

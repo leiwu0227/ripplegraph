@@ -127,7 +127,7 @@ function createRun(rootPath, workflow, graph, checkpoint) {
     writeCheckpoint(rootPath, checkpoint);
     writeCurrent(rootPath, { focusedRunId: checkpoint.runId });
     appendTransition(rootPath, checkpoint.runId, transitionEntry('start', checkpoint.runId, null, checkpoint.position));
-    return enterWorkflowRefs(rootPath, workflow, checkpoint, graph);
+    return enterWorkflowRefs(rootPath, workflow, checkpoint);
 }
 export function getState(opts) {
     const workflow = loadWorkflow(opts.workflowRoot);
@@ -149,7 +149,7 @@ export function getState(opts) {
         };
     }
     const checkpoint = readCheckpoint(opts.workflowRoot, current.focusedRunId);
-    return stateForCheckpoint(workflow, checkpoint, activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint));
+    return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint);
 }
 export function listRuns(opts) {
     const workflow = loadWorkflow(opts.workflowRoot);
@@ -213,7 +213,7 @@ export function stepRun(opts) {
         return completeRun(opts.workflowRoot, checkpoint, to);
     }
     writeCheckpoint(opts.workflowRoot, checkpoint);
-    return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint, active.graph);
+    return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint);
 }
 export function advanceRun(opts) {
     const workflow = loadWorkflow(opts.workflowRoot);
@@ -275,7 +275,7 @@ export function decideGate(opts) {
         return completeRun(opts.workflowRoot, checkpoint, to);
     }
     writeCheckpoint(opts.workflowRoot, checkpoint);
-    return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint, active.graph);
+    return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint);
 }
 export function suspendRun(opts) {
     const workflow = loadWorkflow(opts.workflowRoot);
@@ -304,7 +304,6 @@ export function resumeRun(opts) {
         throw new RipplegraphError('E_FOCUSED_RUN_EXISTS', `focused run already exists: ${current.focusedRunId}`);
     }
     const checkpoint = readCheckpoint(opts.workflowRoot, opts.runId);
-    const active = activeContextForCheckpoint(opts.workflowRoot, workflow, checkpoint);
     if (checkpoint.status !== 'suspended') {
         throw new RipplegraphError('E_RUN_NOT_RESUMABLE', `run ${opts.runId} is not suspended`);
     }
@@ -313,7 +312,7 @@ export function resumeRun(opts) {
     writeCheckpoint(opts.workflowRoot, checkpoint);
     writeCurrent(opts.workflowRoot, { focusedRunId: opts.runId });
     appendTransition(opts.workflowRoot, checkpoint.runId, transitionEntry('resume', checkpoint.runId, checkpoint.position, checkpoint.position));
-    return stateForCheckpoint(workflow, checkpoint, active);
+    return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint);
 }
 export function abandonRun(opts) {
     const checkpoint = focusedCheckpoint(opts.workflowRoot);
@@ -339,8 +338,8 @@ function focusedCheckpoint(rootPath) {
     }
     return readCheckpoint(rootPath, current.focusedRunId);
 }
-function enterWorkflowRefs(rootPath, workflow, checkpoint, graph) {
-    let active = { graph, graphSource: checkpoint.graphSource, graphId: checkpoint.position.graph, scope: '' };
+function enterWorkflowRefs(rootPath, workflow, checkpoint) {
+    let active = activeContextForCheckpoint(rootPath, workflow, checkpoint);
     const entered = new Set();
     while (true) {
         const node = getNode(active.graph, checkpoint.position.node);
@@ -441,7 +440,7 @@ function exitChildWorkflow(rootPath, workflow, checkpoint, child, childResult, c
         return completeRun(rootPath, checkpoint, to);
     }
     writeCheckpoint(rootPath, checkpoint);
-    return enterWorkflowRefs(rootPath, workflow, checkpoint, parentGraph);
+    return enterWorkflowRefs(rootPath, workflow, checkpoint);
 }
 function activeContextForCheckpoint(rootPath, workflow, checkpoint) {
     const frame = checkpoint.stack.at(-1);
