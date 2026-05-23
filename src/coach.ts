@@ -13,6 +13,7 @@ import {
   RipplegraphError,
   type Checkpoint,
   type Gate,
+  type Graph,
   type JsonSchema,
   type Node,
   type Position,
@@ -129,10 +130,22 @@ export function validateWorkflowRoot(rootPath: string): { status: 'ok'; workflow
   return { status: 'ok', workflow: { id: workflow.id, version: workflow.version }, graphs: Object.keys(workflow.graphs) };
 }
 
+function effectsForNode(graph: Graph, node: Node): string[] {
+  return node.effects ?? graph.effects;
+}
+
+function unionOfNodeEffects(graph: Graph): string[] {
+  const set = new Set<string>();
+  for (const node of Object.values(graph.nodes)) {
+    for (const effect of effectsForNode(graph, node)) set.add(effect);
+  }
+  return [...set];
+}
+
 export function startRun(opts: StartRunOptions): StateOk {
   const workflow = loadWorkflow(opts.workflowRoot);
   const graph = getGraph(workflow, opts.graph);
-  assertEffectsAllowed(graph.effects, opts.effectPolicy, `graph ${opts.graph}`);
+  assertEffectsAllowed(unionOfNodeEffects(graph), opts.effectPolicy, `graph ${opts.graph}`);
   ensureWorkflowRoot(opts.workflowRoot);
   const current = readCurrent(opts.workflowRoot);
   if (current.focusedRunId) {
