@@ -31,9 +31,32 @@ export interface JsonSchema {
   [key: string]: unknown;
 }
 
+export const decisionSourceSchema = z.discriminatedUnion('kind', [
+  z
+    .object({
+      kind: z.literal('human'),
+      label: z.string().min(1).optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal('tool'),
+      tool: idSchema,
+      label: z.string().min(1).optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal('system'),
+      label: z.string().min(1).optional(),
+    })
+    .strict(),
+]);
+
 export const gateSchema = z
   .object({
     type: z.literal('external_decision'),
+    decisionSource: decisionSourceSchema.optional(),
     decisionSchema: jsonSchemaSchema,
   })
   .strict();

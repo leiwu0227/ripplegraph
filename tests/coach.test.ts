@@ -375,6 +375,85 @@ describe('coach operations', () => {
     }
   });
 
+  it('exposes gate decision source metadata in gated state contracts', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-gate-source-'));
+    fs.writeFileSync(
+      path.join(root, 'workflow.json'),
+      JSON.stringify({
+        id: 'gate-source-demo',
+        version: '0.1.0',
+        graphs: {
+          review: {
+            entry: 'approval',
+            nodes: {
+              approval: {
+                purpose: 'Request reviewloop approval',
+                gate: {
+                  type: 'external_decision',
+                  decisionSource: { kind: 'tool', tool: 'reviewloop', label: 'Implementation review' },
+                  decisionSchema: {
+                    type: 'object',
+                    required: ['decision'],
+                    properties: { decision: { type: 'string', enum: ['approved', 'rejected'] } },
+                  },
+                },
+                edges: [{ to: 'done', when: { decision: 'approved' } }],
+              },
+              done: { purpose: 'Done', terminal: true },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+    try {
+      const state = startRun({ workflowRoot: root, graph: 'review', runId: 'approval-source-a' });
+      expect(state.node.gate?.decisionSource).toEqual({
+        kind: 'tool',
+        tool: 'reviewloop',
+        label: 'Implementation review',
+      });
+      expect(state.responseContract).toMatchObject({
+        command: 'decide',
+        decisionSource: { kind: 'tool', tool: 'reviewloop', label: 'Implementation review' },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects tool decision sources without a tool identifier', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-gate-source-invalid-'));
+    fs.writeFileSync(
+      path.join(root, 'workflow.json'),
+      JSON.stringify({
+        id: 'invalid-gate-source',
+        version: '0.1.0',
+        graphs: {
+          review: {
+            entry: 'approval',
+            nodes: {
+              approval: {
+                purpose: 'Invalid source',
+                gate: {
+                  type: 'external_decision',
+                  decisionSource: { kind: 'tool' },
+                  decisionSchema: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+    try {
+      expect(() => loadWorkflow(root)).toThrow(/decisionSource/);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('exposes dispatcher-ready guidance when no run is focused', () => {
     const root = makeGraphMetadataWorkflowRoot();
     try {

@@ -95,7 +95,7 @@ export interface StateOk {
   };
   responseContract:
     | { command: 'step'; acceptedFormats: ['json'] }
-    | { command: 'decide'; acceptedFormats: ['json']; schema: JsonSchema };
+    | { command: 'decide'; acceptedFormats: ['json']; schema: JsonSchema; decisionSource?: Gate['decisionSource'] };
 }
 
 export interface StateNoFocusedRun {
