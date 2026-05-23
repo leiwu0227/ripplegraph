@@ -1,0 +1,41 @@
+{
+  "plan_file": ".specdev/assignments/00017_feature_workflow-ref-frame-stack/breakdown/plan.md",
+  "total_tasks": 5,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-05-23T03:05:20Z",
+      "completed_at": "2026-05-23T03:07:26Z",
+      "summary": "Added workflowRef schema validation, durable checkpoint stack frames, scoped node output/artifact helpers, and focused persistence coverage. Verified npm test -- tests/coach.test.ts."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-05-23T03:07:30Z",
+      "completed_at": "2026-05-23T03:11:35Z",
+      "summary": "Added active graph/scope context resolution, routed state and step/decision writes through it, rendered stack context, and filtered previous outputs by scope. Verified npm test -- tests/coach.test.ts and npm run build."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "started_at": "2026-05-23T03:11:41Z",
+      "completed_at": "2026-05-23T03:14:38Z",
+      "summary": "Added automatic workflow-ref child entry, pinned child stack frames, frame scope allocation, recursive child effect enforcement, and focused tests for entry and effect denial. Verified npm test -- tests/coach.test.ts and npm run build."
+    },
+    {
+      "number": 4,
+      "status": "completed",
+      "started_at": "2026-05-23T03:14:46Z",
+      "completed_at": "2026-05-23T03:16:37Z",
+      "summary": "Added child workflow terminal pop/resume handling, child output validation, parent ref output persistence, scoped parent/child artifact history, and end-to-end collision coverage. Verified npm test -- tests/coach.test.ts and npm run build."
+    },
+    {
+      "number": 5,
+      "status": "completed",
+      "started_at": "2026-05-23T03:16:43Z",
+      "completed_at": "2026-05-23T03:18:10Z",
+      "summary": "Built tracked dist artifacts, restored legacy root effect error labels found during full-suite verification, ran npm run build and npm test successfully, and reviewed rootGraph/output scan results as scoped or non-run-callable uses."
+    }
+  ]
+}

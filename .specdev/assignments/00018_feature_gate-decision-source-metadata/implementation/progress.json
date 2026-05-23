@@ -1,0 +1,20 @@
+{
+  "plan_file": ".specdev/assignments/00018_feature_gate-decision-source-metadata/breakdown/plan.md",
+  "total_tasks": 2,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-05-23T03:32:11Z",
+      "completed_at": "2026-05-23T03:34:34Z",
+      "summary": "Added strict decisionSource schema support for gates, surfaced metadata through StateOk.node.gate and decide response contracts, and covered valid tool metadata plus invalid tool-without-id validation. Verified npm test -- tests/coach.test.ts and npm run build."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-05-23T03:34:39Z",
+      "completed_at": "2026-05-23T03:36:16Z",
+      "summary": "Verified metadata-bearing gates still persist only the submitted decision, route through the existing edge behavior, and log only the decision payload. Rebuilt tracked dist artifacts. Verified npm run build, npm test -- tests/coach.test.ts tests/callable.test.ts, and npm test."
+    }
+  ]
+}

@@ -215,6 +215,7 @@ export function startRun(opts: StartRunOptions): StateOk {
     outputs: {},
     gateDecisions: {},
     stack: [],
+    frameCounter: 0,
   };
   return createRun(opts.workflowRoot, workflow, graph, checkpoint);
 }
@@ -240,6 +241,7 @@ export function startRegisteredWorkflowRun(opts: StartRegisteredWorkflowRunOptio
     outputs: {},
     gateDecisions: {},
     stack: [],
+    frameCounter: 0,
     graphSource: {
       kind: 'package',
       graphId: manifest.id,
@@ -485,6 +487,7 @@ function focusedCheckpoint(rootPath: string): Checkpoint {
 
 function enterWorkflowRefs(rootPath: string, workflow: Workflow, checkpoint: Checkpoint): StateOk {
   let active = activeContextForCheckpoint(rootPath, workflow, checkpoint);
+  ensureFrameCounter(checkpoint);
   const entered = new Set<string>();
   while (true) {
     const node = getNode(active.graph, checkpoint.position.node);
@@ -499,7 +502,8 @@ function enterWorkflowRefs(rootPath: string, workflow: Workflow, checkpoint: Che
     const { entry, graphPackage } = resolveRegisteredGraphPackage({ workflowRoot: rootPath, graphId, kind: 'workflow' });
     const manifest = graphPackage.manifest;
     const from = checkpoint.position;
-    const frameScope = nextFrameScope(checkpoint);
+    checkpoint.frameCounter += 1;
+    const frameScope = `f${checkpoint.frameCounter}`;
     checkpoint.stack.push({
       parent: {
         graph: active.graphId,
@@ -529,7 +533,8 @@ function enterWorkflowRefs(rootPath: string, workflow: Workflow, checkpoint: Che
   }
 }
 
-function nextFrameScope(checkpoint: Checkpoint): string {
+function ensureFrameCounter(checkpoint: Checkpoint): void {
+  if (checkpoint.frameCounter > 0) return;
   let max = 0;
   for (const frame of checkpoint.stack) {
     const match = /^f(\d+)$/.exec(frame.scope);
@@ -539,7 +544,7 @@ function nextFrameScope(checkpoint: Checkpoint): string {
     const match = /^f(\d+)\//.exec(key);
     if (match) max = Math.max(max, Number(match[1]));
   }
-  return `f${max + 1}`;
+  checkpoint.frameCounter = max;
 }
 
 function exitChildWorkflow(

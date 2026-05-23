@@ -1,0 +1,27 @@
+{
+  "plan_file": ".specdev/assignments/00015_feature_workflow-composition/breakdown/plan.md",
+  "total_tasks": 3,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-05-23T00:48:29Z",
+      "completed_at": "2026-05-23T00:50:19Z",
+      "summary": "Added node.effects? field to nodeSchema; tightened exec to literal 'inline'; added schema test."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-05-23T00:50:19Z",
+      "completed_at": "2026-05-23T00:54:20Z",
+      "summary": "Added effectsForNode + unionOfNodeEffects helpers in coach.ts; startRun now checks union of declared/inherited node effects against policy. Reviewer: PASS/READY."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "started_at": "2026-05-23T00:54:20Z",
+      "completed_at": "2026-05-23T00:58:18Z",
+      "summary": "Removed dispatcher pre-check for start_run; startRun is now authoritative for workflow effect checks. Updated the existing graph-effects test to align the compact workflow with the registered package."
+    }
+  ]
+}

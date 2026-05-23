@@ -45,12 +45,6 @@ export const decisionSourceSchema = z.discriminatedUnion('kind', [
       label: z.string().min(1).optional(),
     })
     .strict(),
-  z
-    .object({
-      kind: z.literal('system'),
-      label: z.string().min(1).optional(),
-    })
-    .strict(),
 ]);
 
 export const gateSchema = z
@@ -219,9 +213,20 @@ export const checkpointSchema = z
     gateDecisions: z.record(z.string(), z.unknown()).default({}),
     graphSource: graphSourceSchema.optional(),
     stack: z.array(checkpointStackFrameSchema).default([]),
+    frameCounter: z.number().int().nonnegative().default(0),
     resumeNote: z.string().optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((checkpoint, ctx) => {
+    const expected = checkpoint.stack.at(-1)?.child.graphId ?? checkpoint.graphSource?.graphId ?? checkpoint.rootGraph;
+    if (checkpoint.position.graph !== expected) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['position', 'graph'],
+        message: `position.graph (${checkpoint.position.graph}) must match active graph (${expected})`,
+      });
+    }
+  });
 
 export const currentSchema = z
   .object({

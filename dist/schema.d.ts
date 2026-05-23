@@ -32,15 +32,6 @@ export declare const decisionSourceSchema: z.ZodDiscriminatedUnion<"kind", [z.Zo
     kind: "tool";
     tool: string;
     label?: string | undefined;
-}>, z.ZodObject<{
-    kind: z.ZodLiteral<"system">;
-    label: z.ZodOptional<z.ZodString>;
-}, "strict", z.ZodTypeAny, {
-    kind: "system";
-    label?: string | undefined;
-}, {
-    kind: "system";
-    label?: string | undefined;
 }>]>;
 export declare const gateSchema: z.ZodObject<{
     type: z.ZodLiteral<"external_decision">;
@@ -65,15 +56,6 @@ export declare const gateSchema: z.ZodObject<{
         kind: "tool";
         tool: string;
         label?: string | undefined;
-    }>, z.ZodObject<{
-        kind: z.ZodLiteral<"system">;
-        label: z.ZodOptional<z.ZodString>;
-    }, "strict", z.ZodTypeAny, {
-        kind: "system";
-        label?: string | undefined;
-    }, {
-        kind: "system";
-        label?: string | undefined;
     }>]>>;
     decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
 }, "strict", z.ZodTypeAny, {
@@ -86,9 +68,6 @@ export declare const gateSchema: z.ZodObject<{
         kind: "tool";
         tool: string;
         label?: string | undefined;
-    } | {
-        kind: "system";
-        label?: string | undefined;
     } | undefined;
 }, {
     type: "external_decision";
@@ -99,9 +78,6 @@ export declare const gateSchema: z.ZodObject<{
     } | {
         kind: "tool";
         tool: string;
-        label?: string | undefined;
-    } | {
-        kind: "system";
         label?: string | undefined;
     } | undefined;
 }>;
@@ -150,15 +126,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
             kind: "tool";
             tool: string;
             label?: string | undefined;
-        }>, z.ZodObject<{
-            kind: z.ZodLiteral<"system">;
-            label: z.ZodOptional<z.ZodString>;
-        }, "strict", z.ZodTypeAny, {
-            kind: "system";
-            label?: string | undefined;
-        }, {
-            kind: "system";
-            label?: string | undefined;
         }>]>>;
         decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
     }, "strict", z.ZodTypeAny, {
@@ -171,9 +138,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
             kind: "tool";
             tool: string;
             label?: string | undefined;
-        } | {
-            kind: "system";
-            label?: string | undefined;
         } | undefined;
     }, {
         type: "external_decision";
@@ -184,9 +148,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
         } | {
             kind: "tool";
             tool: string;
-            label?: string | undefined;
-        } | {
-            kind: "system";
             label?: string | undefined;
         } | undefined;
     }>>;
@@ -229,9 +190,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
             kind: "tool";
             tool: string;
             label?: string | undefined;
-        } | {
-            kind: "system";
-            label?: string | undefined;
         } | undefined;
     } | undefined;
     workflowRef?: {
@@ -252,9 +210,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
         } | {
             kind: "tool";
             tool: string;
-            label?: string | undefined;
-        } | {
-            kind: "system";
             label?: string | undefined;
         } | undefined;
     } | undefined;
@@ -287,9 +242,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
             kind: "tool";
             tool: string;
             label?: string | undefined;
-        } | {
-            kind: "system";
-            label?: string | undefined;
         } | undefined;
     } | undefined;
     workflowRef?: {
@@ -310,9 +262,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
         } | {
             kind: "tool";
             tool: string;
-            label?: string | undefined;
-        } | {
-            kind: "system";
             label?: string | undefined;
         } | undefined;
     } | undefined;
@@ -363,15 +312,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            }>, z.ZodObject<{
-                kind: z.ZodLiteral<"system">;
-                label: z.ZodOptional<z.ZodString>;
-            }, "strict", z.ZodTypeAny, {
-                kind: "system";
-                label?: string | undefined;
-            }, {
-                kind: "system";
-                label?: string | undefined;
             }>]>>;
             decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
         }, "strict", z.ZodTypeAny, {
@@ -384,9 +324,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            } | {
-                kind: "system";
-                label?: string | undefined;
             } | undefined;
         }, {
             type: "external_decision";
@@ -397,9 +334,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             } | {
                 kind: "tool";
                 tool: string;
-                label?: string | undefined;
-            } | {
-                kind: "system";
                 label?: string | undefined;
             } | undefined;
         }>>;
@@ -442,9 +376,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            } | {
-                kind: "system";
-                label?: string | undefined;
             } | undefined;
         } | undefined;
         workflowRef?: {
@@ -465,9 +396,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             } | {
                 kind: "tool";
                 tool: string;
-                label?: string | undefined;
-            } | {
-                kind: "system";
                 label?: string | undefined;
             } | undefined;
         } | undefined;
@@ -500,9 +428,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            } | {
-                kind: "system";
-                label?: string | undefined;
             } | undefined;
         } | undefined;
         workflowRef?: {
@@ -523,9 +448,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             } | {
                 kind: "tool";
                 tool: string;
-                label?: string | undefined;
-            } | {
-                kind: "system";
                 label?: string | undefined;
             } | undefined;
         } | undefined;
@@ -566,9 +488,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            } | {
-                kind: "system";
-                label?: string | undefined;
             } | undefined;
         } | undefined;
         workflowRef?: {
@@ -594,9 +513,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             } | {
                 kind: "tool";
                 tool: string;
-                label?: string | undefined;
-            } | {
-                kind: "system";
                 label?: string | undefined;
             } | undefined;
         } | undefined;
@@ -644,9 +560,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            } | {
-                kind: "system";
-                label?: string | undefined;
             } | undefined;
         } | undefined;
         workflowRef?: {
@@ -672,9 +585,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             } | {
                 kind: "tool";
                 tool: string;
-                label?: string | undefined;
-            } | {
-                kind: "system";
                 label?: string | undefined;
             } | undefined;
         } | undefined;
@@ -733,15 +643,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            }>, z.ZodObject<{
-                kind: z.ZodLiteral<"system">;
-                label: z.ZodOptional<z.ZodString>;
-            }, "strict", z.ZodTypeAny, {
-                kind: "system";
-                label?: string | undefined;
-            }, {
-                kind: "system";
-                label?: string | undefined;
             }>]>>;
             decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
         }, "strict", z.ZodTypeAny, {
@@ -754,9 +655,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            } | {
-                kind: "system";
-                label?: string | undefined;
             } | undefined;
         }, {
             type: "external_decision";
@@ -767,9 +665,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             } | {
                 kind: "tool";
                 tool: string;
-                label?: string | undefined;
-            } | {
-                kind: "system";
                 label?: string | undefined;
             } | undefined;
         }>>;
@@ -812,9 +707,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            } | {
-                kind: "system";
-                label?: string | undefined;
             } | undefined;
         } | undefined;
         workflowRef?: {
@@ -835,9 +727,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             } | {
                 kind: "tool";
                 tool: string;
-                label?: string | undefined;
-            } | {
-                kind: "system";
                 label?: string | undefined;
             } | undefined;
         } | undefined;
@@ -870,9 +759,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            } | {
-                kind: "system";
-                label?: string | undefined;
             } | undefined;
         } | undefined;
         workflowRef?: {
@@ -893,9 +779,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             } | {
                 kind: "tool";
                 tool: string;
-                label?: string | undefined;
-            } | {
-                kind: "system";
                 label?: string | undefined;
             } | undefined;
         } | undefined;
@@ -939,9 +822,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            } | {
-                kind: "system";
-                label?: string | undefined;
             } | undefined;
         } | undefined;
         workflowRef?: {
@@ -969,9 +849,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             } | {
                 kind: "tool";
                 tool: string;
-                label?: string | undefined;
-            } | {
-                kind: "system";
                 label?: string | undefined;
             } | undefined;
         } | undefined;
@@ -1021,9 +898,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
                 kind: "tool";
                 tool: string;
                 label?: string | undefined;
-            } | {
-                kind: "system";
-                label?: string | undefined;
             } | undefined;
         } | undefined;
         workflowRef?: {
@@ -1051,9 +925,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             } | {
                 kind: "tool";
                 tool: string;
-                label?: string | undefined;
-            } | {
-                kind: "system";
                 label?: string | undefined;
             } | undefined;
         } | undefined;
@@ -1120,15 +991,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                     kind: "tool";
                     tool: string;
                     label?: string | undefined;
-                }>, z.ZodObject<{
-                    kind: z.ZodLiteral<"system">;
-                    label: z.ZodOptional<z.ZodString>;
-                }, "strict", z.ZodTypeAny, {
-                    kind: "system";
-                    label?: string | undefined;
-                }, {
-                    kind: "system";
-                    label?: string | undefined;
                 }>]>>;
                 decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
             }, "strict", z.ZodTypeAny, {
@@ -1141,9 +1003,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                     kind: "tool";
                     tool: string;
                     label?: string | undefined;
-                } | {
-                    kind: "system";
-                    label?: string | undefined;
                 } | undefined;
             }, {
                 type: "external_decision";
@@ -1154,9 +1013,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 } | {
                     kind: "tool";
                     tool: string;
-                    label?: string | undefined;
-                } | {
-                    kind: "system";
                     label?: string | undefined;
                 } | undefined;
             }>>;
@@ -1199,9 +1055,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                     kind: "tool";
                     tool: string;
                     label?: string | undefined;
-                } | {
-                    kind: "system";
-                    label?: string | undefined;
                 } | undefined;
             } | undefined;
             workflowRef?: {
@@ -1222,9 +1075,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 } | {
                     kind: "tool";
                     tool: string;
-                    label?: string | undefined;
-                } | {
-                    kind: "system";
                     label?: string | undefined;
                 } | undefined;
             } | undefined;
@@ -1257,9 +1107,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                     kind: "tool";
                     tool: string;
                     label?: string | undefined;
-                } | {
-                    kind: "system";
-                    label?: string | undefined;
                 } | undefined;
             } | undefined;
             workflowRef?: {
@@ -1280,9 +1127,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 } | {
                     kind: "tool";
                     tool: string;
-                    label?: string | undefined;
-                } | {
-                    kind: "system";
                     label?: string | undefined;
                 } | undefined;
             } | undefined;
@@ -1323,9 +1167,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                     kind: "tool";
                     tool: string;
                     label?: string | undefined;
-                } | {
-                    kind: "system";
-                    label?: string | undefined;
                 } | undefined;
             } | undefined;
             workflowRef?: {
@@ -1351,9 +1192,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 } | {
                     kind: "tool";
                     tool: string;
-                    label?: string | undefined;
-                } | {
-                    kind: "system";
                     label?: string | undefined;
                 } | undefined;
             } | undefined;
@@ -1401,9 +1239,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                     kind: "tool";
                     tool: string;
                     label?: string | undefined;
-                } | {
-                    kind: "system";
-                    label?: string | undefined;
                 } | undefined;
             } | undefined;
             workflowRef?: {
@@ -1429,9 +1264,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 } | {
                     kind: "tool";
                     tool: string;
-                    label?: string | undefined;
-                } | {
-                    kind: "system";
                     label?: string | undefined;
                 } | undefined;
             } | undefined;
@@ -1483,9 +1315,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                     kind: "tool";
                     tool: string;
                     label?: string | undefined;
-                } | {
-                    kind: "system";
-                    label?: string | undefined;
                 } | undefined;
             } | undefined;
             workflowRef?: {
@@ -1518,9 +1347,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 } | {
                     kind: "tool";
                     tool: string;
-                    label?: string | undefined;
-                } | {
-                    kind: "system";
                     label?: string | undefined;
                 } | undefined;
             } | undefined;
@@ -1575,9 +1401,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                     kind: "tool";
                     tool: string;
                     label?: string | undefined;
-                } | {
-                    kind: "system";
-                    label?: string | undefined;
                 } | undefined;
             } | undefined;
             workflowRef?: {
@@ -1610,9 +1433,6 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 } | {
                     kind: "tool";
                     tool: string;
-                    label?: string | undefined;
-                } | {
-                    kind: "system";
                     label?: string | undefined;
                 } | undefined;
             } | undefined;
@@ -1767,7 +1587,7 @@ export declare const checkpointStackFrameSchema: z.ZodObject<{
     };
     enteredAt: string;
 }>;
-export declare const checkpointSchema: z.ZodObject<{
+export declare const checkpointSchema: z.ZodEffects<z.ZodObject<{
     runId: z.ZodString;
     status: z.ZodEnum<["active", "suspended", "completed", "abandoned"]>;
     rootGraph: z.ZodString;
@@ -1912,6 +1732,7 @@ export declare const checkpointSchema: z.ZodObject<{
         };
         enteredAt: string;
     }>, "many">>;
+    frameCounter: z.ZodDefault<z.ZodNumber>;
     resumeNote: z.ZodOptional<z.ZodString>;
 }, "strict", z.ZodTypeAny, {
     status: "active" | "suspended" | "completed" | "abandoned";
@@ -1950,6 +1771,7 @@ export declare const checkpointSchema: z.ZodObject<{
         };
         enteredAt: string;
     }[];
+    frameCounter: number;
     graphSource?: {
         kind: "package";
         graphId: string;
@@ -2000,6 +1822,97 @@ export declare const checkpointSchema: z.ZodObject<{
         };
         enteredAt: string;
     }[] | undefined;
+    frameCounter?: number | undefined;
+    resumeNote?: string | undefined;
+}>, {
+    status: "active" | "suspended" | "completed" | "abandoned";
+    workflow: {
+        id: string;
+        version: string;
+    };
+    runId: string;
+    rootGraph: string;
+    position: {
+        node: string;
+        graph: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+    outputs: Record<string, unknown>;
+    gateDecisions: Record<string, unknown>;
+    stack: {
+        scope: string;
+        parent: {
+            node: string;
+            graph: string;
+            scope: string;
+            graphSource?: {
+                kind: "package";
+                graphId: string;
+                graphVersion: string;
+                packagePath: string;
+            } | undefined;
+        };
+        child: {
+            kind: "package";
+            graphId: string;
+            graphVersion: string;
+            packagePath: string;
+        };
+        enteredAt: string;
+    }[];
+    frameCounter: number;
+    graphSource?: {
+        kind: "package";
+        graphId: string;
+        graphVersion: string;
+        packagePath: string;
+    } | undefined;
+    resumeNote?: string | undefined;
+}, {
+    status: "active" | "suspended" | "completed" | "abandoned";
+    workflow: {
+        id: string;
+        version: string;
+    };
+    runId: string;
+    rootGraph: string;
+    position: {
+        node: string;
+        graph: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+    graphSource?: {
+        kind: "package";
+        graphId: string;
+        graphVersion: string;
+        packagePath: string;
+    } | undefined;
+    outputs?: Record<string, unknown> | undefined;
+    gateDecisions?: Record<string, unknown> | undefined;
+    stack?: {
+        scope: string;
+        parent: {
+            node: string;
+            graph: string;
+            scope: string;
+            graphSource?: {
+                kind: "package";
+                graphId: string;
+                graphVersion: string;
+                packagePath: string;
+            } | undefined;
+        };
+        child: {
+            kind: "package";
+            graphId: string;
+            graphVersion: string;
+            packagePath: string;
+        };
+        enteredAt: string;
+    }[] | undefined;
+    frameCounter?: number | undefined;
     resumeNote?: string | undefined;
 }>;
 export declare const currentSchema: z.ZodObject<{

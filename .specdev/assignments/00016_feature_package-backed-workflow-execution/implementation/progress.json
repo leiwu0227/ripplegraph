@@ -1,0 +1,34 @@
+{
+  "plan_file": ".specdev/assignments/00016_feature_package-backed-workflow-execution/breakdown/plan.md",
+  "total_tasks": 4,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-05-23T02:47:11Z",
+      "completed_at": "2026-05-23T02:48:19Z",
+      "summary": "Added graphSource checkpoint schema and focused storage test. Verified npm run typecheck and npm test -- tests/coach.test.ts."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-05-23T02:48:30Z",
+      "completed_at": "2026-05-23T02:51:21Z",
+      "summary": "Added startRegisteredWorkflowRun, pinned package graph loading for state/advance/resume, and focused package-backed workflow tests. Verified npm run typecheck and npm test -- tests/coach.test.ts."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "started_at": "2026-05-23T02:51:33Z",
+      "completed_at": "2026-05-23T02:52:59Z",
+      "summary": "Routed dispatcher start_run to startRegisteredWorkflowRun and replaced stale package-only rejection test. Verified npm run typecheck and npm test -- tests/dispatcher.test.ts."
+    },
+    {
+      "number": 4,
+      "status": "completed",
+      "started_at": "2026-05-23T02:53:12Z",
+      "completed_at": "2026-05-23T02:53:51Z",
+      "summary": "Final verification passed: npm run build, npm test (51 tests), and rg stale-contract scan found no E_GRAPH_NOT_EXECUTABLE_YET or compactWorkflowHasExecutableGraph matches in src/tests."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "plan_file": ".specdev/assignments/00019_refactor_kernel-cleanups/breakdown/plan.md",
+  "total_tasks": 4,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "summary": "Removed system variant from decisionSourceSchema. No callers in repo. typecheck + tests/coach.test.ts green."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "summary": "Added checkpoint.frameCounter (default 0), replaced nextFrameScope with ensureFrameCounter migration helper that backfills from stack scopes + scoped output keys when counter is zero. Hot path is now a pure increment. Added sibling-ref test asserting frameCounter==2 and scope f2."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "summary": "Added superRefine to checkpointSchema asserting position.graph matches stack.at(-1).child.graphId | graphSource.graphId | rootGraph. Added test that mutates a checkpoint on disk and asserts readCheckpoint throws on position.graph."
+    },
+    {
+      "number": 4,
+      "status": "completed",
+      "summary": "npm run build + npm test (62 tests) green. No stale nextFrameScope or 'system' references in src/tests."
+    }
+  ]
+}

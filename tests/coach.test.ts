@@ -949,6 +949,60 @@ describe('coach operations', () => {
     }
   });
 
+  it('allocates sibling workflow-ref frame scopes monotonically and persists the counter', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackage(root, 'graphs/sibling-child', {
+        id: 'sibling-child',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'work',
+        outputSchema: { type: 'object', required: ['decision'], properties: { decision: { type: 'string', enum: ['done'] } } },
+        nodes: {
+          work: {
+            purpose: 'Child work',
+            outputSchema: { type: 'object', required: ['decision'], properties: { decision: { type: 'string', enum: ['done'] } } },
+            edges: [{ to: 'done', when: { decision: 'done' } }],
+          },
+          done: { purpose: 'Done', terminal: true },
+        },
+      });
+      writeGraphPackage(root, 'graphs/sibling-parent', {
+        id: 'sibling-parent',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'first',
+        nodes: {
+          first: { purpose: 'First ref', workflowRef: { graphId: 'sibling-child' }, edges: [{ to: 'second' }] },
+          second: { purpose: 'Second ref', workflowRef: { graphId: 'sibling-child' }, edges: [{ to: 'done' }] },
+          done: { purpose: 'Done', terminal: true },
+        },
+      });
+      startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'sibling-parent', runId: 'sibling-a' });
+      stepRun({ workflowRoot: root, output: { decision: 'done' } });
+      const checkpoint = readCheckpoint(root, 'sibling-a');
+      expect(checkpoint.frameCounter).toBe(2);
+      expect(checkpoint.stack).toMatchObject([{ scope: 'f2', parent: { node: 'second' } }]);
+      expect(checkpoint.position).toEqual({ graph: 'sibling-child', node: 'work' });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects a checkpoint with position.graph mismatched against the active graph', () => {
+    const root = makeCoachWorkflowRoot();
+    try {
+      startRun({ workflowRoot: root, graph: 'daily', runId: 'mismatch-a' });
+      const checkpointPath = path.join(root, '.ripplegraph', 'runs', 'mismatch-a', 'checkpoint.json');
+      const raw = JSON.parse(fs.readFileSync(checkpointPath, 'utf8')) as { position: { graph: string } };
+      raw.position.graph = 'not-the-active-graph';
+      fs.writeFileSync(checkpointPath, JSON.stringify(raw, null, 2), 'utf8');
+      expect(() => readCheckpoint(root, 'mismatch-a')).toThrow(/position\.graph/);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('decides a gated node, stores the external decision, and logs a decide transition', () => {
     const root = makeGatedWorkflowRoot();
     try {

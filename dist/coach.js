@@ -74,6 +74,7 @@ export function startRun(opts) {
         outputs: {},
         gateDecisions: {},
         stack: [],
+        frameCounter: 0,
     };
     return createRun(opts.workflowRoot, workflow, graph, checkpoint);
 }
@@ -98,6 +99,7 @@ export function startRegisteredWorkflowRun(opts) {
         outputs: {},
         gateDecisions: {},
         stack: [],
+        frameCounter: 0,
         graphSource: {
             kind: 'package',
             graphId: manifest.id,
@@ -332,6 +334,7 @@ function focusedCheckpoint(rootPath) {
 }
 function enterWorkflowRefs(rootPath, workflow, checkpoint) {
     let active = activeContextForCheckpoint(rootPath, workflow, checkpoint);
+    ensureFrameCounter(checkpoint);
     const entered = new Set();
     while (true) {
         const node = getNode(active.graph, checkpoint.position.node);
@@ -346,7 +349,8 @@ function enterWorkflowRefs(rootPath, workflow, checkpoint) {
         const { entry, graphPackage } = resolveRegisteredGraphPackage({ workflowRoot: rootPath, graphId, kind: 'workflow' });
         const manifest = graphPackage.manifest;
         const from = checkpoint.position;
-        const frameScope = nextFrameScope(checkpoint);
+        checkpoint.frameCounter += 1;
+        const frameScope = `f${checkpoint.frameCounter}`;
         checkpoint.stack.push({
             parent: {
                 graph: active.graphId,
@@ -375,7 +379,9 @@ function enterWorkflowRefs(rootPath, workflow, checkpoint) {
         };
     }
 }
-function nextFrameScope(checkpoint) {
+function ensureFrameCounter(checkpoint) {
+    if (checkpoint.frameCounter > 0)
+        return;
     let max = 0;
     for (const frame of checkpoint.stack) {
         const match = /^f(\d+)$/.exec(frame.scope);
@@ -387,7 +393,7 @@ function nextFrameScope(checkpoint) {
         if (match)
             max = Math.max(max, Number(match[1]));
     }
-    return `f${max + 1}`;
+    checkpoint.frameCounter = max;
 }
 function exitChildWorkflow(rootPath, workflow, checkpoint, child, childResult, childTerminalPosition) {
     const outputErrors = validateOutput(child.graph.outputSchema, childResult);
