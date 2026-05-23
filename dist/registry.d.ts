@@ -12,9 +12,9 @@ export declare const registryEntrySchema: z.ZodObject<{
     registeredAt: z.ZodString;
 }, "strict", z.ZodTypeAny, {
     path: string;
+    effects: string[];
     kind: "dispatcher" | "workflow" | "callable";
     activationHints: string[];
-    effects: string[];
     id: string;
     version: string;
     registeredAt: string;
@@ -26,10 +26,10 @@ export declare const registryEntrySchema: z.ZodObject<{
     id: string;
     version: string;
     registeredAt: string;
+    effects?: string[] | undefined;
     title?: string | undefined;
     description?: string | undefined;
     activationHints?: string[] | undefined;
-    effects?: string[] | undefined;
 }>;
 export declare const registrySchema: z.ZodObject<{
     version: z.ZodLiteral<1>;
@@ -45,9 +45,9 @@ export declare const registrySchema: z.ZodObject<{
         registeredAt: z.ZodString;
     }, "strict", z.ZodTypeAny, {
         path: string;
+        effects: string[];
         kind: "dispatcher" | "workflow" | "callable";
         activationHints: string[];
-        effects: string[];
         id: string;
         version: string;
         registeredAt: string;
@@ -59,18 +59,18 @@ export declare const registrySchema: z.ZodObject<{
         id: string;
         version: string;
         registeredAt: string;
+        effects?: string[] | undefined;
         title?: string | undefined;
         description?: string | undefined;
         activationHints?: string[] | undefined;
-        effects?: string[] | undefined;
     }>>>;
 }, "strict", z.ZodTypeAny, {
     version: 1;
     graphs: Record<string, {
         path: string;
+        effects: string[];
         kind: "dispatcher" | "workflow" | "callable";
         activationHints: string[];
-        effects: string[];
         id: string;
         version: string;
         registeredAt: string;
@@ -85,10 +85,10 @@ export declare const registrySchema: z.ZodObject<{
         id: string;
         version: string;
         registeredAt: string;
+        effects?: string[] | undefined;
         title?: string | undefined;
         description?: string | undefined;
         activationHints?: string[] | undefined;
-        effects?: string[] | undefined;
     }> | undefined;
 }>;
 export type RegistryEntry = z.infer<typeof registryEntrySchema>;

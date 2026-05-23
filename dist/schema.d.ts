@@ -34,7 +34,7 @@ export declare const edgeSchema: z.ZodObject<{
 export declare const nodeSchema: z.ZodObject<{
     purpose: z.ZodString;
     instructions: z.ZodOptional<z.ZodString>;
-    exec: z.ZodDefault<z.ZodEnum<["inline", "spawn", "script"]>>;
+    exec: z.ZodDefault<z.ZodLiteral<"inline">>;
     outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     gate: z.ZodOptional<z.ZodObject<{
         type: z.ZodLiteral<"external_decision">;
@@ -57,9 +57,10 @@ export declare const nodeSchema: z.ZodObject<{
         when?: Record<string, unknown> | undefined;
     }>, "many">>;
     terminal: z.ZodDefault<z.ZodBoolean>;
+    effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strict", z.ZodTypeAny, {
     purpose: string;
-    exec: "inline" | "spawn" | "script";
+    exec: "inline";
     outputSchema: JsonSchema;
     edges: {
         to: string;
@@ -71,10 +72,11 @@ export declare const nodeSchema: z.ZodObject<{
         type: "external_decision";
         decisionSchema: JsonSchema;
     } | undefined;
+    effects?: string[] | undefined;
 }, {
     purpose: string;
     instructions?: string | undefined;
-    exec?: "inline" | "spawn" | "script" | undefined;
+    exec?: "inline" | undefined;
     outputSchema?: JsonSchema | undefined;
     gate?: {
         type: "external_decision";
@@ -85,6 +87,7 @@ export declare const nodeSchema: z.ZodObject<{
         when?: Record<string, unknown> | undefined;
     }[] | undefined;
     terminal?: boolean | undefined;
+    effects?: string[] | undefined;
 }>;
 export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     kind: z.ZodDefault<z.ZodEnum<["dispatcher", "workflow", "callable"]>>;
@@ -98,7 +101,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     nodes: z.ZodRecord<z.ZodString, z.ZodObject<{
         purpose: z.ZodString;
         instructions: z.ZodOptional<z.ZodString>;
-        exec: z.ZodDefault<z.ZodEnum<["inline", "spawn", "script"]>>;
+        exec: z.ZodDefault<z.ZodLiteral<"inline">>;
         outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
         gate: z.ZodOptional<z.ZodObject<{
             type: z.ZodLiteral<"external_decision">;
@@ -121,9 +124,10 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             when?: Record<string, unknown> | undefined;
         }>, "many">>;
         terminal: z.ZodDefault<z.ZodBoolean>;
+        effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strict", z.ZodTypeAny, {
         purpose: string;
-        exec: "inline" | "spawn" | "script";
+        exec: "inline";
         outputSchema: JsonSchema;
         edges: {
             to: string;
@@ -135,10 +139,11 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             type: "external_decision";
             decisionSchema: JsonSchema;
         } | undefined;
+        effects?: string[] | undefined;
     }, {
         purpose: string;
         instructions?: string | undefined;
-        exec?: "inline" | "spawn" | "script" | undefined;
+        exec?: "inline" | undefined;
         outputSchema?: JsonSchema | undefined;
         gate?: {
             type: "external_decision";
@@ -149,17 +154,18 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             when?: Record<string, unknown> | undefined;
         }[] | undefined;
         terminal?: boolean | undefined;
+        effects?: string[] | undefined;
     }>>;
 }, "strict", z.ZodTypeAny, {
     outputSchema: JsonSchema;
+    effects: string[];
     kind: "dispatcher" | "workflow" | "callable";
     activationHints: string[];
     inputSchema: JsonSchema;
-    effects: string[];
     entry: string;
     nodes: Record<string, {
         purpose: string;
-        exec: "inline" | "spawn" | "script";
+        exec: "inline";
         outputSchema: JsonSchema;
         edges: {
             to: string;
@@ -171,6 +177,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             type: "external_decision";
             decisionSchema: JsonSchema;
         } | undefined;
+        effects?: string[] | undefined;
     }>;
     title?: string | undefined;
     description?: string | undefined;
@@ -179,7 +186,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     nodes: Record<string, {
         purpose: string;
         instructions?: string | undefined;
-        exec?: "inline" | "spawn" | "script" | undefined;
+        exec?: "inline" | undefined;
         outputSchema?: JsonSchema | undefined;
         gate?: {
             type: "external_decision";
@@ -190,24 +197,25 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             when?: Record<string, unknown> | undefined;
         }[] | undefined;
         terminal?: boolean | undefined;
+        effects?: string[] | undefined;
     }>;
     outputSchema?: JsonSchema | undefined;
+    effects?: string[] | undefined;
     kind?: "dispatcher" | "workflow" | "callable" | undefined;
     title?: string | undefined;
     description?: string | undefined;
     activationHints?: string[] | undefined;
     inputSchema?: JsonSchema | undefined;
-    effects?: string[] | undefined;
 }>, {
     outputSchema: JsonSchema;
+    effects: string[];
     kind: "dispatcher" | "workflow" | "callable";
     activationHints: string[];
     inputSchema: JsonSchema;
-    effects: string[];
     entry: string;
     nodes: Record<string, {
         purpose: string;
-        exec: "inline" | "spawn" | "script";
+        exec: "inline";
         outputSchema: JsonSchema;
         edges: {
             to: string;
@@ -219,6 +227,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             type: "external_decision";
             decisionSchema: JsonSchema;
         } | undefined;
+        effects?: string[] | undefined;
     }>;
     title?: string | undefined;
     description?: string | undefined;
@@ -227,7 +236,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     nodes: Record<string, {
         purpose: string;
         instructions?: string | undefined;
-        exec?: "inline" | "spawn" | "script" | undefined;
+        exec?: "inline" | undefined;
         outputSchema?: JsonSchema | undefined;
         gate?: {
             type: "external_decision";
@@ -238,14 +247,15 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             when?: Record<string, unknown> | undefined;
         }[] | undefined;
         terminal?: boolean | undefined;
+        effects?: string[] | undefined;
     }>;
     outputSchema?: JsonSchema | undefined;
+    effects?: string[] | undefined;
     kind?: "dispatcher" | "workflow" | "callable" | undefined;
     title?: string | undefined;
     description?: string | undefined;
     activationHints?: string[] | undefined;
     inputSchema?: JsonSchema | undefined;
-    effects?: string[] | undefined;
 }>;
 export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     kind: z.ZodDefault<z.ZodEnum<["dispatcher", "workflow", "callable"]>>;
@@ -259,7 +269,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     nodes: z.ZodRecord<z.ZodString, z.ZodObject<{
         purpose: z.ZodString;
         instructions: z.ZodOptional<z.ZodString>;
-        exec: z.ZodDefault<z.ZodEnum<["inline", "spawn", "script"]>>;
+        exec: z.ZodDefault<z.ZodLiteral<"inline">>;
         outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
         gate: z.ZodOptional<z.ZodObject<{
             type: z.ZodLiteral<"external_decision">;
@@ -282,9 +292,10 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             when?: Record<string, unknown> | undefined;
         }>, "many">>;
         terminal: z.ZodDefault<z.ZodBoolean>;
+        effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strict", z.ZodTypeAny, {
         purpose: string;
-        exec: "inline" | "spawn" | "script";
+        exec: "inline";
         outputSchema: JsonSchema;
         edges: {
             to: string;
@@ -296,10 +307,11 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             type: "external_decision";
             decisionSchema: JsonSchema;
         } | undefined;
+        effects?: string[] | undefined;
     }, {
         purpose: string;
         instructions?: string | undefined;
-        exec?: "inline" | "spawn" | "script" | undefined;
+        exec?: "inline" | undefined;
         outputSchema?: JsonSchema | undefined;
         gate?: {
             type: "external_decision";
@@ -310,20 +322,21 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             when?: Record<string, unknown> | undefined;
         }[] | undefined;
         terminal?: boolean | undefined;
+        effects?: string[] | undefined;
     }>>;
 } & {
     id: z.ZodString;
     version: z.ZodString;
 }, "strict", z.ZodTypeAny, {
     outputSchema: JsonSchema;
+    effects: string[];
     kind: "dispatcher" | "workflow" | "callable";
     activationHints: string[];
     inputSchema: JsonSchema;
-    effects: string[];
     entry: string;
     nodes: Record<string, {
         purpose: string;
-        exec: "inline" | "spawn" | "script";
+        exec: "inline";
         outputSchema: JsonSchema;
         edges: {
             to: string;
@@ -335,6 +348,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             type: "external_decision";
             decisionSchema: JsonSchema;
         } | undefined;
+        effects?: string[] | undefined;
     }>;
     id: string;
     version: string;
@@ -345,7 +359,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     nodes: Record<string, {
         purpose: string;
         instructions?: string | undefined;
-        exec?: "inline" | "spawn" | "script" | undefined;
+        exec?: "inline" | undefined;
         outputSchema?: JsonSchema | undefined;
         gate?: {
             type: "external_decision";
@@ -356,26 +370,27 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             when?: Record<string, unknown> | undefined;
         }[] | undefined;
         terminal?: boolean | undefined;
+        effects?: string[] | undefined;
     }>;
     id: string;
     version: string;
     outputSchema?: JsonSchema | undefined;
+    effects?: string[] | undefined;
     kind?: "dispatcher" | "workflow" | "callable" | undefined;
     title?: string | undefined;
     description?: string | undefined;
     activationHints?: string[] | undefined;
     inputSchema?: JsonSchema | undefined;
-    effects?: string[] | undefined;
 }>, {
     outputSchema: JsonSchema;
+    effects: string[];
     kind: "dispatcher" | "workflow" | "callable";
     activationHints: string[];
     inputSchema: JsonSchema;
-    effects: string[];
     entry: string;
     nodes: Record<string, {
         purpose: string;
-        exec: "inline" | "spawn" | "script";
+        exec: "inline";
         outputSchema: JsonSchema;
         edges: {
             to: string;
@@ -387,6 +402,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             type: "external_decision";
             decisionSchema: JsonSchema;
         } | undefined;
+        effects?: string[] | undefined;
     }>;
     id: string;
     version: string;
@@ -397,7 +413,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     nodes: Record<string, {
         purpose: string;
         instructions?: string | undefined;
-        exec?: "inline" | "spawn" | "script" | undefined;
+        exec?: "inline" | undefined;
         outputSchema?: JsonSchema | undefined;
         gate?: {
             type: "external_decision";
@@ -408,16 +424,17 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             when?: Record<string, unknown> | undefined;
         }[] | undefined;
         terminal?: boolean | undefined;
+        effects?: string[] | undefined;
     }>;
     id: string;
     version: string;
     outputSchema?: JsonSchema | undefined;
+    effects?: string[] | undefined;
     kind?: "dispatcher" | "workflow" | "callable" | undefined;
     title?: string | undefined;
     description?: string | undefined;
     activationHints?: string[] | undefined;
     inputSchema?: JsonSchema | undefined;
-    effects?: string[] | undefined;
 }>;
 export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
     id: z.ZodString;
@@ -437,7 +454,7 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
         nodes: z.ZodRecord<z.ZodString, z.ZodObject<{
             purpose: z.ZodString;
             instructions: z.ZodOptional<z.ZodString>;
-            exec: z.ZodDefault<z.ZodEnum<["inline", "spawn", "script"]>>;
+            exec: z.ZodDefault<z.ZodLiteral<"inline">>;
             outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
             gate: z.ZodOptional<z.ZodObject<{
                 type: z.ZodLiteral<"external_decision">;
@@ -460,9 +477,10 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 when?: Record<string, unknown> | undefined;
             }>, "many">>;
             terminal: z.ZodDefault<z.ZodBoolean>;
+            effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strict", z.ZodTypeAny, {
             purpose: string;
-            exec: "inline" | "spawn" | "script";
+            exec: "inline";
             outputSchema: JsonSchema;
             edges: {
                 to: string;
@@ -474,10 +492,11 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 type: "external_decision";
                 decisionSchema: JsonSchema;
             } | undefined;
+            effects?: string[] | undefined;
         }, {
             purpose: string;
             instructions?: string | undefined;
-            exec?: "inline" | "spawn" | "script" | undefined;
+            exec?: "inline" | undefined;
             outputSchema?: JsonSchema | undefined;
             gate?: {
                 type: "external_decision";
@@ -488,17 +507,18 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 when?: Record<string, unknown> | undefined;
             }[] | undefined;
             terminal?: boolean | undefined;
+            effects?: string[] | undefined;
         }>>;
     }, "strict", z.ZodTypeAny, {
         outputSchema: JsonSchema;
+        effects: string[];
         kind: "dispatcher" | "workflow" | "callable";
         activationHints: string[];
         inputSchema: JsonSchema;
-        effects: string[];
         entry: string;
         nodes: Record<string, {
             purpose: string;
-            exec: "inline" | "spawn" | "script";
+            exec: "inline";
             outputSchema: JsonSchema;
             edges: {
                 to: string;
@@ -510,6 +530,7 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 type: "external_decision";
                 decisionSchema: JsonSchema;
             } | undefined;
+            effects?: string[] | undefined;
         }>;
         title?: string | undefined;
         description?: string | undefined;
@@ -518,7 +539,7 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
         nodes: Record<string, {
             purpose: string;
             instructions?: string | undefined;
-            exec?: "inline" | "spawn" | "script" | undefined;
+            exec?: "inline" | undefined;
             outputSchema?: JsonSchema | undefined;
             gate?: {
                 type: "external_decision";
@@ -529,24 +550,25 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 when?: Record<string, unknown> | undefined;
             }[] | undefined;
             terminal?: boolean | undefined;
+            effects?: string[] | undefined;
         }>;
         outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
         kind?: "dispatcher" | "workflow" | "callable" | undefined;
         title?: string | undefined;
         description?: string | undefined;
         activationHints?: string[] | undefined;
         inputSchema?: JsonSchema | undefined;
-        effects?: string[] | undefined;
     }>, {
         outputSchema: JsonSchema;
+        effects: string[];
         kind: "dispatcher" | "workflow" | "callable";
         activationHints: string[];
         inputSchema: JsonSchema;
-        effects: string[];
         entry: string;
         nodes: Record<string, {
             purpose: string;
-            exec: "inline" | "spawn" | "script";
+            exec: "inline";
             outputSchema: JsonSchema;
             edges: {
                 to: string;
@@ -558,6 +580,7 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 type: "external_decision";
                 decisionSchema: JsonSchema;
             } | undefined;
+            effects?: string[] | undefined;
         }>;
         title?: string | undefined;
         description?: string | undefined;
@@ -566,7 +589,7 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
         nodes: Record<string, {
             purpose: string;
             instructions?: string | undefined;
-            exec?: "inline" | "spawn" | "script" | undefined;
+            exec?: "inline" | undefined;
             outputSchema?: JsonSchema | undefined;
             gate?: {
                 type: "external_decision";
@@ -577,28 +600,29 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 when?: Record<string, unknown> | undefined;
             }[] | undefined;
             terminal?: boolean | undefined;
+            effects?: string[] | undefined;
         }>;
         outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
         kind?: "dispatcher" | "workflow" | "callable" | undefined;
         title?: string | undefined;
         description?: string | undefined;
         activationHints?: string[] | undefined;
         inputSchema?: JsonSchema | undefined;
-        effects?: string[] | undefined;
     }>>;
 }, "strict", z.ZodTypeAny, {
     id: string;
     version: string;
     graphs: Record<string, {
         outputSchema: JsonSchema;
+        effects: string[];
         kind: "dispatcher" | "workflow" | "callable";
         activationHints: string[];
         inputSchema: JsonSchema;
-        effects: string[];
         entry: string;
         nodes: Record<string, {
             purpose: string;
-            exec: "inline" | "spawn" | "script";
+            exec: "inline";
             outputSchema: JsonSchema;
             edges: {
                 to: string;
@@ -610,6 +634,7 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 type: "external_decision";
                 decisionSchema: JsonSchema;
             } | undefined;
+            effects?: string[] | undefined;
         }>;
         title?: string | undefined;
         description?: string | undefined;
@@ -625,7 +650,7 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
         nodes: Record<string, {
             purpose: string;
             instructions?: string | undefined;
-            exec?: "inline" | "spawn" | "script" | undefined;
+            exec?: "inline" | undefined;
             outputSchema?: JsonSchema | undefined;
             gate?: {
                 type: "external_decision";
@@ -636,14 +661,15 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 when?: Record<string, unknown> | undefined;
             }[] | undefined;
             terminal?: boolean | undefined;
+            effects?: string[] | undefined;
         }>;
         outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
         kind?: "dispatcher" | "workflow" | "callable" | undefined;
         title?: string | undefined;
         description?: string | undefined;
         activationHints?: string[] | undefined;
         inputSchema?: JsonSchema | undefined;
-        effects?: string[] | undefined;
     }>;
     title?: string | undefined;
     description?: string | undefined;
@@ -653,14 +679,14 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
     version: string;
     graphs: Record<string, {
         outputSchema: JsonSchema;
+        effects: string[];
         kind: "dispatcher" | "workflow" | "callable";
         activationHints: string[];
         inputSchema: JsonSchema;
-        effects: string[];
         entry: string;
         nodes: Record<string, {
             purpose: string;
-            exec: "inline" | "spawn" | "script";
+            exec: "inline";
             outputSchema: JsonSchema;
             edges: {
                 to: string;
@@ -672,6 +698,7 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 type: "external_decision";
                 decisionSchema: JsonSchema;
             } | undefined;
+            effects?: string[] | undefined;
         }>;
         title?: string | undefined;
         description?: string | undefined;
@@ -687,7 +714,7 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
         nodes: Record<string, {
             purpose: string;
             instructions?: string | undefined;
-            exec?: "inline" | "spawn" | "script" | undefined;
+            exec?: "inline" | undefined;
             outputSchema?: JsonSchema | undefined;
             gate?: {
                 type: "external_decision";
@@ -698,14 +725,15 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
                 when?: Record<string, unknown> | undefined;
             }[] | undefined;
             terminal?: boolean | undefined;
+            effects?: string[] | undefined;
         }>;
         outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
         kind?: "dispatcher" | "workflow" | "callable" | undefined;
         title?: string | undefined;
         description?: string | undefined;
         activationHints?: string[] | undefined;
         inputSchema?: JsonSchema | undefined;
-        effects?: string[] | undefined;
     }>;
     title?: string | undefined;
     description?: string | undefined;

@@ -187,8 +187,7 @@ export function applyDispatchAction(options: DispatchActionOptions): DispatchAct
     case 'switch_run':
       return resumeRun({ workflowRoot: options.workflowRoot, runId: action.runId });
     case 'start_run': {
-      const graph = requireRegisteredGraph(graphs, action.graphId, 'workflow');
-      assertEffectsAllowed(graph.effects, options.effectPolicy, `graph ${action.graphId}`);
+      requireRegisteredGraph(graphs, action.graphId, 'workflow');
       if (!compactWorkflowHasExecutableGraph(options.workflowRoot, action.graphId)) {
         throw new RipplegraphError(
           'E_GRAPH_NOT_EXECUTABLE_YET',

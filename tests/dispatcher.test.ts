@@ -161,9 +161,30 @@ describe('dispatcher runtime', () => {
     }
   });
 
-  it('enforces registered graph effects before dispatcher start and call actions mutate state', () => {
-    const runRoot = makeCliWorkflowRoot();
+  it('enforces graph effects before dispatcher start and call actions mutate state', () => {
+    const runRoot = makeRoot('ripplegraph-dispatcher-effects-start-');
     try {
+      // Compact workflow + registered package both declare the same effects so the
+      // start path is denied at startRun's union check, before any state is written.
+      fs.writeFileSync(
+        path.join(runRoot, 'workflow.json'),
+        JSON.stringify({
+          id: 'effects-demo',
+          version: '0.1.0',
+          graphs: {
+            daily: {
+              kind: 'workflow',
+              effects: ['write_files'],
+              entry: 'review',
+              nodes: {
+                review: { purpose: 'Review', exec: 'inline', edges: [{ to: 'done' }] },
+                done: { purpose: 'Done', terminal: true },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
       registerGraphPackage({ workflowRoot: runRoot, packageRoot: writePackage(runRoot, 'workspace-dispatcher') });
       registerGraphPackage({
         workflowRoot: runRoot,
@@ -235,6 +256,40 @@ describe('dispatcher runtime', () => {
       expect(fs.existsSync(path.join(callRoot, '.ripplegraph', 'calls'))).toBe(false);
     } finally {
       fs.rmSync(callRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('honors per-node effects opt-out through the dispatcher start path', () => {
+    const root = makeCliWorkflowRoot();
+    try {
+      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });
+      registerGraphPackage({
+        workflowRoot: root,
+        packageRoot: writePackage(root, 'daily', {
+          kind: 'workflow',
+          effects: ['write_files'],
+          entry: 'route',
+          nodes: {
+            route: {
+              purpose: 'Single read-only node',
+              exec: 'inline',
+              outputSchema: { type: 'object' },
+              effects: [],
+              terminal: true,
+            },
+          },
+        }),
+      });
+
+      expect(
+        applyDispatchAction({
+          workflowRoot: root,
+          action: { action: 'start_run', graphId: 'daily', runId: 'daily-optout' },
+          effectPolicy: { allowedEffects: [] },
+        }),
+      ).toMatchObject({ status: 'ok', run: { id: 'daily-optout', rootGraph: 'daily', status: 'active' } });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
     }
   });
 

@@ -32,11 +32,13 @@ export const nodeSchema = z
     .object({
     purpose: z.string().min(1),
     instructions: z.string().min(1).optional(),
-    exec: z.enum(['inline', 'spawn', 'script']).default('inline'),
+    exec: z.literal('inline').default('inline'),
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
     gate: gateSchema.optional(),
     edges: z.array(edgeSchema).default([]),
     terminal: z.boolean().default(false),
+    // undefined inherits graph.effects; [] overrides to require nothing; non-empty array overrides with that set.
+    effects: z.array(idSchema).optional(),
 })
     .strict();
 const graphFieldsSchema = z

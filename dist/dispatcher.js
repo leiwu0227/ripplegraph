@@ -136,8 +136,7 @@ export function applyDispatchAction(options) {
         case 'switch_run':
             return resumeRun({ workflowRoot: options.workflowRoot, runId: action.runId });
         case 'start_run': {
-            const graph = requireRegisteredGraph(graphs, action.graphId, 'workflow');
-            assertEffectsAllowed(graph.effects, options.effectPolicy, `graph ${action.graphId}`);
+            requireRegisteredGraph(graphs, action.graphId, 'workflow');
             if (!compactWorkflowHasExecutableGraph(options.workflowRoot, action.graphId)) {
                 throw new RipplegraphError('E_GRAPH_NOT_EXECUTABLE_YET', `registered graph ${action.graphId} is not executable yet because it is not present as a workflow in workflow.json`);
             }

@@ -10,10 +10,21 @@ export function validateWorkflowRoot(rootPath) {
     ensureWorkflowRoot(rootPath);
     return { status: 'ok', workflow: { id: workflow.id, version: workflow.version }, graphs: Object.keys(workflow.graphs) };
 }
+function effectsForNode(graph, node) {
+    return node.effects ?? graph.effects;
+}
+function unionOfNodeEffects(graph) {
+    const set = new Set();
+    for (const node of Object.values(graph.nodes)) {
+        for (const effect of effectsForNode(graph, node))
+            set.add(effect);
+    }
+    return [...set];
+}
 export function startRun(opts) {
     const workflow = loadWorkflow(opts.workflowRoot);
     const graph = getGraph(workflow, opts.graph);
-    assertEffectsAllowed(graph.effects, opts.effectPolicy, `graph ${opts.graph}`);
+    assertEffectsAllowed(unionOfNodeEffects(graph), opts.effectPolicy, `graph ${opts.graph}`);
     ensureWorkflowRoot(opts.workflowRoot);
     const current = readCurrent(opts.workflowRoot);
     if (current.focusedRunId) {
