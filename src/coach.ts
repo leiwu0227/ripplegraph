@@ -359,6 +359,9 @@ export function stepRun(opts: StepRunOptions): StepRunResponse {
   });
   const nextNode = getNode(active.graph, nextNodeId);
   if (nextNode.terminal) {
+    if (checkpoint.stack.length > 0) {
+      return exitChildWorkflow(opts.workflowRoot, workflow, checkpoint, active, opts.output, to);
+    }
     return completeRun(opts.workflowRoot, checkpoint, to);
   }
   writeCheckpoint(opts.workflowRoot, checkpoint);
@@ -420,6 +423,9 @@ export function decideGate(opts: DecideGateOptions): DecideGateResponse {
   });
   const nextNode = getNode(active.graph, nextNodeId);
   if (nextNode.terminal) {
+    if (checkpoint.stack.length > 0) {
+      return exitChildWorkflow(opts.workflowRoot, workflow, checkpoint, active, opts.decision, to);
+    }
     return completeRun(opts.workflowRoot, checkpoint, to);
   }
   writeCheckpoint(opts.workflowRoot, checkpoint);
@@ -548,6 +554,68 @@ function nextFrameScope(checkpoint: Checkpoint): string {
     if (match) max = Math.max(max, Number(match[1]));
   }
   return `f${max + 1}`;
+}
+
+function exitChildWorkflow(
+  rootPath: string,
+  workflow: Workflow,
+  checkpoint: Checkpoint,
+  child: ActiveContext,
+  childResult: unknown,
+  childTerminalPosition: Position,
+): StepRunResponse {
+  const outputErrors = validateOutput(child.graph.outputSchema, childResult);
+  if (outputErrors.length > 0) {
+    appendTransition(rootPath, checkpoint.runId, {
+      ...transitionEntry('step', checkpoint.runId, childTerminalPosition, childTerminalPosition),
+      validation: { ok: false, errors: outputErrors },
+      error: { code: 'E_VALIDATION', message: 'child workflow output failed validation' },
+    });
+    return {
+      status: 'validation_error',
+      run: { id: checkpoint.runId, status: checkpoint.status, rootGraph: checkpoint.rootGraph },
+      position: childTerminalPosition,
+      errors: outputErrors,
+    };
+  }
+
+  const frame = checkpoint.stack.pop();
+  if (!frame) {
+    return completeRun(rootPath, checkpoint, childTerminalPosition);
+  }
+  const parentGraph = frame.parent.graphSource ? graphForSource(rootPath, checkpoint, frame.parent.graphSource) : getGraph(workflow, frame.parent.graph);
+  const parentNode = getNode(parentGraph, frame.parent.node);
+  const artifact = writeNodeOutput(rootPath, checkpoint.runId, frame.parent.node, childResult, frame.parent.scope);
+  checkpoint.outputs[nodeOutputKey(frame.parent.scope, frame.parent.node)] = childResult;
+  const nextNodeId = selectEdge(parentNode.edges, childResult)?.to;
+  if (!nextNodeId) {
+    throw new RipplegraphError('E_NO_EDGE', `node ${frame.parent.node} has no matching edge`);
+  }
+  const to = { graph: frame.parent.graph, node: nextNodeId };
+  checkpoint.position = to;
+  checkpoint.updatedAt = new Date().toISOString();
+  appendTransition(rootPath, checkpoint.runId, {
+    ...transitionEntry('step', checkpoint.runId, childTerminalPosition, to),
+    input: { artifact },
+    output: { artifact },
+  });
+
+  const nextNode = getNode(parentGraph, nextNodeId);
+  if (nextNode.terminal) {
+    if (checkpoint.stack.length > 0) {
+      return exitChildWorkflow(
+        rootPath,
+        workflow,
+        checkpoint,
+        { graph: parentGraph, graphSource: frame.parent.graphSource, graphId: frame.parent.graph, scope: frame.parent.scope },
+        childResult,
+        to,
+      );
+    }
+    return completeRun(rootPath, checkpoint, to);
+  }
+  writeCheckpoint(rootPath, checkpoint);
+  return enterWorkflowRefs(rootPath, workflow, checkpoint, parentGraph);
 }
 
 interface ActiveContext {

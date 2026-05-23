@@ -666,6 +666,72 @@ describe('coach operations', () => {
     }
   });
 
+  it('pops child workflow frames and keeps overlapping parent and child outputs scoped', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackage(root, 'graphs/collision-child', {
+        id: 'collision-child',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'review',
+        outputSchema: { type: 'object', required: ['decision'], properties: { decision: { type: 'string', enum: ['done'] } } },
+        nodes: {
+          review: {
+            purpose: 'Child review',
+            outputSchema: { type: 'object', required: ['decision'], properties: { decision: { type: 'string', enum: ['done'] } } },
+            edges: [{ to: 'done', when: { decision: 'done' } }],
+          },
+          done: { purpose: 'Child done', terminal: true },
+        },
+      });
+      writeGraphPackage(root, 'graphs/collision-parent', {
+        id: 'collision-parent',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'review',
+        nodes: {
+          review: {
+            purpose: 'Parent review',
+            workflowRef: { graphId: 'collision-child' },
+            edges: [{ to: 'done', when: { decision: 'done' } }],
+          },
+          done: { purpose: 'Parent done', terminal: true },
+        },
+      });
+      startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'collision-parent', runId: 'collision-a' });
+
+      const completed = stepRun({ workflowRoot: root, output: { decision: 'done' } });
+
+      expect(completed).toMatchObject({
+        status: 'completed',
+        run: { id: 'collision-a', rootGraph: 'collision-parent', status: 'completed' },
+        position: { graph: 'collision-parent', node: 'done' },
+      });
+      expect(readCurrent(root)).toEqual({ focusedRunId: null });
+      expect(readCheckpoint(root, 'collision-a')).toMatchObject({
+        status: 'completed',
+        position: { graph: 'collision-parent', node: 'done' },
+        stack: [],
+        outputs: {
+          review: { decision: 'done' },
+          'f1/review': { decision: 'done' },
+        },
+      });
+      expect(
+        JSON.parse(
+          fs.readFileSync(path.join(root, '.ripplegraph', 'runs', 'collision-a', 'artifacts', 'review', 'output.json'), 'utf8'),
+        ),
+      ).toEqual({ decision: 'done' });
+      expect(
+        JSON.parse(
+          fs.readFileSync(path.join(root, '.ripplegraph', 'runs', 'collision-a', 'artifacts', 'f1', 'review', 'output.json'), 'utf8'),
+        ),
+      ).toEqual({ decision: 'done' });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('decides a gated node, stores the external decision, and logs a decide transition', () => {
     const root = makeGatedWorkflowRoot();
     try {
