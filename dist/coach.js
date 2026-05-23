@@ -15,14 +15,6 @@ export function validateWorkflowRoot(rootPath) {
 function effectsForNode(graph, node) {
     return node.effects ?? graph.effects;
 }
-function assertGraphEffectsAllowed(graph, graphId, policy) {
-    const allowed = new Set(policy?.allowedEffects ?? []);
-    const missing = missingEffectsForGraph(graph, allowed);
-    if (missing.size === 0)
-        return;
-    const parts = [...missing.entries()].map(([effect, nodes]) => `${effect} (${nodes.length > 1 ? 'nodes' : 'node'}: ${nodes.join(', ')})`);
-    throw new RipplegraphError('E_EFFECT_NOT_ALLOWED', `graph ${graphId} requires effects not allowed by policy: ${parts.join(', ')}`);
-}
 function assertGraphAndChildEffectsAllowed(rootPath, graph, graphId, policy) {
     const allowed = new Set(policy?.allowedEffects ?? []);
     const missing = missingEffectsForGraph(graph, allowed);
@@ -461,9 +453,6 @@ function activeContextForCheckpoint(rootPath, workflow, checkpoint) {
         };
     }
     return { graph: getGraph(workflow, checkpoint.rootGraph), graphId: checkpoint.rootGraph, scope: '' };
-}
-function graphForCheckpoint(rootPath, workflow, checkpoint) {
-    return activeContextForCheckpoint(rootPath, workflow, checkpoint).graph;
 }
 function graphForSource(rootPath, checkpoint, source) {
     const packageRoot = path.isAbsolute(source.packagePath) ? source.packagePath : path.join(rootPath, source.packagePath);

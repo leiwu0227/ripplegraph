@@ -37,10 +37,10 @@ export function stateForCheckpoint(workflow, checkpoint, context) {
 }
 function activeContext(workflow, checkpoint, context) {
     if (!context)
-        return { graph: getGraph(workflow, checkpoint.rootGraph), graphId: checkpoint.rootGraph, scope: '' };
+        return { graph: getGraph(workflow, checkpoint.rootGraph), scope: '' };
     if ('graph' in context)
         return context;
-    return { graph: context, graphId: checkpoint.rootGraph, scope: '' };
+    return { graph: context, scope: '' };
 }
 function exampleOutput(schema) {
     const payload = {};

@@ -147,19 +147,6 @@ function effectsForNode(graph: Graph, node: Node): string[] {
   return node.effects ?? graph.effects;
 }
 
-function assertGraphEffectsAllowed(graph: Graph, graphId: string, policy?: EffectPolicy): void {
-  const allowed = new Set(policy?.allowedEffects ?? []);
-  const missing = missingEffectsForGraph(graph, allowed);
-  if (missing.size === 0) return;
-  const parts = [...missing.entries()].map(
-    ([effect, nodes]) => `${effect} (${nodes.length > 1 ? 'nodes' : 'node'}: ${nodes.join(', ')})`,
-  );
-  throw new RipplegraphError(
-    'E_EFFECT_NOT_ALLOWED',
-    `graph ${graphId} requires effects not allowed by policy: ${parts.join(', ')}`,
-  );
-}
-
 function assertGraphAndChildEffectsAllowed(rootPath: string, graph: Graph, graphId: string, policy?: EffectPolicy): void {
   const allowed = new Set(policy?.allowedEffects ?? []);
   const missing = missingEffectsForGraph(graph, allowed);
@@ -643,10 +630,6 @@ function activeContextForCheckpoint(rootPath: string, workflow: Workflow, checkp
     };
   }
   return { graph: getGraph(workflow, checkpoint.rootGraph), graphId: checkpoint.rootGraph, scope: '' };
-}
-
-function graphForCheckpoint(rootPath: string, workflow: Workflow, checkpoint: Checkpoint): Graph {
-  return activeContextForCheckpoint(rootPath, workflow, checkpoint).graph;
 }
 
 function graphForSource(rootPath: string, checkpoint: Checkpoint, source: GraphSource): Graph {

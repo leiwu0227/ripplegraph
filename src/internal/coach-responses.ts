@@ -5,7 +5,6 @@ import { getGraph, getNode } from './runtime-graph.js';
 
 interface StateGraphContext {
   graph: Graph;
-  graphId: string;
   scope: string;
 }
 
@@ -46,9 +45,9 @@ export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint, c
 }
 
 function activeContext(workflow: Workflow, checkpoint: Checkpoint, context?: Graph | StateGraphContext): StateGraphContext {
-  if (!context) return { graph: getGraph(workflow, checkpoint.rootGraph), graphId: checkpoint.rootGraph, scope: '' };
+  if (!context) return { graph: getGraph(workflow, checkpoint.rootGraph), scope: '' };
   if ('graph' in context) return context;
-  return { graph: context, graphId: checkpoint.rootGraph, scope: '' };
+  return { graph: context, scope: '' };
 }
 
 function exampleOutput(schema: { properties?: Record<string, { enum?: unknown[]; type?: string }> }): string {
