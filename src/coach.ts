@@ -203,20 +203,12 @@ export function startRun(opts: StartRunOptions): StateOk {
   const workflow = loadWorkflow(opts.workflowRoot);
   const graph = getGraph(workflow, opts.graph);
   assertGraphAndChildEffectsAllowed(opts.workflowRoot, graph, opts.graph, opts.effectPolicy);
-  const now = new Date().toISOString();
-  const checkpoint: Checkpoint = {
+  const checkpoint = buildInitialCheckpoint({
     runId: opts.runId,
-    status: 'active',
     rootGraph: opts.graph,
-    workflow: { id: workflow.id, version: workflow.version },
-    position: { graph: opts.graph, node: graph.entry },
-    createdAt: now,
-    updatedAt: now,
-    outputs: {},
-    gateDecisions: {},
-    stack: [],
-    frameCounter: 0,
-  };
+    entryNode: graph.entry,
+    workflow,
+  });
   return createRun(opts.workflowRoot, workflow, graph, checkpoint);
 }
 
@@ -229,27 +221,43 @@ export function startRegisteredWorkflowRun(opts: StartRegisteredWorkflowRunOptio
   });
   const manifest = graphPackage.manifest;
   assertGraphAndChildEffectsAllowed(opts.workflowRoot, manifest, opts.graphId, opts.effectPolicy);
-  const now = new Date().toISOString();
-  const checkpoint: Checkpoint = {
+  const checkpoint = buildInitialCheckpoint({
     runId: opts.runId,
-    status: 'active',
     rootGraph: manifest.id,
-    workflow: { id: workflow.id, version: workflow.version },
-    position: { graph: manifest.id, node: manifest.entry },
-    createdAt: now,
-    updatedAt: now,
-    outputs: {},
-    gateDecisions: {},
-    stack: [],
-    frameCounter: 0,
+    entryNode: manifest.entry,
+    workflow,
     graphSource: {
       kind: 'package',
       graphId: manifest.id,
       graphVersion: manifest.version,
       packagePath: entry.path,
     },
-  };
+  });
   return createRun(opts.workflowRoot, workflow, manifest, checkpoint);
+}
+
+function buildInitialCheckpoint(args: {
+  runId: string;
+  rootGraph: string;
+  entryNode: string;
+  workflow: Workflow;
+  graphSource?: GraphSource;
+}): Checkpoint {
+  const now = new Date().toISOString();
+  return {
+    runId: args.runId,
+    status: 'active',
+    rootGraph: args.rootGraph,
+    workflow: { id: args.workflow.id, version: args.workflow.version },
+    position: { graph: args.rootGraph, node: args.entryNode },
+    createdAt: now,
+    updatedAt: now,
+    outputs: {},
+    gateDecisions: {},
+    stack: [],
+    frameCounter: 0,
+    ...(args.graphSource ? { graphSource: args.graphSource } : {}),
+  };
 }
 
 function createRun(rootPath: string, workflow: Workflow, graph: Graph, checkpoint: Checkpoint): StateOk {

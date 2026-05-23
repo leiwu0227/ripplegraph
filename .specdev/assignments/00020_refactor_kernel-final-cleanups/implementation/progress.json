@@ -1,0 +1,21 @@
+{
+  "plan_file": ".specdev/assignments/00020_refactor_kernel-final-cleanups/breakdown/plan.md",
+  "total_tasks": 3,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "summary": "Extracted buildInitialCheckpoint helper used by startRun and startRegisteredWorkflowRun. ~25 lines of duplicated construction removed. typecheck + tests/coach + tests/dispatcher green."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "summary": "Added comment block above dispatcherActionSchema explaining dual role with dispatchActionSchema. Exported both schemas. Added tests/dispatcher.test.ts drift case asserting both schemas declare the same action discriminator set."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "summary": "npm run build + npm test (9 files, 63 tests) green."
+    }
+  ]
+}

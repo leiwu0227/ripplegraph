@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { applyDispatchAction, getDispatchRequest, registerGraphPackage, stepRun, suspendRun } from '../src/index.js';
+import { dispatchActionSchema, dispatcherActionSchema } from '../src/dispatcher.js';
 import { makeCliWorkflowRoot } from './helpers/workflows.js';
 
 const baseManifest = {
@@ -382,5 +383,23 @@ describe('dispatcher runtime', () => {
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
+  });
+
+  it('keeps the Zod and JSON Schema dispatcher actions in sync', () => {
+    const zodActions = new Set<string>();
+    for (const option of dispatcherActionSchema.options) {
+      const literal = option.shape.action as { value?: string; options?: readonly string[] };
+      if (typeof literal.value === 'string') zodActions.add(literal.value);
+      else if (literal.options) for (const value of literal.options) zodActions.add(value);
+    }
+    const jsonActions = new Set<string>();
+    const variants = (dispatchActionSchema as { oneOf?: Array<Record<string, unknown>> }).oneOf ?? [];
+    for (const variant of variants) {
+      const properties = (variant.properties ?? {}) as Record<string, { const?: string; enum?: string[] }>;
+      const actionProp = properties.action;
+      if (actionProp?.const) jsonActions.add(actionProp.const);
+      else if (actionProp?.enum) for (const value of actionProp.enum) jsonActions.add(value);
+    }
+    expect([...zodActions].sort()).toEqual([...jsonActions].sort());
   });
 });

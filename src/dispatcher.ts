@@ -46,6 +46,12 @@ export type DispatchActionResult =
   | StartCallableCallResponse
   | StateOk;
 
+// The dispatcher carries two schemas for the same action shapes:
+//   - dispatcherActionSchema (Zod, below) is the server-side validator.
+//   - dispatchActionSchema (JSON Schema literal further down) is the
+//     agent-facing contract surfaced in getDispatchRequest().actionSchema.
+// The two MUST list the same `action` discriminator values; a test in
+// tests/dispatcher.test.ts asserts this on every run.
 const startRunActionSchema = z
   .object({
     action: z.literal('start_run'),
@@ -88,7 +94,7 @@ const callGraphActionSchema = z
   })
   .strict();
 
-const dispatcherActionSchema = z.discriminatedUnion('action', [
+export const dispatcherActionSchema = z.discriminatedUnion('action', [
   startRunActionSchema,
   resumeRunActionSchema,
   listRunsActionSchema,
@@ -96,7 +102,8 @@ const dispatcherActionSchema = z.discriminatedUnion('action', [
   callGraphActionSchema,
 ]);
 
-const dispatchActionSchema: JsonSchema = {
+// Agent-facing JSON Schema. Must stay in sync with dispatcherActionSchema (Zod above).
+export const dispatchActionSchema: JsonSchema = {
   oneOf: [
     {
       type: 'object',
