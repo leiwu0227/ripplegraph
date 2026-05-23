@@ -76,6 +76,7 @@ export interface StateOk {
         command: 'decide';
         acceptedFormats: ['json'];
         schema: JsonSchema;
+        decisionSource?: Gate['decisionSource'];
     };
 }
 export interface StateNoFocusedRun {

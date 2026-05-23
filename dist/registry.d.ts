@@ -12,8 +12,8 @@ export declare const registryEntrySchema: z.ZodObject<{
     registeredAt: z.ZodString;
 }, "strict", z.ZodTypeAny, {
     path: string;
-    effects: string[];
     kind: "dispatcher" | "workflow" | "callable";
+    effects: string[];
     activationHints: string[];
     id: string;
     version: string;
@@ -45,8 +45,8 @@ export declare const registrySchema: z.ZodObject<{
         registeredAt: z.ZodString;
     }, "strict", z.ZodTypeAny, {
         path: string;
-        effects: string[];
         kind: "dispatcher" | "workflow" | "callable";
+        effects: string[];
         activationHints: string[];
         id: string;
         version: string;
@@ -68,8 +68,8 @@ export declare const registrySchema: z.ZodObject<{
     version: 1;
     graphs: Record<string, {
         path: string;
-        effects: string[];
         kind: "dispatcher" | "workflow" | "callable";
+        effects: string[];
         activationHints: string[];
         id: string;
         version: string;

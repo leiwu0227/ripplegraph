@@ -11,15 +11,99 @@ export interface JsonSchema {
     enum?: unknown[];
     [key: string]: unknown;
 }
+export declare const decisionSourceSchema: z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
+    kind: z.ZodLiteral<"human">;
+    label: z.ZodOptional<z.ZodString>;
+}, "strict", z.ZodTypeAny, {
+    kind: "human";
+    label?: string | undefined;
+}, {
+    kind: "human";
+    label?: string | undefined;
+}>, z.ZodObject<{
+    kind: z.ZodLiteral<"tool">;
+    tool: z.ZodString;
+    label: z.ZodOptional<z.ZodString>;
+}, "strict", z.ZodTypeAny, {
+    kind: "tool";
+    tool: string;
+    label?: string | undefined;
+}, {
+    kind: "tool";
+    tool: string;
+    label?: string | undefined;
+}>, z.ZodObject<{
+    kind: z.ZodLiteral<"system">;
+    label: z.ZodOptional<z.ZodString>;
+}, "strict", z.ZodTypeAny, {
+    kind: "system";
+    label?: string | undefined;
+}, {
+    kind: "system";
+    label?: string | undefined;
+}>]>;
 export declare const gateSchema: z.ZodObject<{
     type: z.ZodLiteral<"external_decision">;
+    decisionSource: z.ZodOptional<z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
+        kind: z.ZodLiteral<"human">;
+        label: z.ZodOptional<z.ZodString>;
+    }, "strict", z.ZodTypeAny, {
+        kind: "human";
+        label?: string | undefined;
+    }, {
+        kind: "human";
+        label?: string | undefined;
+    }>, z.ZodObject<{
+        kind: z.ZodLiteral<"tool">;
+        tool: z.ZodString;
+        label: z.ZodOptional<z.ZodString>;
+    }, "strict", z.ZodTypeAny, {
+        kind: "tool";
+        tool: string;
+        label?: string | undefined;
+    }, {
+        kind: "tool";
+        tool: string;
+        label?: string | undefined;
+    }>, z.ZodObject<{
+        kind: z.ZodLiteral<"system">;
+        label: z.ZodOptional<z.ZodString>;
+    }, "strict", z.ZodTypeAny, {
+        kind: "system";
+        label?: string | undefined;
+    }, {
+        kind: "system";
+        label?: string | undefined;
+    }>]>>;
     decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
 }, "strict", z.ZodTypeAny, {
     type: "external_decision";
     decisionSchema: JsonSchema;
+    decisionSource?: {
+        kind: "human";
+        label?: string | undefined;
+    } | {
+        kind: "tool";
+        tool: string;
+        label?: string | undefined;
+    } | {
+        kind: "system";
+        label?: string | undefined;
+    } | undefined;
 }, {
     type: "external_decision";
     decisionSchema: JsonSchema;
+    decisionSource?: {
+        kind: "human";
+        label?: string | undefined;
+    } | {
+        kind: "tool";
+        tool: string;
+        label?: string | undefined;
+    } | {
+        kind: "system";
+        label?: string | undefined;
+    } | undefined;
 }>;
 export declare const workflowRefSchema: z.ZodObject<{
     graphId: z.ZodString;
@@ -45,13 +129,66 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     gate: z.ZodOptional<z.ZodObject<{
         type: z.ZodLiteral<"external_decision">;
+        decisionSource: z.ZodOptional<z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
+            kind: z.ZodLiteral<"human">;
+            label: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            kind: "human";
+            label?: string | undefined;
+        }, {
+            kind: "human";
+            label?: string | undefined;
+        }>, z.ZodObject<{
+            kind: z.ZodLiteral<"tool">;
+            tool: z.ZodString;
+            label: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            kind: "tool";
+            tool: string;
+            label?: string | undefined;
+        }, {
+            kind: "tool";
+            tool: string;
+            label?: string | undefined;
+        }>, z.ZodObject<{
+            kind: z.ZodLiteral<"system">;
+            label: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            kind: "system";
+            label?: string | undefined;
+        }, {
+            kind: "system";
+            label?: string | undefined;
+        }>]>>;
         decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
     }, "strict", z.ZodTypeAny, {
         type: "external_decision";
         decisionSchema: JsonSchema;
+        decisionSource?: {
+            kind: "human";
+            label?: string | undefined;
+        } | {
+            kind: "tool";
+            tool: string;
+            label?: string | undefined;
+        } | {
+            kind: "system";
+            label?: string | undefined;
+        } | undefined;
     }, {
         type: "external_decision";
         decisionSchema: JsonSchema;
+        decisionSource?: {
+            kind: "human";
+            label?: string | undefined;
+        } | {
+            kind: "tool";
+            tool: string;
+            label?: string | undefined;
+        } | {
+            kind: "system";
+            label?: string | undefined;
+        } | undefined;
     }>>;
     workflowRef: z.ZodOptional<z.ZodObject<{
         graphId: z.ZodString;
@@ -85,6 +222,17 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     gate?: {
         type: "external_decision";
         decisionSchema: JsonSchema;
+        decisionSource?: {
+            kind: "human";
+            label?: string | undefined;
+        } | {
+            kind: "tool";
+            tool: string;
+            label?: string | undefined;
+        } | {
+            kind: "system";
+            label?: string | undefined;
+        } | undefined;
     } | undefined;
     workflowRef?: {
         graphId: string;
@@ -98,6 +246,17 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     gate?: {
         type: "external_decision";
         decisionSchema: JsonSchema;
+        decisionSource?: {
+            kind: "human";
+            label?: string | undefined;
+        } | {
+            kind: "tool";
+            tool: string;
+            label?: string | undefined;
+        } | {
+            kind: "system";
+            label?: string | undefined;
+        } | undefined;
     } | undefined;
     workflowRef?: {
         graphId: string;
@@ -121,6 +280,17 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     gate?: {
         type: "external_decision";
         decisionSchema: JsonSchema;
+        decisionSource?: {
+            kind: "human";
+            label?: string | undefined;
+        } | {
+            kind: "tool";
+            tool: string;
+            label?: string | undefined;
+        } | {
+            kind: "system";
+            label?: string | undefined;
+        } | undefined;
     } | undefined;
     workflowRef?: {
         graphId: string;
@@ -134,6 +304,17 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     gate?: {
         type: "external_decision";
         decisionSchema: JsonSchema;
+        decisionSource?: {
+            kind: "human";
+            label?: string | undefined;
+        } | {
+            kind: "tool";
+            tool: string;
+            label?: string | undefined;
+        } | {
+            kind: "system";
+            label?: string | undefined;
+        } | undefined;
     } | undefined;
     workflowRef?: {
         graphId: string;
@@ -161,13 +342,66 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
         gate: z.ZodOptional<z.ZodObject<{
             type: z.ZodLiteral<"external_decision">;
+            decisionSource: z.ZodOptional<z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
+                kind: z.ZodLiteral<"human">;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "human";
+                label?: string | undefined;
+            }, {
+                kind: "human";
+                label?: string | undefined;
+            }>, z.ZodObject<{
+                kind: z.ZodLiteral<"tool">;
+                tool: z.ZodString;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            }, {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            }>, z.ZodObject<{
+                kind: z.ZodLiteral<"system">;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "system";
+                label?: string | undefined;
+            }, {
+                kind: "system";
+                label?: string | undefined;
+            }>]>>;
             decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
         }, "strict", z.ZodTypeAny, {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         }, {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         }>>;
         workflowRef: z.ZodOptional<z.ZodObject<{
             graphId: z.ZodString;
@@ -201,6 +435,17 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -214,6 +459,17 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -237,6 +493,17 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -250,6 +517,17 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -262,9 +540,9 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         effects?: string[] | undefined;
     }>>;
 }, "strict", z.ZodTypeAny, {
+    kind: "dispatcher" | "workflow" | "callable";
     outputSchema: JsonSchema;
     effects: string[];
-    kind: "dispatcher" | "workflow" | "callable";
     activationHints: string[];
     inputSchema: JsonSchema;
     entry: string;
@@ -281,6 +559,17 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -299,6 +588,17 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -310,17 +610,17 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         terminal?: boolean | undefined;
         effects?: string[] | undefined;
     }>;
+    kind?: "dispatcher" | "workflow" | "callable" | undefined;
     outputSchema?: JsonSchema | undefined;
     effects?: string[] | undefined;
-    kind?: "dispatcher" | "workflow" | "callable" | undefined;
     title?: string | undefined;
     description?: string | undefined;
     activationHints?: string[] | undefined;
     inputSchema?: JsonSchema | undefined;
 }>, {
+    kind: "dispatcher" | "workflow" | "callable";
     outputSchema: JsonSchema;
     effects: string[];
-    kind: "dispatcher" | "workflow" | "callable";
     activationHints: string[];
     inputSchema: JsonSchema;
     entry: string;
@@ -337,6 +637,17 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -355,6 +666,17 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -366,9 +688,9 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         terminal?: boolean | undefined;
         effects?: string[] | undefined;
     }>;
+    kind?: "dispatcher" | "workflow" | "callable" | undefined;
     outputSchema?: JsonSchema | undefined;
     effects?: string[] | undefined;
-    kind?: "dispatcher" | "workflow" | "callable" | undefined;
     title?: string | undefined;
     description?: string | undefined;
     activationHints?: string[] | undefined;
@@ -390,13 +712,66 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
         outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
         gate: z.ZodOptional<z.ZodObject<{
             type: z.ZodLiteral<"external_decision">;
+            decisionSource: z.ZodOptional<z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
+                kind: z.ZodLiteral<"human">;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "human";
+                label?: string | undefined;
+            }, {
+                kind: "human";
+                label?: string | undefined;
+            }>, z.ZodObject<{
+                kind: z.ZodLiteral<"tool">;
+                tool: z.ZodString;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            }, {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            }>, z.ZodObject<{
+                kind: z.ZodLiteral<"system">;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "system";
+                label?: string | undefined;
+            }, {
+                kind: "system";
+                label?: string | undefined;
+            }>]>>;
             decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
         }, "strict", z.ZodTypeAny, {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         }, {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         }>>;
         workflowRef: z.ZodOptional<z.ZodObject<{
             graphId: z.ZodString;
@@ -430,6 +805,17 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -443,6 +829,17 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -466,6 +863,17 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -479,6 +887,17 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -494,9 +913,9 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     id: z.ZodString;
     version: z.ZodString;
 }, "strict", z.ZodTypeAny, {
+    kind: "dispatcher" | "workflow" | "callable";
     outputSchema: JsonSchema;
     effects: string[];
-    kind: "dispatcher" | "workflow" | "callable";
     activationHints: string[];
     inputSchema: JsonSchema;
     entry: string;
@@ -513,6 +932,17 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -533,6 +963,17 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -546,17 +987,17 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     }>;
     id: string;
     version: string;
+    kind?: "dispatcher" | "workflow" | "callable" | undefined;
     outputSchema?: JsonSchema | undefined;
     effects?: string[] | undefined;
-    kind?: "dispatcher" | "workflow" | "callable" | undefined;
     title?: string | undefined;
     description?: string | undefined;
     activationHints?: string[] | undefined;
     inputSchema?: JsonSchema | undefined;
 }>, {
+    kind: "dispatcher" | "workflow" | "callable";
     outputSchema: JsonSchema;
     effects: string[];
-    kind: "dispatcher" | "workflow" | "callable";
     activationHints: string[];
     inputSchema: JsonSchema;
     entry: string;
@@ -573,6 +1014,17 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -593,6 +1045,17 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
         gate?: {
             type: "external_decision";
             decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | {
+                kind: "system";
+                label?: string | undefined;
+            } | undefined;
         } | undefined;
         workflowRef?: {
             graphId: string;
@@ -606,9 +1069,9 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     }>;
     id: string;
     version: string;
+    kind?: "dispatcher" | "workflow" | "callable" | undefined;
     outputSchema?: JsonSchema | undefined;
     effects?: string[] | undefined;
-    kind?: "dispatcher" | "workflow" | "callable" | undefined;
     title?: string | undefined;
     description?: string | undefined;
     activationHints?: string[] | undefined;
@@ -636,13 +1099,66 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
             gate: z.ZodOptional<z.ZodObject<{
                 type: z.ZodLiteral<"external_decision">;
+                decisionSource: z.ZodOptional<z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
+                    kind: z.ZodLiteral<"human">;
+                    label: z.ZodOptional<z.ZodString>;
+                }, "strict", z.ZodTypeAny, {
+                    kind: "human";
+                    label?: string | undefined;
+                }, {
+                    kind: "human";
+                    label?: string | undefined;
+                }>, z.ZodObject<{
+                    kind: z.ZodLiteral<"tool">;
+                    tool: z.ZodString;
+                    label: z.ZodOptional<z.ZodString>;
+                }, "strict", z.ZodTypeAny, {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                }, {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                }>, z.ZodObject<{
+                    kind: z.ZodLiteral<"system">;
+                    label: z.ZodOptional<z.ZodString>;
+                }, "strict", z.ZodTypeAny, {
+                    kind: "system";
+                    label?: string | undefined;
+                }, {
+                    kind: "system";
+                    label?: string | undefined;
+                }>]>>;
                 decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
             }, "strict", z.ZodTypeAny, {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             }, {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             }>>;
             workflowRef: z.ZodOptional<z.ZodObject<{
                 graphId: z.ZodString;
@@ -676,6 +1192,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -689,6 +1216,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -712,6 +1250,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -725,6 +1274,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -737,9 +1297,9 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             effects?: string[] | undefined;
         }>>;
     }, "strict", z.ZodTypeAny, {
+        kind: "dispatcher" | "workflow" | "callable";
         outputSchema: JsonSchema;
         effects: string[];
-        kind: "dispatcher" | "workflow" | "callable";
         activationHints: string[];
         inputSchema: JsonSchema;
         entry: string;
@@ -756,6 +1316,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -774,6 +1345,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -785,17 +1367,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             terminal?: boolean | undefined;
             effects?: string[] | undefined;
         }>;
+        kind?: "dispatcher" | "workflow" | "callable" | undefined;
         outputSchema?: JsonSchema | undefined;
         effects?: string[] | undefined;
-        kind?: "dispatcher" | "workflow" | "callable" | undefined;
         title?: string | undefined;
         description?: string | undefined;
         activationHints?: string[] | undefined;
         inputSchema?: JsonSchema | undefined;
     }>, {
+        kind: "dispatcher" | "workflow" | "callable";
         outputSchema: JsonSchema;
         effects: string[];
-        kind: "dispatcher" | "workflow" | "callable";
         activationHints: string[];
         inputSchema: JsonSchema;
         entry: string;
@@ -812,6 +1394,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -830,6 +1423,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -841,9 +1445,9 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             terminal?: boolean | undefined;
             effects?: string[] | undefined;
         }>;
+        kind?: "dispatcher" | "workflow" | "callable" | undefined;
         outputSchema?: JsonSchema | undefined;
         effects?: string[] | undefined;
-        kind?: "dispatcher" | "workflow" | "callable" | undefined;
         title?: string | undefined;
         description?: string | undefined;
         activationHints?: string[] | undefined;
@@ -853,9 +1457,9 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
     id: string;
     version: string;
     graphs: Record<string, {
+        kind: "dispatcher" | "workflow" | "callable";
         outputSchema: JsonSchema;
         effects: string[];
-        kind: "dispatcher" | "workflow" | "callable";
         activationHints: string[];
         inputSchema: JsonSchema;
         entry: string;
@@ -872,6 +1476,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -897,6 +1512,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -908,9 +1534,9 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             terminal?: boolean | undefined;
             effects?: string[] | undefined;
         }>;
+        kind?: "dispatcher" | "workflow" | "callable" | undefined;
         outputSchema?: JsonSchema | undefined;
         effects?: string[] | undefined;
-        kind?: "dispatcher" | "workflow" | "callable" | undefined;
         title?: string | undefined;
         description?: string | undefined;
         activationHints?: string[] | undefined;
@@ -923,9 +1549,9 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
     id: string;
     version: string;
     graphs: Record<string, {
+        kind: "dispatcher" | "workflow" | "callable";
         outputSchema: JsonSchema;
         effects: string[];
-        kind: "dispatcher" | "workflow" | "callable";
         activationHints: string[];
         inputSchema: JsonSchema;
         entry: string;
@@ -942,6 +1568,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -967,6 +1604,17 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             gate?: {
                 type: "external_decision";
                 decisionSchema: JsonSchema;
+                decisionSource?: {
+                    kind: "human";
+                    label?: string | undefined;
+                } | {
+                    kind: "tool";
+                    tool: string;
+                    label?: string | undefined;
+                } | {
+                    kind: "system";
+                    label?: string | undefined;
+                } | undefined;
             } | undefined;
             workflowRef?: {
                 graphId: string;
@@ -978,9 +1626,9 @@ export declare const workflowSchema: z.ZodEffects<z.ZodObject<{
             terminal?: boolean | undefined;
             effects?: string[] | undefined;
         }>;
+        kind?: "dispatcher" | "workflow" | "callable" | undefined;
         outputSchema?: JsonSchema | undefined;
         effects?: string[] | undefined;
-        kind?: "dispatcher" | "workflow" | "callable" | undefined;
         title?: string | undefined;
         description?: string | undefined;
         activationHints?: string[] | undefined;
@@ -1008,13 +1656,13 @@ export declare const graphSourceSchema: z.ZodObject<{
     graphVersion: z.ZodString;
     packagePath: z.ZodString;
 }, "strict", z.ZodTypeAny, {
-    graphId: string;
     kind: "package";
+    graphId: string;
     graphVersion: string;
     packagePath: string;
 }, {
-    graphId: string;
     kind: "package";
+    graphId: string;
     graphVersion: string;
     packagePath: string;
 }>;
@@ -1028,13 +1676,13 @@ export declare const checkpointStackFrameSchema: z.ZodObject<{
             graphVersion: z.ZodString;
             packagePath: z.ZodString;
         }, "strict", z.ZodTypeAny, {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         }, {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         }>>;
@@ -1044,8 +1692,8 @@ export declare const checkpointStackFrameSchema: z.ZodObject<{
         graph: string;
         scope: string;
         graphSource?: {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         } | undefined;
@@ -1054,8 +1702,8 @@ export declare const checkpointStackFrameSchema: z.ZodObject<{
         graph: string;
         scope: string;
         graphSource?: {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         } | undefined;
@@ -1066,13 +1714,13 @@ export declare const checkpointStackFrameSchema: z.ZodObject<{
         graphVersion: z.ZodString;
         packagePath: z.ZodString;
     }, "strict", z.ZodTypeAny, {
-        graphId: string;
         kind: "package";
+        graphId: string;
         graphVersion: string;
         packagePath: string;
     }, {
-        graphId: string;
         kind: "package";
+        graphId: string;
         graphVersion: string;
         packagePath: string;
     }>;
@@ -1085,15 +1733,15 @@ export declare const checkpointStackFrameSchema: z.ZodObject<{
         graph: string;
         scope: string;
         graphSource?: {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         } | undefined;
     };
     child: {
-        graphId: string;
         kind: "package";
+        graphId: string;
         graphVersion: string;
         packagePath: string;
     };
@@ -1105,15 +1753,15 @@ export declare const checkpointStackFrameSchema: z.ZodObject<{
         graph: string;
         scope: string;
         graphSource?: {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         } | undefined;
     };
     child: {
-        graphId: string;
         kind: "package";
+        graphId: string;
         graphVersion: string;
         packagePath: string;
     };
@@ -1153,13 +1801,13 @@ export declare const checkpointSchema: z.ZodObject<{
         graphVersion: z.ZodString;
         packagePath: z.ZodString;
     }, "strict", z.ZodTypeAny, {
-        graphId: string;
         kind: "package";
+        graphId: string;
         graphVersion: string;
         packagePath: string;
     }, {
-        graphId: string;
         kind: "package";
+        graphId: string;
         graphVersion: string;
         packagePath: string;
     }>>;
@@ -1173,13 +1821,13 @@ export declare const checkpointSchema: z.ZodObject<{
                 graphVersion: z.ZodString;
                 packagePath: z.ZodString;
             }, "strict", z.ZodTypeAny, {
-                graphId: string;
                 kind: "package";
+                graphId: string;
                 graphVersion: string;
                 packagePath: string;
             }, {
-                graphId: string;
                 kind: "package";
+                graphId: string;
                 graphVersion: string;
                 packagePath: string;
             }>>;
@@ -1189,8 +1837,8 @@ export declare const checkpointSchema: z.ZodObject<{
             graph: string;
             scope: string;
             graphSource?: {
-                graphId: string;
                 kind: "package";
+                graphId: string;
                 graphVersion: string;
                 packagePath: string;
             } | undefined;
@@ -1199,8 +1847,8 @@ export declare const checkpointSchema: z.ZodObject<{
             graph: string;
             scope: string;
             graphSource?: {
-                graphId: string;
                 kind: "package";
+                graphId: string;
                 graphVersion: string;
                 packagePath: string;
             } | undefined;
@@ -1211,13 +1859,13 @@ export declare const checkpointSchema: z.ZodObject<{
             graphVersion: z.ZodString;
             packagePath: z.ZodString;
         }, "strict", z.ZodTypeAny, {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         }, {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         }>;
@@ -1230,15 +1878,15 @@ export declare const checkpointSchema: z.ZodObject<{
             graph: string;
             scope: string;
             graphSource?: {
-                graphId: string;
                 kind: "package";
+                graphId: string;
                 graphVersion: string;
                 packagePath: string;
             } | undefined;
         };
         child: {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         };
@@ -1250,15 +1898,15 @@ export declare const checkpointSchema: z.ZodObject<{
             graph: string;
             scope: string;
             graphSource?: {
-                graphId: string;
                 kind: "package";
+                graphId: string;
                 graphVersion: string;
                 packagePath: string;
             } | undefined;
         };
         child: {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         };
@@ -1288,23 +1936,23 @@ export declare const checkpointSchema: z.ZodObject<{
             graph: string;
             scope: string;
             graphSource?: {
-                graphId: string;
                 kind: "package";
+                graphId: string;
                 graphVersion: string;
                 packagePath: string;
             } | undefined;
         };
         child: {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         };
         enteredAt: string;
     }[];
     graphSource?: {
-        graphId: string;
         kind: "package";
+        graphId: string;
         graphVersion: string;
         packagePath: string;
     } | undefined;
@@ -1324,8 +1972,8 @@ export declare const checkpointSchema: z.ZodObject<{
     createdAt: string;
     updatedAt: string;
     graphSource?: {
-        graphId: string;
         kind: "package";
+        graphId: string;
         graphVersion: string;
         packagePath: string;
     } | undefined;
@@ -1338,15 +1986,15 @@ export declare const checkpointSchema: z.ZodObject<{
             graph: string;
             scope: string;
             graphSource?: {
-                graphId: string;
                 kind: "package";
+                graphId: string;
                 graphVersion: string;
                 packagePath: string;
             } | undefined;
         };
         child: {
-            graphId: string;
             kind: "package";
+            graphId: string;
             graphVersion: string;
             packagePath: string;
         };

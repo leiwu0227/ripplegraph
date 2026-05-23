@@ -31,7 +31,12 @@ export function stateForCheckpoint(workflow, checkpoint, context) {
             capabilities: [],
         },
         responseContract: node.gate
-            ? { command: 'decide', acceptedFormats: ['json'], schema: node.gate.decisionSchema }
+            ? {
+                command: 'decide',
+                acceptedFormats: ['json'],
+                schema: node.gate.decisionSchema,
+                decisionSource: node.gate.decisionSource,
+            }
             : { command: 'step', acceptedFormats: ['json'] },
     };
 }

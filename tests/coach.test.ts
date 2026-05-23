@@ -417,6 +417,24 @@ describe('coach operations', () => {
         command: 'decide',
         decisionSource: { kind: 'tool', tool: 'reviewloop', label: 'Implementation review' },
       });
+
+      const response = decideGate({ workflowRoot: root, decision: { decision: 'approved', reason: 'review passed' } });
+      expect(response.status).toBe('completed');
+      expect(response.position).toEqual({ graph: 'review', node: 'done' });
+      const checkpoint = readCheckpoint(root, 'approval-source-a');
+      expect(checkpoint.gateDecisions).toEqual({
+        approval: { decision: 'approved', reason: 'review passed' },
+      });
+      expect(checkpoint.outputs).toEqual({
+        approval: { decision: 'approved', reason: 'review passed' },
+      });
+      const logEntries = fs
+        .readFileSync(path.join(root, '.ripplegraph', 'runs', 'approval-source-a', 'transition-log.jsonl'), 'utf8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as { op: string; gateDecision?: unknown });
+      expect(logEntries.map((entry) => entry.op)).toEqual(['start', 'decide']);
+      expect(logEntries[1]?.gateDecision).toEqual({ decision: 'approved', reason: 'review passed' });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
