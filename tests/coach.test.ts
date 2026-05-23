@@ -577,6 +577,95 @@ describe('coach operations', () => {
     }
   });
 
+  it('enters a registered workflow-ref child when starting the parent workflow package', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackage(root, 'graphs/child-flow', {
+        id: 'child-flow',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'work',
+        nodes: {
+          work: {
+            purpose: 'Run child work',
+            outputSchema: { type: 'object', required: ['decision'], properties: { decision: { type: 'string', enum: ['done'] } } },
+            edges: [{ to: 'done', when: { decision: 'done' } }],
+          },
+          done: { purpose: 'Child done', terminal: true },
+        },
+      });
+      writeGraphPackage(root, 'graphs/parent-flow', {
+        id: 'parent-flow',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'review',
+        nodes: {
+          review: { purpose: 'Run child ref', workflowRef: { graphId: 'child-flow' }, edges: [{ to: 'done' }] },
+          done: { purpose: 'Parent done', terminal: true },
+        },
+      });
+
+      const state = startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'parent-flow', runId: 'nested-a' });
+
+      expect(state).toMatchObject({
+        status: 'ok',
+        run: { id: 'nested-a', rootGraph: 'parent-flow', status: 'active' },
+        position: { graph: 'child-flow', node: 'work' },
+        node: { purpose: 'Run child work' },
+        stack: [
+          {
+            parent: { graph: 'parent-flow', node: 'review', scope: '' },
+            child: { graphId: 'child-flow', graphVersion: '0.1.0', packagePath: 'graphs/child-flow' },
+            scope: 'f1',
+          },
+        ],
+      });
+      expect(readCheckpoint(root, 'nested-a')).toMatchObject({
+        rootGraph: 'parent-flow',
+        graphSource: { graphId: 'parent-flow', graphVersion: '0.1.0', packagePath: 'graphs/parent-flow' },
+        position: { graph: 'child-flow', node: 'work' },
+        stack: [{ parent: { graphSource: { graphId: 'parent-flow' } }, child: { graphId: 'child-flow' }, scope: 'f1' }],
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('denies parent workflow-ref starts when a reachable child effect is not allowed', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackage(root, 'graphs/effect-child', {
+        id: 'effect-child',
+        version: '0.1.0',
+        kind: 'workflow',
+        effects: ['write_repo'],
+        entry: 'work',
+        nodes: {
+          work: { purpose: 'Write repo', edges: [{ to: 'done' }] },
+          done: { purpose: 'Done', terminal: true },
+        },
+      });
+      writeGraphPackage(root, 'graphs/effect-parent', {
+        id: 'effect-parent',
+        version: '0.1.0',
+        kind: 'workflow',
+        entry: 'review',
+        nodes: {
+          review: { purpose: 'Run effect child', workflowRef: { graphId: 'effect-child' }, edges: [{ to: 'done' }] },
+          done: { purpose: 'Done', terminal: true },
+        },
+      });
+
+      expect(() => startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'effect-parent', runId: 'effect-a' })).toThrow(
+        /write_repo/,
+      );
+      expect(readCurrent(root)).toEqual({ focusedRunId: null });
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'runs', 'effect-a'))).toBe(false);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('decides a gated node, stores the external decision, and logs a decide transition', () => {
     const root = makeGatedWorkflowRoot();
     try {

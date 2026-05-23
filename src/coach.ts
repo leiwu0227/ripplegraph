@@ -149,15 +149,7 @@ function effectsForNode(graph: Graph, node: Node): string[] {
 
 function assertGraphEffectsAllowed(graph: Graph, graphId: string, policy?: EffectPolicy): void {
   const allowed = new Set(policy?.allowedEffects ?? []);
-  const missing = new Map<string, string[]>();
-  for (const [nodeId, node] of Object.entries(graph.nodes)) {
-    for (const effect of effectsForNode(graph, node)) {
-      if (allowed.has(effect)) continue;
-      const owners = missing.get(effect) ?? [];
-      if (!owners.includes(nodeId)) owners.push(nodeId);
-      missing.set(effect, owners);
-    }
-  }
+  const missing = missingEffectsForGraph(graph, graphId, allowed);
   if (missing.size === 0) return;
   const parts = [...missing.entries()].map(
     ([effect, nodes]) => `${effect} (${nodes.length > 1 ? 'nodes' : 'node'}: ${nodes.join(', ')})`,
@@ -168,10 +160,62 @@ function assertGraphEffectsAllowed(graph: Graph, graphId: string, policy?: Effec
   );
 }
 
+function assertGraphAndChildEffectsAllowed(rootPath: string, graph: Graph, graphId: string, policy?: EffectPolicy): void {
+  const allowed = new Set(policy?.allowedEffects ?? []);
+  const missing = missingEffectsForGraph(graph, graphId, allowed);
+  collectMissingChildEffects(rootPath, graph, allowed, missing, new Set([graphId]));
+  if (missing.size === 0) return;
+  const parts = [...missing.entries()].map(
+    ([effect, nodes]) => `${effect} (${nodes.length > 1 ? 'nodes' : 'node'}: ${nodes.join(', ')})`,
+  );
+  throw new RipplegraphError(
+    'E_EFFECT_NOT_ALLOWED',
+    `graph ${graphId} requires effects not allowed by policy: ${parts.join(', ')}`,
+  );
+}
+
+function missingEffectsForGraph(graph: Graph, graphId: string, allowed: Set<string>): Map<string, string[]> {
+  const missing = new Map<string, string[]>();
+  for (const [nodeId, node] of Object.entries(graph.nodes)) {
+    for (const effect of effectsForNode(graph, node)) {
+      if (allowed.has(effect)) continue;
+      const owners = missing.get(effect) ?? [];
+      const owner = `${graphId}/${nodeId}`;
+      if (!owners.includes(owner)) owners.push(owner);
+      missing.set(effect, owners);
+    }
+  }
+  return missing;
+}
+
+function collectMissingChildEffects(
+  rootPath: string,
+  graph: Graph,
+  allowed: Set<string>,
+  missing: Map<string, string[]>,
+  visited: Set<string>,
+): void {
+  for (const node of Object.values(graph.nodes)) {
+    const graphId = node.workflowRef?.graphId;
+    if (!graphId || visited.has(graphId)) continue;
+    visited.add(graphId);
+    const { graphPackage } = resolveRegisteredGraphPackage({ workflowRoot: rootPath, graphId, kind: 'workflow' });
+    const childMissing = missingEffectsForGraph(graphPackage.manifest, graphId, allowed);
+    for (const [effect, owners] of childMissing) {
+      const existing = missing.get(effect) ?? [];
+      for (const owner of owners) {
+        if (!existing.includes(owner)) existing.push(owner);
+      }
+      missing.set(effect, existing);
+    }
+    collectMissingChildEffects(rootPath, graphPackage.manifest, allowed, missing, visited);
+  }
+}
+
 export function startRun(opts: StartRunOptions): StateOk {
   const workflow = loadWorkflow(opts.workflowRoot);
   const graph = getGraph(workflow, opts.graph);
-  assertGraphEffectsAllowed(graph, opts.graph, opts.effectPolicy);
+  assertGraphAndChildEffectsAllowed(opts.workflowRoot, graph, opts.graph, opts.effectPolicy);
   const now = new Date().toISOString();
   const checkpoint: Checkpoint = {
     runId: opts.runId,
@@ -196,7 +240,7 @@ export function startRegisteredWorkflowRun(opts: StartRegisteredWorkflowRunOptio
     kind: 'workflow',
   });
   const manifest = graphPackage.manifest;
-  assertGraphEffectsAllowed(manifest, opts.graphId, opts.effectPolicy);
+  assertGraphAndChildEffectsAllowed(opts.workflowRoot, manifest, opts.graphId, opts.effectPolicy);
   const now = new Date().toISOString();
   const checkpoint: Checkpoint = {
     runId: opts.runId,
@@ -231,7 +275,7 @@ function createRun(rootPath: string, workflow: Workflow, graph: Graph, checkpoin
   writeCheckpoint(rootPath, checkpoint);
   writeCurrent(rootPath, { focusedRunId: checkpoint.runId });
   appendTransition(rootPath, checkpoint.runId, transitionEntry('start', checkpoint.runId, null, checkpoint.position));
-  return stateForCheckpoint(workflow, checkpoint, graph);
+  return enterWorkflowRefs(rootPath, workflow, checkpoint, graph);
 }
 
 export function getState(opts: WorkflowRootOptions): CoachState {
@@ -318,7 +362,7 @@ export function stepRun(opts: StepRunOptions): StepRunResponse {
     return completeRun(opts.workflowRoot, checkpoint, to);
   }
   writeCheckpoint(opts.workflowRoot, checkpoint);
-  return stateForCheckpoint(workflow, checkpoint, active);
+  return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint, active.graph);
 }
 
 export function advanceRun(opts: AdvanceRunOptions): AdvanceRunResponse {
@@ -379,7 +423,7 @@ export function decideGate(opts: DecideGateOptions): DecideGateResponse {
     return completeRun(opts.workflowRoot, checkpoint, to);
   }
   writeCheckpoint(opts.workflowRoot, checkpoint);
-  return stateForCheckpoint(workflow, checkpoint, active);
+  return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint, active.graph);
 }
 
 export function suspendRun(opts: SuspendRunOptions): StateOk {
@@ -445,6 +489,65 @@ function focusedCheckpoint(rootPath: string): Checkpoint {
     throw new RipplegraphError('E_NO_FOCUSED_RUN', 'no focused run');
   }
   return readCheckpoint(rootPath, current.focusedRunId);
+}
+
+function enterWorkflowRefs(rootPath: string, workflow: Workflow, checkpoint: Checkpoint, graph: Graph): StateOk {
+  let active: ActiveContext = { graph, graphSource: checkpoint.graphSource, graphId: checkpoint.position.graph, scope: '' };
+  const entered = new Set<string>();
+  while (true) {
+    const node = getNode(active.graph, checkpoint.position.node);
+    const graphId = node.workflowRef?.graphId;
+    if (!graphId) return stateForCheckpoint(workflow, checkpoint, active);
+    const cycleKey = `${active.graphId}/${checkpoint.position.node}->${graphId}`;
+    if (entered.has(cycleKey)) {
+      throw new RipplegraphError('E_WORKFLOW_REF_CYCLE', `workflowRef cycle while entering ${graphId}`);
+    }
+    entered.add(cycleKey);
+
+    const { entry, graphPackage } = resolveRegisteredGraphPackage({ workflowRoot: rootPath, graphId, kind: 'workflow' });
+    const manifest = graphPackage.manifest;
+    const from = checkpoint.position;
+    const frameScope = nextFrameScope(checkpoint);
+    checkpoint.stack.push({
+      parent: {
+        graph: active.graphId,
+        node: checkpoint.position.node,
+        graphSource: active.graphSource,
+        scope: active.scope,
+      },
+      child: {
+        kind: 'package',
+        graphId: manifest.id,
+        graphVersion: manifest.version,
+        packagePath: entry.path,
+      },
+      scope: frameScope,
+      enteredAt: new Date().toISOString(),
+    });
+    checkpoint.position = { graph: manifest.id, node: manifest.entry };
+    checkpoint.updatedAt = new Date().toISOString();
+    writeCheckpoint(rootPath, checkpoint);
+    appendTransition(rootPath, checkpoint.runId, transitionEntry('step', checkpoint.runId, from, checkpoint.position));
+    active = {
+      graph: manifest,
+      graphSource: checkpoint.stack.at(-1)!.child,
+      graphId: manifest.id,
+      scope: frameScope,
+    };
+  }
+}
+
+function nextFrameScope(checkpoint: Checkpoint): string {
+  let max = 0;
+  for (const frame of checkpoint.stack) {
+    const match = /^f(\d+)$/.exec(frame.scope);
+    if (match) max = Math.max(max, Number(match[1]));
+  }
+  for (const key of Object.keys(checkpoint.outputs)) {
+    const match = /^f(\d+)\//.exec(key);
+    if (match) max = Math.max(max, Number(match[1]));
+  }
+  return `f${max + 1}`;
 }
 
 interface ActiveContext {
