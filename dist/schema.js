@@ -117,6 +117,14 @@ export const positionSchema = z
     node: idSchema,
 })
     .strict();
+export const graphSourceSchema = z
+    .object({
+    kind: z.literal('package'),
+    graphId: idSchema,
+    graphVersion: z.string().min(1),
+    packagePath: z.string().min(1),
+})
+    .strict();
 export const checkpointSchema = z
     .object({
     runId: idSchema,
@@ -128,6 +136,7 @@ export const checkpointSchema = z
     updatedAt: z.string().min(1),
     outputs: z.record(z.string(), z.unknown()).default({}),
     gateDecisions: z.record(z.string(), z.unknown()).default({}),
+    graphSource: graphSourceSchema.optional(),
     resumeNote: z.string().optional(),
 })
     .strict();

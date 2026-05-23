@@ -8,6 +8,11 @@ export interface StartRunOptions extends WorkflowRootOptions {
     runId: string;
     effectPolicy?: EffectPolicy;
 }
+export interface StartRegisteredWorkflowRunOptions extends WorkflowRootOptions {
+    graphId: string;
+    runId: string;
+    effectPolicy?: EffectPolicy;
+}
 export interface StepRunOptions extends WorkflowRootOptions {
     output: unknown;
 }
@@ -143,6 +148,7 @@ export declare function validateWorkflowRoot(rootPath: string): {
     graphs: string[];
 };
 export declare function startRun(opts: StartRunOptions): StateOk;
+export declare function startRegisteredWorkflowRun(opts: StartRegisteredWorkflowRunOptions): StateOk;
 export declare function getState(opts: WorkflowRootOptions): CoachState;
 export declare function listRuns(opts: WorkflowRootOptions): RunList;
 export declare function stepRun(opts: StepRunOptions): StepRunResponse;

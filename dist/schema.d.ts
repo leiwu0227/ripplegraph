@@ -751,6 +751,22 @@ export declare const positionSchema: z.ZodObject<{
     node: string;
     graph: string;
 }>;
+export declare const graphSourceSchema: z.ZodObject<{
+    kind: z.ZodLiteral<"package">;
+    graphId: z.ZodString;
+    graphVersion: z.ZodString;
+    packagePath: z.ZodString;
+}, "strict", z.ZodTypeAny, {
+    kind: "package";
+    graphId: string;
+    graphVersion: string;
+    packagePath: string;
+}, {
+    kind: "package";
+    graphId: string;
+    graphVersion: string;
+    packagePath: string;
+}>;
 export declare const checkpointSchema: z.ZodObject<{
     runId: z.ZodString;
     status: z.ZodEnum<["active", "suspended", "completed", "abandoned"]>;
@@ -779,6 +795,22 @@ export declare const checkpointSchema: z.ZodObject<{
     updatedAt: z.ZodString;
     outputs: z.ZodDefault<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
     gateDecisions: z.ZodDefault<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+    graphSource: z.ZodOptional<z.ZodObject<{
+        kind: z.ZodLiteral<"package">;
+        graphId: z.ZodString;
+        graphVersion: z.ZodString;
+        packagePath: z.ZodString;
+    }, "strict", z.ZodTypeAny, {
+        kind: "package";
+        graphId: string;
+        graphVersion: string;
+        packagePath: string;
+    }, {
+        kind: "package";
+        graphId: string;
+        graphVersion: string;
+        packagePath: string;
+    }>>;
     resumeNote: z.ZodOptional<z.ZodString>;
 }, "strict", z.ZodTypeAny, {
     status: "active" | "suspended" | "completed" | "abandoned";
@@ -796,6 +828,12 @@ export declare const checkpointSchema: z.ZodObject<{
     updatedAt: string;
     outputs: Record<string, unknown>;
     gateDecisions: Record<string, unknown>;
+    graphSource?: {
+        kind: "package";
+        graphId: string;
+        graphVersion: string;
+        packagePath: string;
+    } | undefined;
     resumeNote?: string | undefined;
 }, {
     status: "active" | "suspended" | "completed" | "abandoned";
@@ -813,6 +851,12 @@ export declare const checkpointSchema: z.ZodObject<{
     updatedAt: string;
     outputs?: Record<string, unknown> | undefined;
     gateDecisions?: Record<string, unknown> | undefined;
+    graphSource?: {
+        kind: "package";
+        graphId: string;
+        graphVersion: string;
+        packagePath: string;
+    } | undefined;
     resumeNote?: string | undefined;
 }>;
 export declare const currentSchema: z.ZodObject<{
@@ -930,6 +974,9 @@ export declare const callableCheckpointSchema: z.ZodObject<{
     outputArtifact: z.ZodOptional<z.ZodString>;
 }, "strict", z.ZodTypeAny, {
     status: "active" | "completed" | "failed";
+    graphId: string;
+    graphVersion: string;
+    packagePath: string;
     position: {
         node: string;
         graph: string;
@@ -938,14 +985,14 @@ export declare const callableCheckpointSchema: z.ZodObject<{
     updatedAt: string;
     outputs: Record<string, unknown>;
     callId: string;
-    graphId: string;
-    graphVersion: string;
-    packagePath: string;
     input?: unknown;
     finalOutput?: unknown;
     outputArtifact?: string | undefined;
 }, {
     status: "active" | "completed" | "failed";
+    graphId: string;
+    graphVersion: string;
+    packagePath: string;
     position: {
         node: string;
         graph: string;
@@ -953,9 +1000,6 @@ export declare const callableCheckpointSchema: z.ZodObject<{
     createdAt: string;
     updatedAt: string;
     callId: string;
-    graphId: string;
-    graphVersion: string;
-    packagePath: string;
     outputs?: Record<string, unknown> | undefined;
     input?: unknown;
     finalOutput?: unknown;
