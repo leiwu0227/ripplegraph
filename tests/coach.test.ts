@@ -11,7 +11,9 @@ import {
   readCheckpoint,
   readCurrent,
   listRuns,
+  registerGraphPackage,
   resumeRun,
+  startRegisteredWorkflowRun,
   startRun,
   stepRun,
   suspendRun,
@@ -29,6 +31,51 @@ import {
   makeDemoWorkflowRoot,
   makeStorageWorkflowRoot,
 } from './helpers/workflows.js';
+
+function workflowPackageManifest(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    id: 'package-flow',
+    version: '0.1.0',
+    kind: 'workflow',
+    entry: 'review',
+    nodes: {
+      review: {
+        purpose: 'Review package workflow v1',
+        exec: 'inline',
+        outputSchema: {
+          type: 'object',
+          required: ['decision'],
+          properties: { decision: { type: 'string', enum: ['stop'] } },
+        },
+        edges: [{ to: 'done', when: { decision: 'stop' } }],
+      },
+      done: { purpose: 'Package workflow complete', terminal: true },
+    },
+    ...overrides,
+  };
+}
+
+function makePackageWorkflowRoot(): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-package-workflow-'));
+  fs.writeFileSync(
+    path.join(root, 'workflow.json'),
+    JSON.stringify({
+      id: 'package-workspace',
+      version: '0.1.0',
+      graphs: {},
+    }),
+    'utf8',
+  );
+  return root;
+}
+
+function writeGraphPackage(root: string, folder: string, manifest: Record<string, unknown>, force = false): string {
+  const packageRoot = path.join(root, folder);
+  fs.mkdirSync(packageRoot, { recursive: true });
+  fs.writeFileSync(path.join(packageRoot, 'graph.json'), JSON.stringify(manifest), 'utf8');
+  registerGraphPackage({ workflowRoot: root, packageRoot, force, now: '2026-05-23T00:00:00.000Z' });
+  return packageRoot;
+}
 
 describe('coach runtime storage', () => {
   it('loads workflow definitions from the hidden runtime directory', () => {
@@ -320,6 +367,78 @@ describe('coach operations', () => {
             position: { graph: 'mockcopy', node: 'plan' },
           },
         ],
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('starts and completes a registered workflow package as a pinned run', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackage(root, 'graphs/package-flow-v1', workflowPackageManifest());
+
+      const state = startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'package-flow', runId: 'package-a' });
+
+      expect(state).toMatchObject({
+        status: 'ok',
+        run: { id: 'package-a', rootGraph: 'package-flow', status: 'active' },
+        position: { graph: 'package-flow', node: 'review' },
+        node: { purpose: 'Review package workflow v1' },
+      });
+      expect(readCheckpoint(root, 'package-a').graphSource).toEqual({
+        kind: 'package',
+        graphId: 'package-flow',
+        graphVersion: '0.1.0',
+        packagePath: 'graphs/package-flow-v1',
+      });
+
+      expect(stepRun({ workflowRoot: root, output: { decision: 'stop' } })).toMatchObject({
+        status: 'completed',
+        position: { graph: 'package-flow', node: 'done' },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('continues package-backed workflow runs against the pinned package after registry replacement', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackage(root, 'graphs/package-flow-v1', workflowPackageManifest());
+      startRegisteredWorkflowRun({ workflowRoot: root, graphId: 'package-flow', runId: 'package-a' });
+      suspendRun({ workflowRoot: root });
+
+      writeGraphPackage(
+        root,
+        'graphs/package-flow-v2',
+        workflowPackageManifest({
+          version: '0.2.0',
+          nodes: {
+            review: {
+              purpose: 'Review package workflow v2',
+              exec: 'inline',
+              outputSchema: {
+                type: 'object',
+                required: ['decision'],
+                properties: { decision: { type: 'string', enum: ['go'] } },
+              },
+              edges: [{ to: 'done', when: { decision: 'go' } }],
+            },
+            done: { purpose: 'Package workflow complete v2', terminal: true },
+          },
+        }),
+        true,
+      );
+
+      const resumed = resumeRun({ workflowRoot: root, runId: 'package-a' });
+      expect(resumed).toMatchObject({
+        status: 'ok',
+        node: { purpose: 'Review package workflow v1' },
+      });
+      expect(stepRun({ workflowRoot: root, output: { decision: 'stop' } })).toMatchObject({
+        status: 'completed',
+        position: { graph: 'package-flow', node: 'done' },
       });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });

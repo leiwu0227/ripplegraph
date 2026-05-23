@@ -1,11 +1,11 @@
 import { listRunIds, readCheckpoint } from '../storage.js';
-import type { Checkpoint, Workflow } from '../schema.js';
+import type { Checkpoint, Graph, Workflow } from '../schema.js';
 import type { RunSummary, StateNoFocusedRun, StateOk } from '../coach.js';
 import { getGraph, getNode } from './runtime-graph.js';
 
-export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint): StateOk {
-  const graph = getGraph(workflow, checkpoint.rootGraph);
-  const node = getNode(graph, checkpoint.position.node);
+export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint, graph?: Graph): StateOk {
+  const activeGraph = graph ?? getGraph(workflow, checkpoint.rootGraph);
+  const node = getNode(activeGraph, checkpoint.position.node);
   return {
     status: 'ok',
     workflow: { id: workflow.id, version: workflow.version },
@@ -25,7 +25,7 @@ export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint): 
     context: {
       previous: previousNodes(checkpoint),
       next: node.edges.map((edge) => {
-        const next = getNode(graph, edge.to);
+        const next = getNode(activeGraph, edge.to);
         return { id: edge.to, purpose: next.purpose, when: edge.when };
       }),
       latches: [],
