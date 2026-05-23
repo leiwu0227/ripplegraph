@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { startCallableCall, type StartCallableCallResponse } from './callable.js';
-import { listRuns, resumeRun, startRun, type RunList, type StateOk } from './coach.js';
+import { listRuns, resumeRun, startRegisteredWorkflowRun, type RunList, type StateOk } from './coach.js';
 import { listRegisteredGraphs, type RegistryEntry } from './registry.js';
 import { RipplegraphError, type JsonSchema } from './schema.js';
-import { loadWorkflow } from './storage.js';
 import { assertEffectsAllowed, type EffectPolicy } from './effects.js';
 
 export interface DispatchOptions {
@@ -188,15 +187,9 @@ export function applyDispatchAction(options: DispatchActionOptions): DispatchAct
       return resumeRun({ workflowRoot: options.workflowRoot, runId: action.runId });
     case 'start_run': {
       requireRegisteredGraph(graphs, action.graphId, 'workflow');
-      if (!compactWorkflowHasExecutableGraph(options.workflowRoot, action.graphId)) {
-        throw new RipplegraphError(
-          'E_GRAPH_NOT_EXECUTABLE_YET',
-          `registered graph ${action.graphId} is not executable yet because it is not present as a workflow in workflow.json`,
-        );
-      }
-      return startRun({
+      return startRegisteredWorkflowRun({
         workflowRoot: options.workflowRoot,
-        graph: action.graphId,
+        graphId: action.graphId,
         runId: action.runId ?? generatedRunId(action.graphId),
         effectPolicy: options.effectPolicy,
       });
@@ -248,15 +241,6 @@ function requireRegisteredGraph(graphs: RegisteredGraphSummary[], graphId: strin
     throw new RipplegraphError('E_WRONG_GRAPH_KIND', `graph ${graphId} is ${graph.kind}, expected ${kind}`);
   }
   return graph;
-}
-
-function compactWorkflowHasExecutableGraph(workflowRoot: string, graphId: string): boolean {
-  try {
-    return loadWorkflow(workflowRoot).graphs[graphId]?.kind === 'workflow';
-  } catch (error) {
-    if (error instanceof RipplegraphError && error.code === 'E_MISSING_WORKFLOW') return false;
-    throw error;
-  }
 }
 
 function generatedRunId(graphId: string): string {

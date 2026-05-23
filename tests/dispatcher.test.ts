@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { applyDispatchAction, getDispatchRequest, registerGraphPackage, suspendRun } from '../src/index.js';
+import { applyDispatchAction, getDispatchRequest, registerGraphPackage, stepRun, suspendRun } from '../src/index.js';
 import { makeCliWorkflowRoot } from './helpers/workflows.js';
 
 const baseManifest = {
@@ -293,7 +293,7 @@ describe('dispatcher runtime', () => {
     }
   });
 
-  it('rejects unsupported dispatcher action targets clearly', () => {
+  it('starts package-only workflow targets and rejects unsupported dispatcher action targets clearly', () => {
     const root = makeRoot('ripplegraph-dispatcher-unsupported-');
     try {
       fs.writeFileSync(
@@ -353,10 +353,16 @@ describe('dispatcher runtime', () => {
       });
 
       expect(
-        errorCode(() =>
-          applyDispatchAction({ workflowRoot: root, action: { action: 'start_run', graphId: 'package-only', runId: 'pkg-a' } }),
-        ),
-      ).toBe('E_GRAPH_NOT_EXECUTABLE_YET');
+        applyDispatchAction({ workflowRoot: root, action: { action: 'start_run', graphId: 'package-only', runId: 'pkg-a' } }),
+      ).toMatchObject({
+        status: 'ok',
+        run: { id: 'pkg-a', rootGraph: 'package-only', status: 'active' },
+        position: { graph: 'package-only', node: 'route' },
+      });
+      expect(stepRun({ workflowRoot: root, output: {} })).toMatchObject({
+        status: 'completed',
+        run: { id: 'pkg-a', rootGraph: 'package-only', status: 'completed' },
+      });
       expect(
         applyDispatchAction({
           workflowRoot: root,
