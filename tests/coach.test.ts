@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import {
   appendTransition,
@@ -76,6 +77,56 @@ describe('coach runtime storage', () => {
       expect(() => loadWorkflow(invalidEntryRoot)).toThrow(/entryGraph must reference a dispatcher graph/);
     } finally {
       fs.rmSync(invalidEntryRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('accepts per-node effects declarations and rejects deprecated exec modes', () => {
+    const validRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'rg-node-effects-valid-'));
+    fs.writeFileSync(
+      path.join(validRoot, 'workflow.json'),
+      JSON.stringify({
+        id: 'node-effects',
+        version: '0.0.1',
+        graphs: {
+          main: {
+            kind: 'workflow',
+            entry: 'a',
+            effects: ['read_repo'],
+            nodes: {
+              a: { purpose: 'first', effects: ['read_repo', 'write_repo'], edges: [{ to: 'b' }] },
+              b: { purpose: 'last', terminal: true },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+    try {
+      expect(loadWorkflow(validRoot).graphs.main!.nodes.a!.effects).toEqual(['read_repo', 'write_repo']);
+    } finally {
+      fs.rmSync(validRoot, { recursive: true, force: true });
+    }
+
+    const invalidRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'rg-exec-spawn-'));
+    fs.writeFileSync(
+      path.join(invalidRoot, 'workflow.json'),
+      JSON.stringify({
+        id: 'spawn-rejected',
+        version: '0.0.1',
+        graphs: {
+          main: {
+            kind: 'workflow',
+            entry: 'a',
+            nodes: { a: { purpose: 'first', exec: 'spawn', terminal: true } },
+          },
+        },
+      }),
+      'utf8',
+    );
+    try {
+      expect(() => loadWorkflow(invalidRoot)).toThrow(/exec/i);
+    } finally {
+      fs.rmSync(invalidRoot, { recursive: true, force: true });
     }
   });
 
