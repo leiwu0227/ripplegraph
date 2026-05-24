@@ -160,6 +160,17 @@ the command, validator, reviewer, or business action. Effects declared by
 Callable packages reject node-level host contract metadata because callable
 state is an isolated graph-shaped function contract, not a user-turn workflow.
 
+Hosts can also append non-advancing runtime records for focused workflow runs:
+
+```sh
+ripplegraph side-channel --action refresh-backend --input '{"table":"positions"}' --output '{"rows":3}' --workflow-root .
+ripplegraph reconcile --source backend-fsm --snapshot '{"status":"waiting"}' --expected '{"status":"ready"}' --workflow-root .
+```
+
+Both commands append transition-log entries with the current graph position as
+both `from` and `to`. `reconcile` returns `reconciliation.aligned` so the host
+can decide whether to stop, ask the user, or advance later.
+
 ## Effect Policy
 
 Graphs can declare effects such as `read_repo`, `write_files`, `network`, or
