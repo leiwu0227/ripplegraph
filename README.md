@@ -144,6 +144,22 @@ schema keywords are `type`, `enum`, `required`, `properties`, `const`, `oneOf`,
 array `items`, and `additionalProperties: false`. Unsupported callable schema
 keywords fail before a call starts so contracts are not silently ignored.
 
+## Host Contract Metadata
+
+Workflow package nodes can declare host-facing metadata without asking
+Ripplegraph to execute host work. Supported node metadata includes
+`interaction`, `interrupt`, `sideChannelActions`, `toolContract`, and
+`validators`; gates can also declare `interaction`, and `workflowRef` can carry
+`inputMap` and `outputMap` metadata. State responses expose the active node's
+metadata so a host CLI can render prompts, enforce user-turn pauses, offer
+side-channel actions, and resolve validators or commands.
+
+Ripplegraph validates and reports these contracts, but the host still performs
+the command, validator, reviewer, or business action. Effects declared by
+`toolContract` and `sideChannelActions` are included in workflow start preflight.
+Callable packages reject node-level host contract metadata because callable
+state is an isolated graph-shaped function contract, not a user-turn workflow.
+
 ## Effect Policy
 
 Graphs can declare effects such as `read_repo`, `write_files`, `network`, or

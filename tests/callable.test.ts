@@ -305,6 +305,25 @@ describe('callable start and state', () => {
           },
         }),
       });
+      writeGraphPackage(root, 'graphs/host-contract-ticket', {
+        ...callableManifest({
+          id: 'host-contract-ticket',
+          nodes: {
+            summarize: {
+              purpose: 'Summarize a support ticket',
+              exec: 'inline',
+              interaction: {
+                id: 'summary-review',
+                kind: 'choice',
+                prompt: 'Review summary?',
+                choices: [{ label: 'Approve', value: 'approved' }],
+              },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        }),
+      });
 
       const invalid = startCallableCall({
         workflowRoot: root,
@@ -331,6 +350,11 @@ describe('callable start and state', () => {
       expect(errorCode(() => startCallableCall({ workflowRoot: root, graphId: 'gated-ticket', callId: 'gated-call' }))).toBe(
         'E_CALLABLE_GATE_UNSUPPORTED',
       );
+      expect(
+        errorCode(() =>
+          startCallableCall({ workflowRoot: root, graphId: 'host-contract-ticket', callId: 'host-contract-call' }),
+        ),
+      ).toBe('E_CALLABLE_HOST_CONTRACT_UNSUPPORTED');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }

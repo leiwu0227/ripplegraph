@@ -265,6 +265,19 @@ function assertCallableSupported(manifest: GraphPackageManifest): void {
   assertSupportedCallableSchema(manifest.outputSchema);
   for (const [nodeId, node] of Object.entries(manifest.nodes)) {
     if (node.gate) throw new RipplegraphError('E_CALLABLE_GATE_UNSUPPORTED', `callable node ${nodeId} uses a gate`);
+    const hostContractFields = [
+      node.interaction ? 'interaction' : undefined,
+      node.interrupt ? 'interrupt' : undefined,
+      node.sideChannelActions ? 'sideChannelActions' : undefined,
+      node.toolContract ? 'toolContract' : undefined,
+      node.validators ? 'validators' : undefined,
+    ].filter((field): field is string => field !== undefined);
+    if (hostContractFields.length > 0) {
+      throw new RipplegraphError(
+        'E_CALLABLE_HOST_CONTRACT_UNSUPPORTED',
+        `callable node ${nodeId} uses host contract metadata: ${hostContractFields.join(', ')}`,
+      );
+    }
     assertSupportedCallableSchema(node.outputSchema);
   }
 }
