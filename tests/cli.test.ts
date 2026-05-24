@@ -244,6 +244,40 @@ describe('reference cli', () => {
         run(['start', '--workflow-root', root, '--graph', 'daily', '--run-id', 'daily-a', '--allow-effects', 'read_workspace']).json.status,
       ).toBe('ok');
       expect(run(['state', '--workflow-root', root]).json.position).toEqual({ graph: 'daily', node: 'review' });
+      expect(
+        run([
+          'side-channel',
+          '--workflow-root',
+          root,
+          '--action',
+          'refresh-backend',
+          '--input',
+          '{"table":"positions"}',
+          '--output',
+          '{"rows":3}',
+        ]).json,
+      ).toMatchObject({
+        status: 'ok',
+        position: { graph: 'daily', node: 'review' },
+        state: { position: { graph: 'daily', node: 'review' } },
+      });
+      expect(
+        run([
+          'reconcile',
+          '--workflow-root',
+          root,
+          '--source',
+          'backend-fsm',
+          '--snapshot',
+          '{"status":"waiting"}',
+          '--expected',
+          '{"status":"ready"}',
+        ]).json,
+      ).toMatchObject({
+        status: 'ok',
+        position: { graph: 'daily', node: 'review' },
+        reconciliation: { source: 'backend-fsm', aligned: false },
+      });
       expect(run(['step', '--workflow-root', root, '--output', '{"decision":"maybe"}']).json.status).toBe(
         'validation_error',
       );

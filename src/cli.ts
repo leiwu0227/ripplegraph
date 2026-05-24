@@ -9,7 +9,9 @@ import {
   listCallableCalls,
   listRegisteredGraphs,
   loadGraphPackage,
+  recordSideChannelAction,
   registerGraphPackage,
+  reconcileExternalState,
   resumeRun,
   RipplegraphError,
   startCallableCall,
@@ -44,6 +46,8 @@ Canonical commands:
   call-state --call-id <id> [--workflow-root <path>]
   call-step --call-id <id> --output <json> [--workflow-root <path>]
   call-list [--workflow-root <path>]
+  side-channel --action <id> [--input <json>] [--output <json>] [--status completed|failed] [--note <text>] [--workflow-root <path>]
+  reconcile --source <id> --snapshot <json> [--expected <json>] [--note <text>] [--workflow-root <path>]
 
 Compatibility/debug commands:
   validate --workflow-root <path>
@@ -120,6 +124,29 @@ async function main(argv: string[]): Promise<void> {
     case 'call-list':
       emitJson(listCallableCalls({ workflowRoot: workflowRoot(flags) }));
       return;
+    case 'side-channel':
+      emitJson(
+        recordSideChannelAction({
+          workflowRoot: workflowRoot(flags),
+          actionId: requiredFlag(flags, 'action'),
+          input: optionalJsonFlag(flags, 'input'),
+          output: optionalJsonFlag(flags, 'output'),
+          status: stringFlag(flags, 'status') as 'completed' | 'failed' | undefined,
+          note: stringFlag(flags, 'note'),
+        }),
+      );
+      return;
+    case 'reconcile':
+      emitJson(
+        reconcileExternalState({
+          workflowRoot: workflowRoot(flags),
+          source: requiredFlag(flags, 'source'),
+          snapshot: parseJson(stringFlag(flags, 'snapshot'), 'missing --snapshot', '--snapshot is not valid JSON'),
+          expected: optionalJsonFlag(flags, 'expected'),
+          note: stringFlag(flags, 'note'),
+        }),
+      );
+      return;
     case 'step':
       emitJson(stepRun({ workflowRoot: workflowRoot(flags), output: parseJson(stringFlag(flags, 'output'), 'missing --output', '--output is not valid JSON') }));
       return;
@@ -138,6 +165,11 @@ async function main(argv: string[]): Promise<void> {
     default:
       throw new RipplegraphError('E_UNKNOWN_COMMAND', `unknown command: ${command}`);
   }
+}
+
+function optionalJsonFlag(flags: ReturnType<typeof parseArgs>['flags'], name: string): unknown {
+  const value = stringFlag(flags, name);
+  return value === undefined ? undefined : parseJson(value, `missing --${name}`, `--${name} is not valid JSON`);
 }
 
 function handleDispatchCommand(flags: ReturnType<typeof parseArgs>['flags']): unknown {
