@@ -80,7 +80,12 @@ export interface StateOk {
     instructions?: string;
     exec: Node['exec'];
     outputSchema: JsonSchema;
+    interaction?: Node['interaction'];
+    interrupt?: Node['interrupt'];
     gate?: Gate;
+    sideChannelActions?: Node['sideChannelActions'];
+    toolContract?: Node['toolContract'];
+    validators?: Node['validators'];
   };
   context: {
     previous: Array<{ id: string; purpose: string; output?: unknown }>;

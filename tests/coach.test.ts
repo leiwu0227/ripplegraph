@@ -358,6 +358,60 @@ describe('coach operations', () => {
     }
   });
 
+  it('exposes host contract metadata in active node state', () => {
+    const root = createTestWorkspace({
+      prefix: 'ripplegraph-host-contract-state-',
+      workspace: { id: 'host-contract-demo' },
+      graphs: [
+        {
+          id: 'review',
+          entry: 'approval',
+          nodes: {
+            approval: {
+              purpose: 'Request host-visible approval',
+              interaction: {
+                id: 'approval-form',
+                kind: 'form',
+                prompt: 'Enter the approval summary.',
+                schema: { type: 'object', properties: { summary: { type: 'string' } } },
+              },
+              interrupt: { requiresUserTurn: true, reason: 'User must review approval summary.' },
+              toolContract: { id: 'load-artifact', command: 'artifact-load', validator: 'artifact-validator' },
+              validators: [{ id: 'artifact-validator', purpose: 'Validate artifact output.' }],
+              sideChannelActions: [{ id: 'refresh-artifact', purpose: 'Refresh artifact without advancing.' }],
+              gate: {
+                type: 'external_decision',
+                interaction: {
+                  id: 'approval-choice',
+                  kind: 'choice',
+                  prompt: 'Approve this summary?',
+                  choices: [{ label: 'Approve', value: 'approved' }],
+                },
+                decisionSchema: { type: 'object', properties: { decision: { type: 'string' } } },
+              },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        },
+      ],
+    });
+    try {
+      const state = startRun({ workflowRoot: root, graphId: 'review', runId: 'approval-contract-a' });
+      expect(state.node).toMatchObject({
+        interaction: { id: 'approval-form', kind: 'form', schema: { type: 'object' } },
+        interrupt: { requiresUserTurn: true },
+        toolContract: { id: 'load-artifact', command: 'artifact-load' },
+        validators: [{ id: 'artifact-validator' }],
+        sideChannelActions: [{ id: 'refresh-artifact' }],
+        gate: { interaction: { id: 'approval-choice', choices: [{ value: 'approved' }] } },
+      });
+      expect(state.responseContract).toMatchObject({ command: 'decide' });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('rejects graph packages with tool decision sources missing a tool identifier', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-gate-source-invalid-'));
     try {
