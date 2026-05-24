@@ -148,7 +148,10 @@ export function validateWorkflowRoot(rootPath: string): { status: 'ok'; workflow
 }
 
 function effectsForNode(graph: Graph, node: Node): string[] {
-  return node.effects ?? graph.effects;
+  const executionEffects = node.effects ?? graph.effects;
+  const toolEffects = node.toolContract?.effects ?? [];
+  const sideChannelEffects = node.sideChannelActions?.flatMap((action) => action.effects ?? []) ?? [];
+  return [...new Set([...executionEffects, ...toolEffects, ...sideChannelEffects])];
 }
 
 function assertGraphAndChildEffectsAllowed(rootPath: string, graph: Graph, graphId: string, policy?: EffectPolicy): void {

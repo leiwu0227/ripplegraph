@@ -80,4 +80,48 @@ describe('effect policy', () => {
       fs.rmSync(optOutRoot, { recursive: true, force: true });
     }
   });
+
+  it('includes host contract effects in workflow start preflight', () => {
+    const root = createTestWorkspace({
+      prefix: 'rg-host-contract-effects-',
+      workspace: { id: 'host-contract-effects' },
+      graphs: [
+        {
+          id: 'main',
+          kind: 'workflow',
+          entry: 'a',
+          effects: ['write_repo'],
+          nodes: {
+            a: {
+              purpose: 'first',
+              effects: [],
+              toolContract: { id: 'artifact-loader', command: 'load-artifact', effects: ['network'] },
+              sideChannelActions: [
+                { id: 'refresh-backend', purpose: 'Refresh backend state.', effects: ['read_backend', 'network'] },
+              ],
+              terminal: true,
+            },
+          },
+        },
+      ],
+    });
+    try {
+      expect(() =>
+        startRun({ workflowRoot: root, graphId: 'main', runId: 'r', effectPolicy: { allowedEffects: ['network'] } }),
+      ).toThrow(/read_backend \(node: a\)/);
+      expect(() =>
+        startRun({ workflowRoot: root, graphId: 'main', runId: 'r', effectPolicy: { allowedEffects: ['network'] } }),
+      ).not.toThrow(/write_repo/);
+      expect(
+        startRun({
+          workflowRoot: root,
+          graphId: 'main',
+          runId: 'r',
+          effectPolicy: { allowedEffects: ['network', 'read_backend'] },
+        }).status,
+      ).toBe('ok');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
