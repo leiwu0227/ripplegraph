@@ -65,6 +65,21 @@ export interface AbandonRunOptions extends WorkflowRootOptions {
   reason?: string;
 }
 
+export interface RecordSideChannelActionOptions extends WorkflowRootOptions {
+  actionId: string;
+  input?: unknown;
+  output?: unknown;
+  status?: 'completed' | 'failed';
+  note?: string;
+}
+
+export interface ReconcileExternalStateOptions extends WorkflowRootOptions {
+  source: string;
+  snapshot: unknown;
+  expected?: unknown;
+  note?: string;
+}
+
 export interface StateOk {
   status: 'ok';
   workflow: { id: string; version: string };
@@ -129,6 +144,17 @@ export interface ValidationErrorResponse {
   run: { id: string; status: Checkpoint['status']; rootGraph: string };
   position: Position;
   errors: Array<{ path: string; message: string }>;
+}
+
+export interface RuntimeAuditResponse {
+  status: 'ok';
+  run: { id: string; status: Checkpoint['status']; rootGraph: string };
+  position: Position;
+  state: StateOk;
+}
+
+export interface ReconciliationResponse extends RuntimeAuditResponse {
+  reconciliation: { source: string; aligned: boolean };
 }
 
 export type CoachState = StateOk | StateNoFocusedRun;
@@ -497,6 +523,45 @@ export function abandonRun(opts: AbandonRunOptions): { status: 'abandoned'; run:
   };
 }
 
+export function recordSideChannelAction(opts: RecordSideChannelActionOptions): RuntimeAuditResponse {
+  const status = opts.status ?? 'completed';
+  if (status !== 'completed' && status !== 'failed') {
+    throw new RipplegraphError('E_INVALID_SIDE_CHANNEL_STATUS', `side-channel status must be completed or failed: ${status}`);
+  }
+  const { workflow, checkpoint, active } = activeFocusedRun(opts.workflowRoot);
+  const position = checkpoint.position;
+  appendTransition(opts.workflowRoot, checkpoint.runId, {
+    ...transitionEntry('side_channel', checkpoint.runId, position, position),
+    output: {
+      actionId: opts.actionId,
+      status,
+      note: opts.note,
+      input: opts.input,
+      output: opts.output,
+    },
+    reason: opts.note ?? null,
+  });
+  return runtimeAuditResponse(workflow, checkpoint, active);
+}
+
+export function reconcileExternalState(opts: ReconcileExternalStateOptions): ReconciliationResponse {
+  const { workflow, checkpoint, active } = activeFocusedRun(opts.workflowRoot);
+  const position = checkpoint.position;
+  const aligned = opts.expected === undefined || stableJson(opts.snapshot) === stableJson(opts.expected);
+  appendTransition(opts.workflowRoot, checkpoint.runId, {
+    ...transitionEntry('reconcile', checkpoint.runId, position, position),
+    output: {
+      source: opts.source,
+      snapshot: opts.snapshot,
+      expected: opts.expected,
+      aligned,
+      note: opts.note,
+    },
+    reason: opts.note ?? null,
+  });
+  return { ...runtimeAuditResponse(workflow, checkpoint, active), reconciliation: { source: opts.source, aligned } };
+}
+
 function focusedCheckpoint(rootPath: string): Checkpoint {
   ensureWorkflowRoot(rootPath);
   const current = readCurrent(rootPath);
@@ -504,6 +569,38 @@ function focusedCheckpoint(rootPath: string): Checkpoint {
     throw new RipplegraphError('E_NO_FOCUSED_RUN', 'no focused run');
   }
   return readCheckpoint(rootPath, current.focusedRunId);
+}
+
+function activeFocusedRun(rootPath: string): { workflow: Workflow; checkpoint: Checkpoint; active: ActiveContext } {
+  const workflow = loadWorkflow(rootPath);
+  const checkpoint = focusedCheckpoint(rootPath);
+  if (checkpoint.status !== 'active') {
+    throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
+  }
+  return { workflow, checkpoint, active: activeContextForCheckpoint(rootPath, checkpoint) };
+}
+
+function runtimeAuditResponse(workflow: Workflow, checkpoint: Checkpoint, active: ActiveContext): RuntimeAuditResponse {
+  return {
+    status: 'ok',
+    run: { id: checkpoint.runId, status: checkpoint.status, rootGraph: checkpoint.rootGraph },
+    position: checkpoint.position,
+    state: stateForCheckpoint(workflow, checkpoint, { graph: active.graph, scope: active.scope }),
+  };
+}
+
+function stableJson(value: unknown): string {
+  return JSON.stringify(stableValue(value));
+}
+
+function stableValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, item]) => [key, stableValue(item)]),
+  );
 }
 
 function enterWorkflowRefs(rootPath: string, workflow: Workflow, checkpoint: Checkpoint): StateOk {

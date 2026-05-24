@@ -13,7 +13,9 @@ import {
   readCurrent,
   listRegisteredGraphs,
   listRuns,
+  recordSideChannelAction,
   registerGraphPackage,
+  reconcileExternalState,
   resumeRun,
   startRun,
   stepRun,
@@ -1023,6 +1025,88 @@ describe('coach operations', () => {
         .map((line) => JSON.parse(line) as { op: string; gateDecision?: unknown });
       expect(logEntries.map((entry) => entry.op)).toEqual(['start', 'decide']);
       expect(logEntries[1]?.gateDecision).toEqual({ decision: 'approved', reason: 'classification is correct' });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('records side-channel actions without advancing graph position', () => {
+    const root = makeCoachWorkflowRoot();
+    try {
+      startRun({ workflowRoot: root, graphId: 'daily', runId: 'side-channel-a' });
+      const before = readCheckpoint(root, 'side-channel-a');
+      const response = recordSideChannelAction({
+        workflowRoot: root,
+        actionId: 'refresh-backend',
+        input: { table: 'positions' },
+        output: { rows: 3 },
+        note: 'loaded current table',
+      });
+
+      expect(response).toMatchObject({
+        status: 'ok',
+        run: { id: 'side-channel-a', status: 'active' },
+        position: before.position,
+        state: { position: before.position },
+      });
+      expect(readCheckpoint(root, 'side-channel-a')).toEqual(before);
+      expect(readCurrent(root)).toEqual({ focusedRunId: 'side-channel-a' });
+
+      const logEntries = fs
+        .readFileSync(path.join(root, '.ripplegraph', 'runs', 'side-channel-a', 'transition-log.jsonl'), 'utf8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as { op: string; from?: unknown; to?: unknown; output?: unknown });
+      expect(logEntries.map((entry) => entry.op)).toEqual(['start', 'side_channel']);
+      expect(logEntries[1]).toMatchObject({
+        from: before.position,
+        to: before.position,
+        output: {
+          actionId: 'refresh-backend',
+          status: 'completed',
+          note: 'loaded current table',
+          input: { table: 'positions' },
+          output: { rows: 3 },
+        },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('records external state reconciliation drift without advancing graph position', () => {
+    const root = makeCoachWorkflowRoot();
+    try {
+      startRun({ workflowRoot: root, graphId: 'daily', runId: 'reconcile-a' });
+      const before = readCheckpoint(root, 'reconcile-a');
+
+      const aligned = reconcileExternalState({
+        workflowRoot: root,
+        source: 'backend-fsm',
+        snapshot: { status: 'ready', nested: { count: 2 } },
+        expected: { nested: { count: 2 }, status: 'ready' },
+      });
+      expect(aligned.reconciliation).toEqual({ source: 'backend-fsm', aligned: true });
+
+      const drift = reconcileExternalState({
+        workflowRoot: root,
+        source: 'backend-fsm',
+        snapshot: { status: 'waiting' },
+        expected: { status: 'ready' },
+        note: 'backend action set changed',
+      });
+      expect(drift.reconciliation).toEqual({ source: 'backend-fsm', aligned: false });
+      expect(drift.position).toEqual(before.position);
+      expect(readCheckpoint(root, 'reconcile-a')).toEqual(before);
+
+      const logEntries = fs
+        .readFileSync(path.join(root, '.ripplegraph', 'runs', 'reconcile-a', 'transition-log.jsonl'), 'utf8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as { op: string; to?: unknown; output?: { aligned?: boolean; note?: string } });
+      expect(logEntries.map((entry) => entry.op)).toEqual(['start', 'reconcile', 'reconcile']);
+      expect(logEntries[1]).toMatchObject({ to: before.position, output: { aligned: true } });
+      expect(logEntries[2]).toMatchObject({ to: before.position, output: { aligned: false, note: 'backend action set changed' } });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
