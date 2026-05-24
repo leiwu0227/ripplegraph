@@ -1,0 +1,27 @@
+{
+  "plan_file": ".specdev/assignments/00023_feature_side-channel-reconciliation-runtime/breakdown/plan.md",
+  "total_tasks": 3,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-05-24T01:10:09Z",
+      "completed_at": "2026-05-24T01:12:34Z",
+      "summary": "Added transition log ops and coach APIs for side-channel and reconciliation records; verified with npm test -- tests/coach.test.ts."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-05-24T01:12:38Z",
+      "completed_at": "2026-05-24T01:14:19Z",
+      "summary": "Added side-channel and reconcile CLI commands; verified with npm test -- tests/cli.test.ts."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "started_at": "2026-05-24T01:14:23Z",
+      "completed_at": "2026-05-24T01:15:13Z",
+      "summary": "Documented side-channel/reconciliation commands and resolved premature implementation-review findings; verified with npm run typecheck and npm test."
+    }
+  ]
+}
