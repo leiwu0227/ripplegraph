@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ripplegraph Core Concepts</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #5b6472;
+      --line: #d8dee8;
+      --panel: #ffffff;
+      --soft: #f4f7fb;
+      --blue: #1f6feb;
+      --green: #18794e;
+      --amber: #9a6700;
+      --red: #c9352b;
+      --violet: #7657d6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #f8fafc;
+    }
+
+    header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 48px 24px 40px;
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 24px 64px;
+    }
+
+    h1, h2, h3 {
+      line-height: 1.18;
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 980px;
+      margin: 0 auto 14px;
+      font-size: 44px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-top: 42px;
+      font-size: 28px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin: 10px 0;
+    }
+
+    header p {
+      max-width: 980px;
+      margin: 0 auto;
+      color: #cbd5e1;
+      font-size: 19px;
+    }
+
+    .lead {
+      font-size: 18px;
+      color: #394150;
+      max-width: 880px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .tag {
+      display: inline-block;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr 48px 1fr 48px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    .node {
+      min-height: 116px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 15px;
+    }
+
+    .node strong {
+      display: block;
+      font-size: 17px;
+      margin-bottom: 7px;
+    }
+
+    .arrow {
+      color: var(--blue);
+      text-align: center;
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    .swimlane {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      margin-top: 18px;
+    }
+
+    .lane {
+      padding: 18px;
+    }
+
+    .lane + .lane {
+      border-left: 1px solid var(--line);
+    }
+
+    .lane h3 {
+      margin-bottom: 12px;
+    }
+
+    ul {
+      margin: 10px 0 0 20px;
+      padding: 0;
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    code {
+      background: #eef2f7;
+      border: 1px solid #e1e7ef;
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      display: table;
+      margin-top: 14px;
+    }
+
+    .table th,
+    .table td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .table th {
+      background: #eef3f8;
+      font-size: 13px;
+      color: #344054;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .mini-diagram {
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .callout {
+      border-left: 4px solid var(--blue);
+      background: #eef6ff;
+      padding: 14px 16px;
+      margin: 18px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .ok {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .warn {
+      color: var(--amber);
+      font-weight: 700;
+    }
+
+    .bad {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .footer {
+      color: var(--muted);
+      margin-top: 44px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 840px) {
+      h1 {
+        font-size: 34px;
+      }
+
+      .two,
+      .three,
+      .flow,
+      .swimlane {
+        grid-template-columns: 1fr;
+      }
+
+      .arrow {
+        transform: rotate(90deg);
+      }
+
+      .lane + .lane {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Ripplegraph Core Concepts</h1>
+    <p>A practical wiki-style introduction for people who have never seen Ripplegraph before.</p>
+  </header>
+
+  <main>
+    <section>
+      <p class="lead">
+        Ripplegraph is a small runtime for building reliable agent-driven workflows. It does not replace an LLM or a CLI.
+        It gives them rails: graph position, validation, checkpoints, transitions, gates, and durable audit logs.
+      </p>
+      <div class="callout">
+        <strong>Shortest definition:</strong> Ripplegraph is the workflow backbone. The graph owns flow; the host agent owns the work.
+      </div>
+    </section>
+
+    <section>
+      <h2>The Problem It Solves</h2>
+      <div class="grid three">
+        <div class="card">
+          <span class="tag">Without rails</span>
+          <h3>Agents drift</h3>
+          <p>Long-running CLI workflows can lose track of where they are, what has already been approved, and what should happen next.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Without contracts</span>
+          <h3>Steps become vague</h3>
+          <p>Prompts, validators, business commands, and output shapes can get mixed into ad hoc code or chat history.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Without state</span>
+          <h3>Recovery is hard</h3>
+          <p>If context is lost, the host needs a trustworthy source of current position, recent outputs, and allowed next actions.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Core Mental Model</h2>
+      <div class="flow">
+        <div class="node">
+          <strong>Graph Package</strong>
+          <p>Declares workflow structure, nodes, schemas, effects, gates, and host-facing metadata.</p>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <strong>Ripplegraph Runtime</strong>
+          <p>Tracks position, validates outputs, writes checkpoints, and records transitions.</p>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <strong>Host CLI / Agent</strong>
+          <p>Renders prompts, runs tools, calls validators, talks to users, and submits results back.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Who Owns What?</h2>
+      <div class="swimlane">
+        <div class="lane">
+          <h3>Ripplegraph Owns</h3>
+          <ul>
+            <li>Current graph position</li>
+            <li>Checkpoint files</li>
+            <li>Transition logs</li>
+            <li>Node output validation</li>
+            <li>Gate decisions</li>
+            <li>Effect preflight checks</li>
+            <li>Workflow composition through <code>workflowRef</code></li>
+            <li>Side-channel and reconciliation audit records</li>
+          </ul>
+        </div>
+        <div class="lane">
+          <h3>Host CLI / Agent Owns</h3>
+          <ul>
+            <li>LLM calls and prompt execution</li>
+            <li>Rendering user interactions</li>
+            <li>Running shell commands or tools</li>
+            <li>Calling validators</li>
+            <li>Reading backend systems</li>
+            <li>Business logic and adapters</li>
+            <li>Domain-specific files and formats</li>
+            <li>Deciding what to do when drift is detected</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>The Main Building Blocks</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Concept</th>
+            <th>Plain-English Meaning</th>
+            <th>Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>graph package</code></td>
+            <td>A folder containing a workflow definition and metadata.</td>
+            <td>Lets workflows be reusable, registered, versioned, and tested independently.</td>
+          </tr>
+          <tr>
+            <td><code>node</code></td>
+            <td>A unit of work in the workflow.</td>
+            <td>Each node has a purpose, optional instructions, output schema, and edges to next nodes.</td>
+          </tr>
+          <tr>
+            <td><code>edge</code></td>
+            <td>A transition from one node to another.</td>
+            <td>Keeps flow deterministic instead of leaving routing to chat memory.</td>
+          </tr>
+          <tr>
+            <td><code>gate</code></td>
+            <td>An external decision point.</td>
+            <td>Used for human approvals, review tools, or other decisions that should be explicit.</td>
+          </tr>
+          <tr>
+            <td><code>checkpoint</code></td>
+            <td>The saved runtime state for a run.</td>
+            <td>Allows recovery after context loss, process restart, or user interruption.</td>
+          </tr>
+          <tr>
+            <td><code>transition log</code></td>
+            <td>An append-only audit log of runtime events.</td>
+            <td>Shows what happened: start, step, decide, suspend, resume, side-channel, reconcile.</td>
+          </tr>
+          <tr>
+            <td><code>workflowRef</code></td>
+            <td>A node that enters another workflow package.</td>
+            <td>Lets larger systems be built from smaller subgraphs.</td>
+          </tr>
+          <tr>
+            <td><code>callable</code></td>
+            <td>An isolated graph-shaped function.</td>
+            <td>Useful for reusable typed work that should not mutate the focused workflow run.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Workspace Front Door: Registry And Dispatcher</h2>
+      <p>
+        A Ripplegraph workspace can contain many graph packages. The workspace needs a way to know what is available,
+        and the host needs a way to route a user request to the right action. These are separate concepts:
+        the <strong>registry</strong> is the catalog, and the <strong>dispatcher</strong> is the front door.
+      </p>
+
+      <div class="grid two">
+        <div class="card">
+          <span class="tag">Catalog</span>
+          <h3>Registry</h3>
+          <p>
+            The registry lives at <code>.ripplegraph/registry.json</code>. It records registered graph packages in the workspace.
+          </p>
+          <ul>
+            <li>Graph id</li>
+            <li>Version</li>
+            <li>Kind: <code>dispatcher</code>, <code>workflow</code>, or <code>callable</code></li>
+            <li>Package path</li>
+            <li>Title, description, activation hints, and effects</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tag">Router</span>
+          <h3>Dispatcher Graph</h3>
+          <p>
+            A dispatcher is a graph package with <code>"kind": "dispatcher"</code>. It helps route user intent to a structured action.
+          </p>
+          <ul>
+            <li>Start a workflow run</li>
+            <li>Resume or switch runs</li>
+            <li>List runs</li>
+            <li>Ask the user a question</li>
+            <li>Call a callable graph</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mini-diagram">
+        <svg viewBox="0 0 980 260" role="img" aria-label="Registry and dispatcher relationship">
+          <defs>
+            <marker id="frontdoor-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#1f6feb"></path>
+            </marker>
+          </defs>
+          <rect x="30" y="88" width="170" height="78" rx="8" fill="#eef6ff" stroke="#91c3ff"></rect>
+          <text x="115" y="120" text-anchor="middle" font-size="15" font-weight="700">User Request</text>
+          <text x="115" y="142" text-anchor="middle" font-size="12">"triage this ticket"</text>
+
+          <line x1="200" y1="127" x2="275" y2="127" stroke="#1f6feb" stroke-width="2" marker-end="url(#frontdoor-arrow)"></line>
+
+          <rect x="280" y="75" width="185" height="104" rx="8" fill="#f3f0ff" stroke="#b8a8ff"></rect>
+          <text x="372" y="108" text-anchor="middle" font-size="15" font-weight="700">Dispatcher Graph</text>
+          <text x="372" y="131" text-anchor="middle" font-size="12">kind: dispatcher</text>
+          <text x="372" y="153" text-anchor="middle" font-size="12">returns structured action</text>
+
+          <line x1="465" y1="127" x2="540" y2="127" stroke="#1f6feb" stroke-width="2" marker-end="url(#frontdoor-arrow)"></line>
+
+          <rect x="545" y="30" width="185" height="70" rx="8" fill="#ecfdf3" stroke="#8fd7a7"></rect>
+          <text x="637" y="59" text-anchor="middle" font-size="15" font-weight="700">support-triage</text>
+          <text x="637" y="81" text-anchor="middle" font-size="12">kind: workflow</text>
+
+          <rect x="545" y="113" width="185" height="70" rx="8" fill="#fff8e6" stroke="#e6c878"></rect>
+          <text x="637" y="142" text-anchor="middle" font-size="15" font-weight="700">summarize-ticket</text>
+          <text x="637" y="164" text-anchor="middle" font-size="12">kind: callable</text>
+
+          <rect x="545" y="196" width="185" height="42" rx="8" fill="#f8fafc" stroke="#d8dee8"></rect>
+          <text x="637" y="222" text-anchor="middle" font-size="13">resume / list / ask user</text>
+
+          <rect x="790" y="75" width="160" height="104" rx="8" fill="#ffffff" stroke="#d8dee8"></rect>
+          <text x="870" y="109" text-anchor="middle" font-size="15" font-weight="700">Registry</text>
+          <text x="870" y="132" text-anchor="middle" font-size="12">.ripplegraph/</text>
+          <text x="870" y="154" text-anchor="middle" font-size="12">registry.json</text>
+
+          <line x1="730" y1="65" x2="790" y2="105" stroke="#5b6472" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#frontdoor-arrow)"></line>
+          <line x1="730" y1="148" x2="790" y2="136" stroke="#5b6472" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#frontdoor-arrow)"></line>
+        </svg>
+      </div>
+
+      <h3>Dispatcher Is Not A Master Workflow</h3>
+      <p>
+        It is tempting to call the dispatcher a “master workflow,” but that is not quite right.
+        A dispatcher does not own the durable workflow position for every run. It helps the host decide what structured action to take.
+      </p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Graph Kind</th>
+            <th>Plain Meaning</th>
+            <th>Runtime Behavior</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>dispatcher</code></td>
+            <td>Workspace front desk</td>
+            <td>Routes user intent to actions like <code>start_run</code>, <code>resume_run</code>, <code>list_runs</code>, <code>ask_user</code>, or <code>call_graph</code>.</td>
+          </tr>
+          <tr>
+            <td><code>workflow</code></td>
+            <td>Durable user-visible run</td>
+            <td>Has checkpoints, position, gates, outputs, transition logs, suspend/resume, and completion.</td>
+          </tr>
+          <tr>
+            <td><code>callable</code></td>
+            <td>Graph-shaped function</td>
+            <td>Runs in isolated call state under <code>.ripplegraph/calls/</code> and does not mutate the focused workflow run.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        A root workflow with many <code>workflowRef</code> child graphs is different from a dispatcher.
+        The root workflow owns one durable run. The dispatcher helps choose which run/action should happen.
+      </div>
+    </section>
+
+    <section>
+      <h2>A Run From Start To Finish</h2>
+      <div class="mini-diagram">
+        <svg viewBox="0 0 980 240" role="img" aria-label="Ripplegraph run lifecycle">
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#1f6feb"></path>
+            </marker>
+          </defs>
+          <rect x="20" y="40" width="150" height="70" rx="8" fill="#eef6ff" stroke="#91c3ff"></rect>
+          <text x="95" y="72" text-anchor="middle" font-size="15" font-weight="700">Start Run</text>
+          <text x="95" y="94" text-anchor="middle" font-size="12">create checkpoint</text>
+
+          <line x1="170" y1="75" x2="240" y2="75" stroke="#1f6feb" stroke-width="2" marker-end="url(#arrow)"></line>
+
+          <rect x="245" y="40" width="150" height="70" rx="8" fill="#f3f0ff" stroke="#b8a8ff"></rect>
+          <text x="320" y="72" text-anchor="middle" font-size="15" font-weight="700">Node Work</text>
+          <text x="320" y="94" text-anchor="middle" font-size="12">host performs task</text>
+
+          <line x1="395" y1="75" x2="465" y2="75" stroke="#1f6feb" stroke-width="2" marker-end="url(#arrow)"></line>
+
+          <rect x="470" y="40" width="150" height="70" rx="8" fill="#ecfdf3" stroke="#8fd7a7"></rect>
+          <text x="545" y="72" text-anchor="middle" font-size="15" font-weight="700">Advance</text>
+          <text x="545" y="94" text-anchor="middle" font-size="12">validate output</text>
+
+          <line x1="620" y1="75" x2="690" y2="75" stroke="#1f6feb" stroke-width="2" marker-end="url(#arrow)"></line>
+
+          <rect x="695" y="40" width="150" height="70" rx="8" fill="#fff8e6" stroke="#e6c878"></rect>
+          <text x="770" y="72" text-anchor="middle" font-size="15" font-weight="700">Next Node</text>
+          <text x="770" y="94" text-anchor="middle" font-size="12">select edge</text>
+
+          <line x1="770" y1="110" x2="770" y2="165" stroke="#1f6feb" stroke-width="2" marker-end="url(#arrow)"></line>
+
+          <rect x="695" y="170" width="150" height="50" rx="8" fill="#fef2f2" stroke="#f2a6a6"></rect>
+          <text x="770" y="200" text-anchor="middle" font-size="15" font-weight="700">Complete</text>
+
+          <path d="M245 180 C170 180, 170 120, 245 105" fill="none" stroke="#7657d6" stroke-width="2" marker-end="url(#arrow)"></path>
+          <text x="160" y="174" text-anchor="middle" font-size="12" fill="#7657d6">repeat</text>
+        </svg>
+      </div>
+      <p>
+        The important detail is that Ripplegraph does not guess the next step. It validates submitted data, picks the next edge,
+        updates the checkpoint, and appends a transition log entry.
+      </p>
+    </section>
+
+    <section>
+      <h2>Host-Facing Metadata</h2>
+      <p>
+        Graph packages can declare metadata that tells the host what it should render or resolve.
+        Ripplegraph validates and exposes the metadata, but the host performs the actual action.
+      </p>
+      <div class="grid two">
+        <div class="card">
+          <h3>Interaction Metadata</h3>
+          <p><code>interaction</code> can describe choices, free text, confirmation, or forms. A host CLI can render these consistently.</p>
+        </div>
+        <div class="card">
+          <h3>User-Turn Interrupts</h3>
+          <p><code>interrupt</code> means the workflow needs a real user turn before automatic continuation should proceed.</p>
+        </div>
+        <div class="card">
+          <h3>Tool Contracts</h3>
+          <p><code>toolContract</code> declares a host command, schemas, effects, and an optional validator. Ripplegraph does not execute it.</p>
+        </div>
+        <div class="card">
+          <h3>Validators</h3>
+          <p><code>validators</code> names host-owned checks that a consumer CLI can resolve and run outside the runtime.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Side-Channel And Reconciliation Records</h2>
+      <p>
+        Some useful host actions should not advance the graph. Loading backend state, refreshing an artifact, or checking an external FSM
+        should be audited, but the workflow cursor should stay put.
+      </p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Operation</th>
+            <th>What It Records</th>
+            <th>Position Behavior</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>side_channel</code></td>
+            <td>A host says it performed a side-channel action and submits input/output metadata.</td>
+            <td><span class="ok">Does not move</span>. <code>from</code> and <code>to</code> are the same position.</td>
+          </tr>
+          <tr>
+            <td><code>reconcile</code></td>
+            <td>A host submits an external snapshot and optional expected snapshot. Ripplegraph reports alignment or drift.</td>
+            <td><span class="ok">Does not move</span>. The host decides what to do if drift is found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>How To Build On Ripplegraph Incrementally</h2>
+      <div class="flow">
+        <div class="node">
+          <strong>1. One Workflow</strong>
+          <p>Start with a simple graph package and run it end to end.</p>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <strong>2. One Gate</strong>
+          <p>Add a decision point and test the host rendering/submission path.</p>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <strong>3. One Subgraph</strong>
+          <p>Introduce <code>workflowRef</code> and test parent-child behavior.</p>
+        </div>
+      </div>
+      <div class="callout">
+        <strong>Rule of thumb:</strong> keep business flow in graph packages, keep business execution in the host, and keep runtime truth in Ripplegraph.
+      </div>
+    </section>
+
+    <section>
+      <h2>A Story: Building The Support Triage CLI</h2>
+      <p>
+        Imagine a team is building a CLI called <strong>SupportPilot</strong>. SupportPilot helps an agent triage customer tickets,
+        inspect workspace files, ask for approval, and produce a final response plan. The team wants the workflow to be reliable,
+        recoverable, and testable. They put the flow in Ripplegraph and keep business execution in their CLI.
+      </p>
+
+      <h3>Cast Of Real Names</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Role In The Story</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>supportpilot</code></td>
+            <td>Host CLI</td>
+            <td>Renders prompts, calls tools, reads ticket data, runs validators, and submits results to Ripplegraph.</td>
+          </tr>
+          <tr>
+            <td><code>support-triage</code></td>
+            <td>Workflow graph package</td>
+            <td>The main user-visible workflow.</td>
+          </tr>
+          <tr>
+            <td><code>ticket-context</code></td>
+            <td>Child workflow graph package</td>
+            <td>A reusable subgraph entered through <code>workflowRef</code>.</td>
+          </tr>
+          <tr>
+            <td><code>summarize-ticket</code></td>
+            <td>Callable graph package</td>
+            <td>An isolated graph-shaped function for producing a typed summary.</td>
+          </tr>
+          <tr>
+            <td><code>ticket-output-validator</code></td>
+            <td>Host validator</td>
+            <td>A validation routine owned by SupportPilot, not by Ripplegraph.</td>
+          </tr>
+          <tr>
+            <td><code>refresh-ticket-state</code></td>
+            <td>Side-channel action</td>
+            <td>A host action that refreshes backend state without advancing the workflow.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Step 1: The Team Creates A Graph Package</h3>
+      <p>
+        The first package is <code>support-triage</code>. It has a few nodes:
+      </p>
+      <ul>
+        <li><code>classify-ticket</code>: the host agent reads the ticket and submits a category.</li>
+        <li><code>load-context</code>: a <code>workflowRef</code> node that enters the child graph <code>ticket-context</code>.</li>
+        <li><code>review-plan</code>: a gated approval node where a user must approve or reject the response plan.</li>
+        <li><code>finalize</code>: the terminal node.</li>
+      </ul>
+      <p>
+        This package owns the flow. SupportPilot does not hard-code the order of these steps. Ripplegraph reads the package,
+        validates it, and starts a run.
+      </p>
+
+      <h3>Before That: The Workspace Registers Its Packages</h3>
+      <p>
+        SupportPilot registers three graph packages into the workspace registry:
+      </p>
+      <pre><code>ripplegraph graph register .ripplegraph/graphs/workspace-dispatcher --workflow-root .
+ripplegraph graph register .ripplegraph/graphs/support-triage --workflow-root .
+ripplegraph graph register .ripplegraph/graphs/summarize-ticket --workflow-root .</code></pre>
+      <p>
+        The registry file <code>.ripplegraph/registry.json</code> now acts as the workspace catalog. When the user says
+        “triage ticket TCK-1007,” SupportPilot can ask the dispatcher graph what action to take.
+      </p>
+      <pre><code>ripplegraph dispatch --request "triage ticket TCK-1007" --workflow-root .</code></pre>
+      <p>
+        The host agent reads the dispatcher context and submits a structured action:
+      </p>
+      <pre><code>ripplegraph dispatch --action '{"action":"start_run","graphId":"support-triage","runId":"triage-TCK-1007"}' --workflow-root .</code></pre>
+      <p>
+        This is the front-door pattern: the dispatcher routes intent, while the <code>support-triage</code> workflow owns the durable run.
+      </p>
+
+      <div class="mini-diagram">
+        <svg viewBox="0 0 980 210" role="img" aria-label="Support triage workflow">
+          <defs>
+            <marker id="story-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#1f6feb"></path>
+            </marker>
+          </defs>
+          <rect x="20" y="55" width="160" height="80" rx="8" fill="#eef6ff" stroke="#91c3ff"></rect>
+          <text x="100" y="88" text-anchor="middle" font-size="15" font-weight="700">classify-ticket</text>
+          <text x="100" y="112" text-anchor="middle" font-size="12">normal node</text>
+
+          <line x1="180" y1="95" x2="250" y2="95" stroke="#1f6feb" stroke-width="2" marker-end="url(#story-arrow)"></line>
+
+          <rect x="255" y="55" width="160" height="80" rx="8" fill="#f3f0ff" stroke="#b8a8ff"></rect>
+          <text x="335" y="88" text-anchor="middle" font-size="15" font-weight="700">load-context</text>
+          <text x="335" y="112" text-anchor="middle" font-size="12">workflowRef</text>
+
+          <line x1="415" y1="95" x2="485" y2="95" stroke="#1f6feb" stroke-width="2" marker-end="url(#story-arrow)"></line>
+
+          <rect x="490" y="55" width="160" height="80" rx="8" fill="#fff8e6" stroke="#e6c878"></rect>
+          <text x="570" y="88" text-anchor="middle" font-size="15" font-weight="700">review-plan</text>
+          <text x="570" y="112" text-anchor="middle" font-size="12">gate + interaction</text>
+
+          <line x1="650" y1="95" x2="720" y2="95" stroke="#1f6feb" stroke-width="2" marker-end="url(#story-arrow)"></line>
+
+          <rect x="725" y="55" width="160" height="80" rx="8" fill="#ecfdf3" stroke="#8fd7a7"></rect>
+          <text x="805" y="88" text-anchor="middle" font-size="15" font-weight="700">finalize</text>
+          <text x="805" y="112" text-anchor="middle" font-size="12">terminal</text>
+
+          <rect x="255" y="155" width="160" height="40" rx="8" fill="#fafafa" stroke="#d8dee8"></rect>
+          <text x="335" y="181" text-anchor="middle" font-size="13">child: ticket-context</text>
+          <line x1="335" y1="135" x2="335" y2="155" stroke="#7657d6" stroke-width="2" marker-end="url(#story-arrow)"></line>
+        </svg>
+      </div>
+
+      <h3>Step 2: SupportPilot Starts A Run</h3>
+      <p>
+        A support engineer types:
+      </p>
+      <p><code>supportpilot start support-triage --ticket TCK-1007</code></p>
+      <p>
+        Under the hood, SupportPilot calls Ripplegraph. Ripplegraph creates a <strong>run</strong>, writes a
+        <strong>checkpoint</strong>, and returns the current state:
+      </p>
+      <pre><code>{
+  "status": "ok",
+  "run": { "id": "triage-TCK-1007", "status": "active" },
+  "position": { "graph": "support-triage", "node": "classify-ticket" },
+  "node": {
+    "id": "classify-ticket",
+    "purpose": "Classify the customer ticket",
+    "outputSchema": {
+      "type": "object",
+      "required": ["category"],
+      "properties": {
+        "category": { "enum": ["bug", "question", "feature"] }
+      }
+    }
+  },
+  "responseContract": { "command": "step", "acceptedFormats": ["json"] }
+}</code></pre>
+      <p>
+        This tells SupportPilot: “You are at <code>classify-ticket</code>. Do the work, then submit JSON matching the schema.”
+      </p>
+
+      <h3>Step 3: The Host Does Work, Ripplegraph Validates</h3>
+      <p>
+        SupportPilot reads the ticket from its own ticket adapter. Ripplegraph does not read the ticket system.
+        The host agent decides the ticket is a bug and submits:
+      </p>
+      <p><code>ripplegraph step --output '{"category":"bug"}'</code></p>
+      <p>
+        Ripplegraph validates the output against <code>classify-ticket.outputSchema</code>, stores the node output,
+        appends a <code>step</code> transition, and moves to the next node.
+      </p>
+      <div class="callout">
+        The LLM can produce content, but the graph controls the route. The host does not freely choose the next node.
+      </div>
+
+      <h3>Step 4: The Workflow Enters A Subgraph</h3>
+      <p>
+        The next node is <code>load-context</code>. It is not a normal work node. It has:
+      </p>
+      <pre><code>{
+  "workflowRef": {
+    "graphId": "ticket-context",
+    "inputMap": { "ticketId": "$.ticket.id" },
+    "outputMap": { "context": "$.summary" }
+  }
+}</code></pre>
+      <p>
+        Ripplegraph enters the child workflow <code>ticket-context</code> and pushes a frame onto the run stack.
+        This means the main run is still one run, but it is temporarily executing a child graph.
+      </p>
+      <p>
+        The child graph might gather repository context, inspect related tickets, or call a host validator. When the child completes,
+        Ripplegraph returns to the parent workflow and continues from the next parent node.
+      </p>
+
+      <h3>Step 5: Host-Facing Metadata Tells The CLI What To Show</h3>
+      <p>
+        Now the run reaches <code>review-plan</code>. This node has a gate and host-facing metadata:
+      </p>
+      <pre><code>{
+  "gate": {
+    "type": "external_decision",
+    "interaction": {
+      "id": "plan-approval",
+      "kind": "choice",
+      "prompt": "Approve the support response plan?",
+      "choices": [
+        { "label": "Approve", "value": "approved" },
+        { "label": "Revise", "value": "revise" }
+      ]
+    },
+    "decisionSchema": {
+      "type": "object",
+      "required": ["decision"]
+    }
+  },
+  "interrupt": {
+    "requiresUserTurn": true,
+    "reason": "A human must approve the customer-facing response."
+  }
+}</code></pre>
+      <p>
+        Ripplegraph exposes this metadata in state. SupportPilot sees <code>node.gate.interaction</code> and renders a choice prompt.
+        It also sees <code>interrupt.requiresUserTurn</code>, so it stops automatic tool execution and asks the support engineer.
+      </p>
+
+      <h3>Step 6: A Side-Channel Action Refreshes Backend State</h3>
+      <p>
+        Before approving, the engineer clicks “Refresh ticket state.” The graph package declared:
+      </p>
+      <pre><code>{
+  "sideChannelActions": [
+    {
+      "id": "refresh-ticket-state",
+      "purpose": "Refresh the current ticket state without advancing the workflow.",
+      "effects": ["read_ticket_backend"]
+    }
+  ]
+}</code></pre>
+      <p>
+        SupportPilot performs the backend read. Then it records the fact in Ripplegraph:
+      </p>
+      <p><code>ripplegraph side-channel --action refresh-ticket-state --output '{"status":"open"}'</code></p>
+      <p>
+        Ripplegraph appends a <code>side_channel</code> transition log entry. The current graph position remains
+        <code>support-triage/review-plan</code>.
+      </p>
+      <div class="callout">
+        Side-channel actions are useful because they are auditable, but they do not move the workflow cursor.
+      </div>
+
+      <h3>Step 7: Reconciliation Detects Drift</h3>
+      <p>
+        SupportPilot expects the backend ticket to still be <code>open</code>, but the backend now says <code>closed</code>.
+        It submits a reconciliation record:
+      </p>
+      <p><code>ripplegraph reconcile --source ticket-backend --snapshot '{"status":"closed"}' --expected '{"status":"open"}'</code></p>
+      <p>
+        Ripplegraph compares the two JSON snapshots and returns:
+      </p>
+      <pre><code>{
+  "status": "ok",
+  "position": { "graph": "support-triage", "node": "review-plan" },
+  "reconciliation": {
+    "source": "ticket-backend",
+    "aligned": false
+  }
+}</code></pre>
+      <p>
+        Ripplegraph does not decide what to do about the drift. SupportPilot owns that policy.
+        It might warn the user, refresh the plan, or ask for a new decision.
+      </p>
+
+      <h3>Step 8: The User Makes The Gate Decision</h3>
+      <p>
+        After reviewing the refreshed state, the engineer chooses “Approve.” SupportPilot submits:
+      </p>
+      <p><code>ripplegraph decide --decision '{"decision":"approved"}'</code></p>
+      <p>
+        Ripplegraph validates the decision, stores it in <code>gateDecisions</code>, appends a <code>decide</code> transition,
+        and moves to <code>finalize</code>.
+      </p>
+
+      <h3>Step 9: A Callable Handles Reusable Typed Work</h3>
+      <p>
+        Separately, SupportPilot has a callable graph package named <code>summarize-ticket</code>.
+        It is not a user-turn workflow. It behaves like a typed graph-shaped function:
+      </p>
+      <p><code>ripplegraph call --graph summarize-ticket --input '{"ticketId":"TCK-1007"}'</code></p>
+      <p>
+        The callable stores its own checkpoint under <code>.ripplegraph/calls/</code>. It does not mutate the focused workflow run.
+        Ripplegraph deliberately rejects gates and host-interaction metadata in callables so they stay isolated and function-like.
+      </p>
+
+      <h3>What The Reader Should Notice</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Story Moment</th>
+            <th>Ripplegraph Concept Learned</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SupportPilot registers graph packages</td>
+            <td>Registry, package catalog, graph kind</td>
+          </tr>
+          <tr>
+            <td><code>workspace-dispatcher</code> routes “triage ticket TCK-1007”</td>
+            <td>Dispatcher graph, user intent, structured action</td>
+          </tr>
+          <tr>
+            <td>SupportPilot starts <code>support-triage</code></td>
+            <td>Graph package, run, checkpoint, active position</td>
+          </tr>
+          <tr>
+            <td><code>classify-ticket</code> submits <code>{"category":"bug"}</code></td>
+            <td>Node output schema, validation, edge selection, transition log</td>
+          </tr>
+          <tr>
+            <td><code>load-context</code> enters <code>ticket-context</code></td>
+            <td><code>workflowRef</code>, child graph, stack frame, subgraph composition</td>
+          </tr>
+          <tr>
+            <td><code>review-plan</code> shows an approval prompt</td>
+            <td>Gate, interaction metadata, interrupt metadata, user turn</td>
+          </tr>
+          <tr>
+            <td><code>refresh-ticket-state</code> runs</td>
+            <td>Side-channel action, host-owned execution, non-advancing audit</td>
+          </tr>
+          <tr>
+            <td><code>reconcile</code> reports <code>aligned:false</code></td>
+            <td>External-state reconciliation, drift detection, host policy ownership</td>
+          </tr>
+          <tr>
+            <td><code>summarize-ticket</code> runs as a callable</td>
+            <td>Callable graph, isolated call state, function-like graph execution</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>What Ripplegraph Is Not</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>Not an LLM framework</h3>
+          <p>It does not call OpenAI, Claude, or local models. The host agent does that.</p>
+        </div>
+        <div class="card">
+          <h3>Not a shell runner</h3>
+          <p>It does not execute arbitrary commands. It declares and audits contracts around host-owned commands.</p>
+        </div>
+        <div class="card">
+          <h3>Not a domain parser</h3>
+          <p>It does not parse Oceanlive, SpecDev, TOML, CSV, or business-specific files. Host packages own that.</p>
+        </div>
+        <div class="card">
+          <h3>Not the product UI</h3>
+          <p>It returns state and contracts. Consumer CLIs decide how to render them for humans.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Current Readiness</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Status</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Package-backed workflows</td>
+            <td class="ok">Ready</td>
+            <td>Graph packages can be registered and executed from package folders.</td>
+          </tr>
+          <tr>
+            <td>Reusable subgraphs</td>
+            <td class="ok">Ready</td>
+            <td><code>workflowRef</code> supports nested workflow execution with frame state.</td>
+          </tr>
+          <tr>
+            <td>Host contracts</td>
+            <td class="ok">Ready</td>
+            <td>Workflow nodes can declare interactions, interrupts, tools, validators, side-channel actions, and effects.</td>
+          </tr>
+          <tr>
+            <td>Side-channel audit</td>
+            <td class="ok">Ready</td>
+            <td>Hosts can append side-channel records without moving graph position.</td>
+          </tr>
+          <tr>
+            <td>External reconciliation</td>
+            <td class="ok">Ready</td>
+            <td>Hosts can submit snapshots and get alignment/drift status without advancing the graph.</td>
+          </tr>
+          <tr>
+            <td>Domain adapters</td>
+            <td class="warn">Host-owned</td>
+            <td>SpecDev, Oceanlive, and other products still need their own graph packages and CLI adapters.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <p class="footer">
+      Saved as a project note wiki page. This page intentionally describes the core architecture at a high level and avoids domain-specific implementation details.
+    </p>
+  </main>
+</body>
+</html>
