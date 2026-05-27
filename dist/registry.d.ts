@@ -13,22 +13,22 @@ export declare const registryEntrySchema: z.ZodObject<{
 }, "strict", z.ZodTypeAny, {
     path: string;
     kind: "dispatcher" | "workflow" | "callable";
+    id: string;
     effects: string[];
     activationHints: string[];
-    id: string;
     version: string;
     registeredAt: string;
-    title?: string | undefined;
     description?: string | undefined;
+    title?: string | undefined;
 }, {
     path: string;
     kind: "dispatcher" | "workflow" | "callable";
     id: string;
     version: string;
     registeredAt: string;
+    description?: string | undefined;
     effects?: string[] | undefined;
     title?: string | undefined;
-    description?: string | undefined;
     activationHints?: string[] | undefined;
 }>;
 export declare const registrySchema: z.ZodObject<{
@@ -46,22 +46,22 @@ export declare const registrySchema: z.ZodObject<{
     }, "strict", z.ZodTypeAny, {
         path: string;
         kind: "dispatcher" | "workflow" | "callable";
+        id: string;
         effects: string[];
         activationHints: string[];
-        id: string;
         version: string;
         registeredAt: string;
-        title?: string | undefined;
         description?: string | undefined;
+        title?: string | undefined;
     }, {
         path: string;
         kind: "dispatcher" | "workflow" | "callable";
         id: string;
         version: string;
         registeredAt: string;
+        description?: string | undefined;
         effects?: string[] | undefined;
         title?: string | undefined;
-        description?: string | undefined;
         activationHints?: string[] | undefined;
     }>>>;
 }, "strict", z.ZodTypeAny, {
@@ -69,13 +69,13 @@ export declare const registrySchema: z.ZodObject<{
     graphs: Record<string, {
         path: string;
         kind: "dispatcher" | "workflow" | "callable";
+        id: string;
         effects: string[];
         activationHints: string[];
-        id: string;
         version: string;
         registeredAt: string;
-        title?: string | undefined;
         description?: string | undefined;
+        title?: string | undefined;
     }>;
 }, {
     version: 1;
@@ -85,9 +85,9 @@ export declare const registrySchema: z.ZodObject<{
         id: string;
         version: string;
         registeredAt: string;
+        description?: string | undefined;
         effects?: string[] | undefined;
         title?: string | undefined;
-        description?: string | undefined;
         activationHints?: string[] | undefined;
     }> | undefined;
 }>;

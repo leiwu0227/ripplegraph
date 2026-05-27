@@ -51,15 +51,15 @@ export declare const dispatcherActionSchema: z.ZodDiscriminatedUnion<"action", [
 }, "strict", z.ZodTypeAny, {
     graphId: string;
     action: "start_run";
+    reason?: string | undefined;
     runId?: string | undefined;
     input?: unknown;
-    reason?: string | undefined;
 }, {
     graphId: string;
     action: "start_run";
+    reason?: string | undefined;
     runId?: string | undefined;
     input?: unknown;
-    reason?: string | undefined;
 }>, z.ZodObject<{
     action: z.ZodEnum<["resume_run", "switch_run"]>;
     runId: z.ZodString;
@@ -99,14 +99,14 @@ export declare const dispatcherActionSchema: z.ZodDiscriminatedUnion<"action", [
 }, "strict", z.ZodTypeAny, {
     graphId: string;
     action: "call_graph";
-    input?: unknown;
     reason?: string | undefined;
+    input?: unknown;
     callId?: string | undefined;
 }, {
     graphId: string;
     action: "call_graph";
-    input?: unknown;
     reason?: string | undefined;
+    input?: unknown;
     callId?: string | undefined;
 }>]>;
 export declare const dispatchActionSchema: JsonSchema;

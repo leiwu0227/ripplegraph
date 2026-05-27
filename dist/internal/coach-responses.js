@@ -18,7 +18,12 @@ export function stateForCheckpoint(workflow, checkpoint, context) {
             instructions: node.instructions,
             exec: node.exec,
             outputSchema: node.outputSchema,
+            interaction: node.interaction,
+            interrupt: node.interrupt,
             gate: node.gate,
+            sideChannelActions: node.sideChannelActions,
+            toolContract: node.toolContract,
+            validators: node.validators,
         },
         context: {
             previous: previousNodes(checkpoint, context.scope),

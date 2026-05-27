@@ -27,6 +27,19 @@ export interface ResumeRunOptions extends WorkflowRootOptions {
 export interface AbandonRunOptions extends WorkflowRootOptions {
     reason?: string;
 }
+export interface RecordSideChannelActionOptions extends WorkflowRootOptions {
+    actionId: string;
+    input?: unknown;
+    output?: unknown;
+    status?: 'completed' | 'failed';
+    note?: string;
+}
+export interface ReconcileExternalStateOptions extends WorkflowRootOptions {
+    source: string;
+    snapshot: unknown;
+    expected?: unknown;
+    note?: string;
+}
 export interface StateOk {
     status: 'ok';
     workflow: {
@@ -49,7 +62,12 @@ export interface StateOk {
         instructions?: string;
         exec: Node['exec'];
         outputSchema: JsonSchema;
+        interaction?: Node['interaction'];
+        interrupt?: Node['interrupt'];
         gate?: Gate;
+        sideChannelActions?: Node['sideChannelActions'];
+        toolContract?: Node['toolContract'];
+        validators?: Node['validators'];
     };
     context: {
         previous: Array<{
@@ -124,6 +142,22 @@ export interface ValidationErrorResponse {
         message: string;
     }>;
 }
+export interface RuntimeAuditResponse {
+    status: 'ok';
+    run: {
+        id: string;
+        status: Checkpoint['status'];
+        rootGraph: string;
+    };
+    position: Position;
+    state: StateOk;
+}
+export interface ReconciliationResponse extends RuntimeAuditResponse {
+    reconciliation: {
+        source: string;
+        aligned: boolean;
+    };
+}
 export type CoachState = StateOk | StateNoFocusedRun;
 export type AdvanceResponse = StateOk | {
     status: 'completed';
@@ -162,3 +196,5 @@ export declare function abandonRun(opts: AbandonRunOptions): {
     };
     position: Position;
 };
+export declare function recordSideChannelAction(opts: RecordSideChannelActionOptions): RuntimeAuditResponse;
+export declare function reconcileExternalState(opts: ReconcileExternalStateOptions): ReconciliationResponse;

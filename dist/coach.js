@@ -18,7 +18,10 @@ export function validateWorkflowRoot(rootPath) {
     };
 }
 function effectsForNode(graph, node) {
-    return node.effects ?? graph.effects;
+    const executionEffects = node.effects ?? graph.effects;
+    const toolEffects = node.toolContract?.effects ?? [];
+    const sideChannelEffects = node.sideChannelActions?.flatMap((action) => action.effects ?? []) ?? [];
+    return [...new Set([...executionEffects, ...toolEffects, ...sideChannelEffects])];
 }
 function assertGraphAndChildEffectsAllowed(rootPath, graph, graphId, policy) {
     const allowed = new Set(policy?.allowedEffects ?? []);
@@ -335,6 +338,43 @@ export function abandonRun(opts) {
         position: checkpoint.position,
     };
 }
+export function recordSideChannelAction(opts) {
+    const status = opts.status ?? 'completed';
+    if (status !== 'completed' && status !== 'failed') {
+        throw new RipplegraphError('E_INVALID_SIDE_CHANNEL_STATUS', `side-channel status must be completed or failed: ${status}`);
+    }
+    const { workflow, checkpoint, active } = activeFocusedRun(opts.workflowRoot);
+    const position = checkpoint.position;
+    appendTransition(opts.workflowRoot, checkpoint.runId, {
+        ...transitionEntry('side_channel', checkpoint.runId, position, position),
+        output: {
+            actionId: opts.actionId,
+            status,
+            note: opts.note,
+            input: opts.input,
+            output: opts.output,
+        },
+        reason: opts.note ?? null,
+    });
+    return runtimeAuditResponse(workflow, checkpoint, active);
+}
+export function reconcileExternalState(opts) {
+    const { workflow, checkpoint, active } = activeFocusedRun(opts.workflowRoot);
+    const position = checkpoint.position;
+    const aligned = opts.expected === undefined || stableJson(opts.snapshot) === stableJson(opts.expected);
+    appendTransition(opts.workflowRoot, checkpoint.runId, {
+        ...transitionEntry('reconcile', checkpoint.runId, position, position),
+        output: {
+            source: opts.source,
+            snapshot: opts.snapshot,
+            expected: opts.expected,
+            aligned,
+            note: opts.note,
+        },
+        reason: opts.note ?? null,
+    });
+    return { ...runtimeAuditResponse(workflow, checkpoint, active), reconciliation: { source: opts.source, aligned } };
+}
 function focusedCheckpoint(rootPath) {
     ensureWorkflowRoot(rootPath);
     const current = readCurrent(rootPath);
@@ -342,6 +382,34 @@ function focusedCheckpoint(rootPath) {
         throw new RipplegraphError('E_NO_FOCUSED_RUN', 'no focused run');
     }
     return readCheckpoint(rootPath, current.focusedRunId);
+}
+function activeFocusedRun(rootPath) {
+    const workflow = loadWorkflow(rootPath);
+    const checkpoint = focusedCheckpoint(rootPath);
+    if (checkpoint.status !== 'active') {
+        throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
+    }
+    return { workflow, checkpoint, active: activeContextForCheckpoint(rootPath, checkpoint) };
+}
+function runtimeAuditResponse(workflow, checkpoint, active) {
+    return {
+        status: 'ok',
+        run: { id: checkpoint.runId, status: checkpoint.status, rootGraph: checkpoint.rootGraph },
+        position: checkpoint.position,
+        state: stateForCheckpoint(workflow, checkpoint, { graph: active.graph, scope: active.scope }),
+    };
+}
+function stableJson(value) {
+    return JSON.stringify(stableValue(value));
+}
+function stableValue(value) {
+    if (Array.isArray(value))
+        return value.map(stableValue);
+    if (!value || typeof value !== 'object')
+        return value;
+    return Object.fromEntries(Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, item]) => [key, stableValue(item)]));
 }
 function enterWorkflowRefs(rootPath, workflow, checkpoint) {
     let active = activeContextForCheckpoint(rootPath, checkpoint);

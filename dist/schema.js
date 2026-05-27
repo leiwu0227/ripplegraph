@@ -31,16 +31,97 @@ export const decisionSourceSchema = z.discriminatedUnion('kind', [
     })
         .strict(),
 ]);
+export const interactionKindSchema = z.enum(['choice', 'free_text', 'confirm', 'form']);
+export const interactionChoiceSchema = z
+    .object({
+    label: z.string().min(1),
+    value: z.union([z.string(), z.number(), z.boolean()]),
+    description: z.string().min(1).optional(),
+})
+    .strict();
+export const interactionFollowUpSchema = z
+    .object({
+    when: z.string().min(1),
+    id: idSchema,
+    kind: interactionKindSchema,
+    source: idSchema.optional(),
+})
+    .strict();
+export const interactionSchema = z
+    .object({
+    id: idSchema,
+    kind: interactionKindSchema,
+    prompt: z.string().min(1),
+    renderVia: idSchema.optional(),
+    choices: z.array(interactionChoiceSchema).optional(),
+    schema: jsonSchemaSchema.optional(),
+    followUp: interactionFollowUpSchema.optional(),
+})
+    .strict()
+    .superRefine((interaction, ctx) => {
+    if ((interaction.kind === 'choice' || interaction.kind === 'confirm') && (interaction.choices?.length ?? 0) === 0) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['choices'],
+            message: `${interaction.kind} interactions require at least one choice`,
+        });
+    }
+    if (interaction.kind === 'form' && interaction.schema?.type !== 'object') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['schema'],
+            message: 'form interactions require an object schema',
+        });
+    }
+});
+export const interruptSchema = z
+    .object({
+    requiresUserTurn: z.literal(true),
+    reason: z.string().min(1).optional(),
+})
+    .strict();
+export const validatorContractSchema = z
+    .object({
+    id: idSchema,
+    purpose: z.string().min(1).optional(),
+    inputSchema: jsonSchemaSchema.optional(),
+    outputSchema: jsonSchemaSchema.optional(),
+})
+    .strict();
+export const toolContractSchema = z
+    .object({
+    id: idSchema,
+    command: z.string().min(1),
+    purpose: z.string().min(1).optional(),
+    effects: z.array(idSchema).optional(),
+    inputSchema: jsonSchemaSchema.optional(),
+    outputSchema: jsonSchemaSchema.optional(),
+    validator: idSchema.optional(),
+})
+    .strict();
+export const sideChannelActionSchema = z
+    .object({
+    id: idSchema,
+    purpose: z.string().min(1),
+    commandRef: idSchema.optional(),
+    effects: z.array(idSchema).optional(),
+    outputSchema: jsonSchemaSchema.optional(),
+    validator: idSchema.optional(),
+})
+    .strict();
 export const gateSchema = z
     .object({
     type: z.literal('external_decision'),
     decisionSource: decisionSourceSchema.optional(),
+    interaction: interactionSchema.optional(),
     decisionSchema: jsonSchemaSchema,
 })
     .strict();
 export const workflowRefSchema = z
     .object({
     graphId: idSchema,
+    inputMap: z.record(z.string().min(1)).optional(),
+    outputMap: z.record(z.string().min(1)).optional(),
 })
     .strict();
 export const edgeSchema = z
@@ -55,8 +136,13 @@ export const nodeSchema = z
     instructions: z.string().min(1).optional(),
     exec: z.literal('inline').default('inline'),
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
+    interaction: interactionSchema.optional(),
+    interrupt: interruptSchema.optional(),
     gate: gateSchema.optional(),
     workflowRef: workflowRefSchema.optional(),
+    sideChannelActions: z.array(sideChannelActionSchema).optional(),
+    toolContract: toolContractSchema.optional(),
+    validators: z.array(validatorContractSchema).optional(),
     edges: z.array(edgeSchema).default([]),
     terminal: z.boolean().default(false),
     // undefined inherits graph.effects; [] overrides to require nothing; non-empty array overrides with that set.
@@ -189,7 +275,7 @@ export const currentSchema = z
 export const transitionLogEntrySchema = z
     .object({
     ts: z.string().min(1),
-    op: z.enum(['start', 'step', 'decide', 'suspend', 'resume', 'abandon']),
+    op: z.enum(['start', 'step', 'decide', 'suspend', 'resume', 'abandon', 'side_channel', 'reconcile']),
     runId: idSchema,
     from: positionSchema.nullable(),
     to: positionSchema.nullable(),
