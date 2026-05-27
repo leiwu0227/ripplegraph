@@ -81,7 +81,14 @@ Graph package management through the JSON CLI:
 ripplegraph graph validate .ripplegraph/graphs/support-triage
 ripplegraph graph register .ripplegraph/graphs/support-triage --workflow-root .
 ripplegraph graph list --workflow-root .
+ripplegraph graph diagram .ripplegraph/graphs/support-triage
+ripplegraph graph diagram .ripplegraph/graphs/support-triage --format=dot
 ```
+
+`graph diagram` emits text to stdout rather than JSON. Mermaid is the default
+format; Graphviz DOT is available with `--format=dot`. Ripplegraph does not
+render PNG/SVG images itself. Use Mermaid or Graphviz tooling outside the kernel
+when a rendered image is needed.
 
 The package manifest is a flat `graph.json` file with `id` and `version` beside
 the graph fields:
@@ -208,8 +215,8 @@ canonical protocol settles:
 
 ```text
 init, status, explain, advance, runs, start, pause, resume, submit, decide,
-graph validate, graph register, graph list, call, call-state, call-step,
-call-list
+graph validate, graph register, graph list, graph diagram, call, call-state,
+call-step, call-list
 ```
 
 `ripplegraph-demo` is the reference agent-facing CLI with compact text output.

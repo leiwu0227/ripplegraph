@@ -11,15 +11,17 @@
     },
     {
       "number": 2,
-      "status": "in_progress",
+      "status": "completed",
       "started_at": "2026-05-27T08:18:04Z",
-      "completed_at": null
+      "completed_at": "2026-05-27T08:22:19Z",
+      "summary": "Added graph diagram CLI branch with raw Mermaid/DOT stdout and invalid format error handling, covered by focused CLI test, and committed e10f1a5."
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-27T08:22:19Z",
+      "completed_at": "2026-05-27T08:23:51Z",
+      "summary": "Documented graph diagram CLI in README, ran typecheck and full test suite successfully, and prepared implementation checkpoint."
     }
   ]
 }
