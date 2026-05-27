@@ -1,4 +1,4 @@
-import { abandonRun, advanceRun, applyDispatchAction, getCallableCall, decideGate, getDispatchRequest, getState, listCallableCalls, listRegisteredGraphs, loadGraphPackage, recordSideChannelAction, registerGraphPackage, reconcileExternalState, resumeRun, RipplegraphError, startCallableCall, startRun, stepRun, stepCallableCall, suspendRun, validateWorkflowRoot, } from './index.js';
+import { abandonRun, advanceRun, applyDispatchAction, getCallableCall, decideGate, getDispatchRequest, getState, listCallableCalls, listRegisteredGraphs, loadGraphPackage, renderGraphDiagram, recordSideChannelAction, registerGraphPackage, reconcileExternalState, resumeRun, RipplegraphError, startCallableCall, startRun, stepRun, stepCallableCall, suspendRun, validateWorkflowRoot, } from './index.js';
 import { effectPolicyFromFlags, emitJson, jsonErrorPayload, parseArgs, parseJson, required, requiredFlag, stringFlag, workflowRoot, } from './internal/cli-helpers.js';
 const HELP = `ripplegraph — focused-run Coach runtime POC
 
@@ -19,6 +19,7 @@ Compatibility/debug commands:
   validate --workflow-root <path>
   graph validate <path> [--workflow-root <path>]
   graph register <path> [--workflow-root <path>] [--force]
+  graph diagram <path> [--format=mermaid|dot]
   graph list [--workflow-root <path>]
   start --graph <graph-id> --run-id <id> [--workflow-root <path>]
   step --output <json> [--workflow-root <path>]
@@ -34,9 +35,15 @@ async function main(argv) {
         return;
     }
     switch (command) {
-        case 'graph':
-            emitJson(handleGraphCommand(flags, parseArgs(argv).positional));
+        case 'graph': {
+            const positional = parseArgs(argv).positional;
+            if (positional[0] === 'diagram') {
+                process.stdout.write(handleGraphDiagram(flags, positional));
+                return;
+            }
+            emitJson(handleGraphCommand(flags, positional));
             return;
+        }
         case 'validate':
             emitJson(validateWorkflowRoot(workflowRoot(flags)));
             return;
@@ -175,6 +182,15 @@ function handleGraphCommand(flags, positional) {
         default:
             throw new RipplegraphError('E_UNKNOWN_COMMAND', `unknown graph command: ${subcommand ?? '<missing>'}`);
     }
+}
+function handleGraphDiagram(flags, positional) {
+    const [, packageRoot] = positional;
+    const format = stringFlag(flags, 'format') ?? 'mermaid';
+    if (format !== 'mermaid' && format !== 'dot') {
+        throw new RipplegraphError('E_INVALID_DIAGRAM_FORMAT', `unsupported graph diagram format: ${format}`);
+    }
+    const graphPackage = loadGraphPackage(required(packageRoot, 'missing graph package path'));
+    return renderGraphDiagram(graphPackage.manifest, format);
 }
 main(process.argv.slice(2)).catch((error) => {
     emitJson(jsonErrorPayload(error));

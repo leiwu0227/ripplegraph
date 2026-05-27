@@ -6,3 +6,4 @@ export * from './registry.js';
 export * from './dispatcher.js';
 export * from './callable.js';
 export * from './effects.js';
+export * from './graph/diagram.js';
