@@ -9,6 +9,7 @@ import {
   listCallableCalls,
   listRegisteredGraphs,
   loadGraphPackage,
+  renderGraphDiagram,
   recordSideChannelAction,
   registerGraphPackage,
   reconcileExternalState,
@@ -53,6 +54,7 @@ Compatibility/debug commands:
   validate --workflow-root <path>
   graph validate <path> [--workflow-root <path>]
   graph register <path> [--workflow-root <path>] [--force]
+  graph diagram <path> [--format=mermaid|dot]
   graph list [--workflow-root <path>]
   start --graph <graph-id> --run-id <id> [--workflow-root <path>]
   step --output <json> [--workflow-root <path>]
@@ -70,9 +72,15 @@ async function main(argv: string[]): Promise<void> {
   }
 
   switch (command) {
-    case 'graph':
-      emitJson(handleGraphCommand(flags, parseArgs(argv).positional));
+    case 'graph': {
+      const positional = parseArgs(argv).positional;
+      if (positional[0] === 'diagram') {
+        process.stdout.write(handleGraphDiagram(flags, positional));
+        return;
+      }
+      emitJson(handleGraphCommand(flags, positional));
       return;
+    }
     case 'validate':
       emitJson(validateWorkflowRoot(workflowRoot(flags)));
       return;
@@ -225,6 +233,16 @@ function handleGraphCommand(flags: ReturnType<typeof parseArgs>['flags'], positi
     default:
       throw new RipplegraphError('E_UNKNOWN_COMMAND', `unknown graph command: ${subcommand ?? '<missing>'}`);
   }
+}
+
+function handleGraphDiagram(flags: ReturnType<typeof parseArgs>['flags'], positional: string[]): string {
+  const [, packageRoot] = positional;
+  const format = stringFlag(flags, 'format') ?? 'mermaid';
+  if (format !== 'mermaid' && format !== 'dot') {
+    throw new RipplegraphError('E_INVALID_DIAGRAM_FORMAT', `unsupported graph diagram format: ${format}`);
+  }
+  const graphPackage = loadGraphPackage(required(packageRoot, 'missing graph package path'));
+  return renderGraphDiagram(graphPackage.manifest, format);
 }
 
 main(process.argv.slice(2)).catch((error) => {

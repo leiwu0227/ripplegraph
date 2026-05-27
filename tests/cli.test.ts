@@ -23,6 +23,18 @@ function run(args: string[]): { status: number | null; json: Record<string, unkn
   };
 }
 
+function runRaw(args: string[]): { status: number | null; stdout: string; stderr: string } {
+  const result = spawnSync(process.execPath, [tsxCli, cli, ...args], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+  return {
+    status: result.status,
+    stdout: result.stdout,
+    stderr: result.stderr,
+  };
+}
+
 function runBuilt(args: string[]): { status: number | null; json: Record<string, unknown>; stderr: string } {
   const result = spawnSync(process.execPath, [binCli, ...args], {
     cwd: repoRoot,
@@ -36,6 +48,52 @@ function runBuilt(args: string[]): { status: number | null; json: Record<string,
 }
 
 describe('reference cli', () => {
+  it('renders graph package diagrams as raw Mermaid or DOT text', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-cli-diagram-'));
+    const packageRoot = path.join(root, 'support-triage');
+    try {
+      fs.mkdirSync(packageRoot, { recursive: true });
+      fs.writeFileSync(
+        path.join(packageRoot, 'graph.json'),
+        JSON.stringify({
+          id: 'support-triage',
+          version: '0.1.0',
+          kind: 'workflow',
+          entry: 'classify-ticket',
+          nodes: {
+            'classify-ticket': {
+              purpose: 'Classify ticket',
+              gate: { type: 'external_decision', decisionSchema: { type: 'object' } },
+              sideChannelActions: [{ id: 'refresh-ticket', purpose: 'Refresh ticket' }],
+              edges: [{ to: 'done', when: { decision: 'approved' } }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        }),
+        'utf8',
+      );
+
+      const mermaid = runRaw(['graph', 'diagram', packageRoot]);
+      expect(mermaid.status).toBe(0);
+      expect(mermaid.stdout).toContain('flowchart LR');
+      expect(mermaid.stdout).toContain('%% support-triage (workflow) v0.1.0');
+      expect(mermaid.stdout).toContain('side: refresh-ticket');
+      expect(mermaid.stdout).toContain('classify_ticket -->|decision=approved| done');
+      expect(() => JSON.parse(mermaid.stdout)).toThrow();
+
+      const dot = runRaw(['graph', 'diagram', packageRoot, '--format', 'dot']);
+      expect(dot.status).toBe(0);
+      expect(dot.stdout).toContain('digraph "support-triage"');
+      expect(dot.stdout).toContain('"classify_ticket" -> "done" [label="decision=approved"];');
+
+      const invalid = run(['graph', 'diagram', packageRoot, '--format', 'png']);
+      expect(invalid.status).toBe(1);
+      expect(invalid.json).toMatchObject({ status: 'error', code: 'E_INVALID_DIAGRAM_FORMAT' });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('validates, registers, and lists graph packages', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-cli-registry-'));
     fs.writeFileSync(path.join(root, 'workflow.json'), JSON.stringify({ id: 'cli-registry', version: '0.1.0' }), 'utf8');

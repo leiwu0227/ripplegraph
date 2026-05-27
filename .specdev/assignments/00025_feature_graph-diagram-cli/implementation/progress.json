@@ -1,0 +1,25 @@
+{
+  "plan_file": ".specdev/assignments/00025_feature_graph-diagram-cli/breakdown/plan.md",
+  "total_tasks": 3,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-05-27T08:15:52Z",
+      "completed_at": "2026-05-27T08:18:04Z",
+      "summary": "Added renderGraphDiagram with Mermaid and DOT output, exported it, covered annotations and edge labels with focused tests, and committed 90329b8."
+    },
+    {
+      "number": 2,
+      "status": "in_progress",
+      "started_at": "2026-05-27T08:18:04Z",
+      "completed_at": null
+    },
+    {
+      "number": 3,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    }
+  ]
+}
