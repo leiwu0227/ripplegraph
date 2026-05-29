@@ -23,6 +23,7 @@ import {
   type JsonSchema,
   type Node,
   type Position,
+  type StartRequirement,
   type Workflow,
 } from './schema.js';
 import { resumableRuns, runSummary, stateForCheckpoint } from './internal/coach-responses.js';
@@ -39,6 +40,7 @@ export interface StartRunOptions extends WorkflowRootOptions {
   graphId: string;
   runId: string;
   effectPolicy?: EffectPolicy;
+  preconditionState?: Record<string, boolean>;
 }
 
 export interface StepRunOptions extends WorkflowRootOptions {
@@ -233,6 +235,28 @@ function collectMissingChildEffects(
   }
 }
 
+function unmetStartRequirements(requirements: StartRequirement[], state?: Record<string, boolean>): StartRequirement[] {
+  return requirements.filter((requirement) => state?.[requirement.id] !== true);
+}
+
+function assertStartRequirementsMet(graphId: string, requirements: StartRequirement[], state?: Record<string, boolean>): void {
+  const unmet = unmetStartRequirements(requirements, state);
+  if (unmet.length === 0) return;
+  throw new RipplegraphError(
+    'E_START_REQUIREMENTS_UNMET',
+    `graph ${graphId} start requirements unmet: ${unmet.map((requirement) => requirement.id).join(', ')}`,
+    {
+      graphId,
+      unmet: unmet.map((requirement) => ({
+        id: requirement.id,
+        describe: requirement.describe,
+        ...(requirement.unmetRedirect ? { redirectTo: requirement.unmetRedirect } : {}),
+        ...(requirement.unmetMessage ? { message: requirement.unmetMessage } : {}),
+      })),
+    },
+  );
+}
+
 export function startRun(opts: StartRunOptions): StateOk {
   const workflow = loadWorkflow(opts.workflowRoot);
   const { entry, graphPackage } = resolveRegisteredGraphPackage({
@@ -241,6 +265,7 @@ export function startRun(opts: StartRunOptions): StateOk {
     kind: 'workflow',
   });
   const manifest = graphPackage.manifest;
+  assertStartRequirementsMet(opts.graphId, manifest.requires, opts.preconditionState);
   assertGraphAndChildEffectsAllowed(opts.workflowRoot, manifest, opts.graphId, opts.effectPolicy);
   const checkpoint = buildInitialCheckpoint({
     runId: opts.runId,

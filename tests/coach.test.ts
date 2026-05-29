@@ -501,6 +501,76 @@ describe('coach operations', () => {
     }
   });
 
+  it('denies workflow starts with unmet requirements before creating runtime state', () => {
+    const root = createTestWorkspace({
+      prefix: 'ripplegraph-requirements-deny-',
+      workspace: { id: 'requirements-demo' },
+      graphs: [
+        {
+          id: 'daily',
+          kind: 'workflow',
+          requires: [
+            {
+              id: 'vessel_present',
+              describe: 'a created vessel',
+              unmetRedirect: 'create-vessel',
+              unmetMessage: 'Create a vessel first.',
+            },
+          ],
+          entry: 'review',
+          nodes: {
+            review: { purpose: 'Review with requirement', exec: 'inline', terminal: true },
+          },
+        },
+      ],
+    });
+    try {
+      let error: unknown;
+      try {
+        startRun({ workflowRoot: root, graphId: 'daily', runId: 'daily-missing' });
+      } catch (caught) {
+        error = caught;
+      }
+      expect(error).toMatchObject({
+        code: 'E_START_REQUIREMENTS_UNMET',
+        details: {
+          graphId: 'daily',
+          unmet: [
+            {
+              id: 'vessel_present',
+              describe: 'a created vessel',
+              redirectTo: 'create-vessel',
+              message: 'Create a vessel first.',
+            },
+          ],
+        },
+      });
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'current.json'))).toBe(false);
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'runs'))).toBe(false);
+
+      expect(() =>
+        startRun({
+          workflowRoot: root,
+          graphId: 'daily',
+          runId: 'daily-false',
+          preconditionState: { vessel_present: false },
+        }),
+      ).toThrow(/vessel_present/);
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'current.json'))).toBe(false);
+      expect(fs.existsSync(path.join(root, '.ripplegraph', 'runs'))).toBe(false);
+
+      const allowed = startRun({
+        workflowRoot: root,
+        graphId: 'daily',
+        runId: 'daily-allowed',
+        preconditionState: { vessel_present: true },
+      });
+      expect(allowed.run.id).toBe('daily-allowed');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('starts, suspends, and resumes exactly one focused run', () => {
     const root = makeCoachWorkflowRoot();
     try {
