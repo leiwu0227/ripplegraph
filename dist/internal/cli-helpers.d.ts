@@ -19,5 +19,6 @@ export declare function jsonErrorPayload(error: unknown): {
     status: 'error';
     code: string;
     message: string;
+    details?: unknown;
 };
 export declare function errorText(error: unknown): string;

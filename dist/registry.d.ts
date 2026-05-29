@@ -7,6 +7,22 @@ export declare const registryEntrySchema: z.ZodObject<{
     title: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
     activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    requires: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        describe: z.ZodString;
+        unmetRedirect: z.ZodOptional<z.ZodString>;
+        unmetMessage: z.ZodOptional<z.ZodString>;
+    }, "strict", z.ZodTypeAny, {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }, {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }>, "many">>;
     effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     path: z.ZodString;
     registeredAt: z.ZodString;
@@ -16,6 +32,12 @@ export declare const registryEntrySchema: z.ZodObject<{
     id: string;
     effects: string[];
     activationHints: string[];
+    requires: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[];
     version: string;
     registeredAt: string;
     description?: string | undefined;
@@ -30,6 +52,12 @@ export declare const registryEntrySchema: z.ZodObject<{
     effects?: string[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
+    requires?: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[] | undefined;
 }>;
 export declare const registrySchema: z.ZodObject<{
     version: z.ZodLiteral<1>;
@@ -40,6 +68,22 @@ export declare const registrySchema: z.ZodObject<{
         title: z.ZodOptional<z.ZodString>;
         description: z.ZodOptional<z.ZodString>;
         activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+        requires: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            describe: z.ZodString;
+            unmetRedirect: z.ZodOptional<z.ZodString>;
+            unmetMessage: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            id: string;
+            describe: string;
+            unmetRedirect?: string | undefined;
+            unmetMessage?: string | undefined;
+        }, {
+            id: string;
+            describe: string;
+            unmetRedirect?: string | undefined;
+            unmetMessage?: string | undefined;
+        }>, "many">>;
         effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
         path: z.ZodString;
         registeredAt: z.ZodString;
@@ -49,6 +93,12 @@ export declare const registrySchema: z.ZodObject<{
         id: string;
         effects: string[];
         activationHints: string[];
+        requires: {
+            id: string;
+            describe: string;
+            unmetRedirect?: string | undefined;
+            unmetMessage?: string | undefined;
+        }[];
         version: string;
         registeredAt: string;
         description?: string | undefined;
@@ -63,6 +113,12 @@ export declare const registrySchema: z.ZodObject<{
         effects?: string[] | undefined;
         title?: string | undefined;
         activationHints?: string[] | undefined;
+        requires?: {
+            id: string;
+            describe: string;
+            unmetRedirect?: string | undefined;
+            unmetMessage?: string | undefined;
+        }[] | undefined;
     }>>>;
 }, "strict", z.ZodTypeAny, {
     version: 1;
@@ -72,6 +128,12 @@ export declare const registrySchema: z.ZodObject<{
         id: string;
         effects: string[];
         activationHints: string[];
+        requires: {
+            id: string;
+            describe: string;
+            unmetRedirect?: string | undefined;
+            unmetMessage?: string | undefined;
+        }[];
         version: string;
         registeredAt: string;
         description?: string | undefined;
@@ -89,6 +151,12 @@ export declare const registrySchema: z.ZodObject<{
         effects?: string[] | undefined;
         title?: string | undefined;
         activationHints?: string[] | undefined;
+        requires?: {
+            id: string;
+            describe: string;
+            unmetRedirect?: string | undefined;
+            unmetMessage?: string | undefined;
+        }[] | undefined;
     }> | undefined;
 }>;
 export type RegistryEntry = z.infer<typeof registryEntrySchema>;

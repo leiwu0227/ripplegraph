@@ -18,9 +18,10 @@
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-29T12:19:00Z",
+      "completed_at": "2026-05-29T12:23:35Z",
+      "summary": "Wired precondition state through dispatcher and direct CLI start paths, preserved details in CLI JSON errors, and regenerated dist for built CLI coverage."
     },
     {
       "number": 4,

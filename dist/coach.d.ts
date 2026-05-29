@@ -8,6 +8,7 @@ export interface StartRunOptions extends WorkflowRootOptions {
     graphId: string;
     runId: string;
     effectPolicy?: EffectPolicy;
+    preconditionState?: Record<string, boolean>;
 }
 export interface StepRunOptions extends WorkflowRootOptions {
     output: unknown;

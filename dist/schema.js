@@ -1,9 +1,11 @@
 import { z } from 'zod';
 export class RipplegraphError extends Error {
     code;
-    constructor(code, message) {
+    details;
+    constructor(code, message, details) {
         super(message);
         this.code = code;
+        this.details = details;
         this.name = 'RipplegraphError';
     }
 }
@@ -124,6 +126,14 @@ export const workflowRefSchema = z
     outputMap: z.record(z.string().min(1)).optional(),
 })
     .strict();
+export const startRequirementSchema = z
+    .object({
+    id: idSchema,
+    describe: z.string().min(1),
+    unmetRedirect: idSchema.optional(),
+    unmetMessage: z.string().min(1).optional(),
+})
+    .strict();
 export const edgeSchema = z
     .object({
     to: idSchema,
@@ -165,6 +175,7 @@ const graphFieldsSchema = z
     title: z.string().min(1).optional(),
     description: z.string().min(1).optional(),
     activationHints: z.array(z.string().min(1)).default([]),
+    requires: z.array(startRequirementSchema).default([]),
     inputSchema: jsonSchemaSchema.default({ type: 'object' }),
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
     effects: z.array(idSchema).default([]),

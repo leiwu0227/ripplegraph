@@ -1,7 +1,8 @@
 import { z } from 'zod';
 export declare class RipplegraphError extends Error {
     readonly code: string;
-    constructor(code: string, message: string);
+    readonly details?: unknown | undefined;
+    constructor(code: string, message: string, details?: unknown | undefined);
 }
 export declare const idSchema: z.ZodString;
 export interface JsonSchema {
@@ -440,6 +441,22 @@ export declare const workflowRefSchema: z.ZodObject<{
     graphId: string;
     inputMap?: Record<string, string> | undefined;
     outputMap?: Record<string, string> | undefined;
+}>;
+export declare const startRequirementSchema: z.ZodObject<{
+    id: z.ZodString;
+    describe: z.ZodString;
+    unmetRedirect: z.ZodOptional<z.ZodString>;
+    unmetMessage: z.ZodOptional<z.ZodString>;
+}, "strict", z.ZodTypeAny, {
+    id: string;
+    describe: string;
+    unmetRedirect?: string | undefined;
+    unmetMessage?: string | undefined;
+}, {
+    id: string;
+    describe: string;
+    unmetRedirect?: string | undefined;
+    unmetMessage?: string | undefined;
 }>;
 export declare const edgeSchema: z.ZodObject<{
     to: z.ZodString;
@@ -1221,6 +1238,22 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     title: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
     activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    requires: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        describe: z.ZodString;
+        unmetRedirect: z.ZodOptional<z.ZodString>;
+        unmetMessage: z.ZodOptional<z.ZodString>;
+    }, "strict", z.ZodTypeAny, {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }, {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }>, "many">>;
     inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
@@ -1996,6 +2029,12 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     outputSchema: JsonSchema;
     effects: string[];
     activationHints: string[];
+    requires: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[];
     entry: string;
     nodes: Record<string, {
         purpose: string;
@@ -2194,12 +2233,24 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     effects?: string[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
+    requires?: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[] | undefined;
 }>, {
     kind: "dispatcher" | "workflow" | "callable";
     inputSchema: JsonSchema;
     outputSchema: JsonSchema;
     effects: string[];
     activationHints: string[];
+    requires: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[];
     entry: string;
     nodes: Record<string, {
         purpose: string;
@@ -2398,12 +2449,34 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     effects?: string[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
+    requires?: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[] | undefined;
 }>;
 export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     kind: z.ZodDefault<z.ZodEnum<["dispatcher", "workflow", "callable"]>>;
     title: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
     activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    requires: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        describe: z.ZodString;
+        unmetRedirect: z.ZodOptional<z.ZodString>;
+        unmetMessage: z.ZodOptional<z.ZodString>;
+    }, "strict", z.ZodTypeAny, {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }, {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }>, "many">>;
     inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
@@ -3183,6 +3256,12 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     outputSchema: JsonSchema;
     effects: string[];
     activationHints: string[];
+    requires: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[];
     entry: string;
     nodes: Record<string, {
         purpose: string;
@@ -3384,6 +3463,12 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     effects?: string[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
+    requires?: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[] | undefined;
 }>, {
     kind: "dispatcher" | "workflow" | "callable";
     id: string;
@@ -3391,6 +3476,12 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     outputSchema: JsonSchema;
     effects: string[];
     activationHints: string[];
+    requires: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[];
     entry: string;
     nodes: Record<string, {
         purpose: string;
@@ -3592,6 +3683,12 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
     effects?: string[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
+    requires?: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[] | undefined;
 }>;
 export declare const workflowSchema: z.ZodObject<{
     id: z.ZodString;
@@ -4293,6 +4390,7 @@ export declare const callableTransitionLogEntrySchema: z.ZodObject<{
 export type Workflow = z.infer<typeof workflowSchema>;
 export type GraphPackageManifest = z.infer<typeof graphPackageManifestSchema>;
 export type Graph = z.infer<typeof graphSchema>;
+export type StartRequirement = z.infer<typeof startRequirementSchema>;
 export type Node = z.infer<typeof nodeSchema>;
 export type Gate = z.infer<typeof gateSchema>;
 export type Interaction = z.infer<typeof interactionSchema>;

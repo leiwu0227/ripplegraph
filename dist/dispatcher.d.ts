@@ -21,6 +21,7 @@ export interface RegisteredGraphSummary {
     title?: string;
     description?: string;
     activationHints: string[];
+    requires: RegistryEntry['requires'];
     effects: string[];
     path: string;
 }
@@ -47,6 +48,7 @@ export declare const dispatcherActionSchema: z.ZodDiscriminatedUnion<"action", [
     graphId: z.ZodString;
     runId: z.ZodOptional<z.ZodString>;
     input: z.ZodOptional<z.ZodUnknown>;
+    preconditionState: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodBoolean>>;
     reason: z.ZodOptional<z.ZodString>;
 }, "strict", z.ZodTypeAny, {
     graphId: string;
@@ -54,12 +56,14 @@ export declare const dispatcherActionSchema: z.ZodDiscriminatedUnion<"action", [
     reason?: string | undefined;
     runId?: string | undefined;
     input?: unknown;
+    preconditionState?: Record<string, boolean> | undefined;
 }, {
     graphId: string;
     action: "start_run";
     reason?: string | undefined;
     runId?: string | undefined;
     input?: unknown;
+    preconditionState?: Record<string, boolean> | undefined;
 }>, z.ZodObject<{
     action: z.ZodEnum<["resume_run", "switch_run"]>;
     runId: z.ZodString;

@@ -111,6 +111,19 @@ describe('dispatcher runtime', () => {
           callId: { type: 'string' },
         },
       });
+      expect(
+        getDispatchRequest({ workflowRoot: root, request: 'triage support' }).actionSchema.oneOf?.find(
+          (schema) =>
+            typeof schema === 'object' &&
+            schema !== null &&
+            'properties' in schema &&
+            JSON.stringify((schema.properties as Record<string, unknown>).action).includes('start_run'),
+        ),
+      ).toMatchObject({
+        properties: {
+          preconditionState: { type: 'object' },
+        },
+      });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
@@ -165,10 +178,25 @@ describe('dispatcher runtime', () => {
     const root = makeCliWorkflowRoot();
     try {
       registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'workspace-dispatcher') });
-      registerGraphPackage({ workflowRoot: root, packageRoot: writePackage(root, 'daily', { kind: 'workflow', effects: [] }) });
+      registerGraphPackage({
+        workflowRoot: root,
+        packageRoot: writePackage(root, 'daily', {
+          kind: 'workflow',
+          effects: [],
+          requires: [{ id: 'workspace_ready', describe: 'a prepared workspace' }],
+        }),
+      });
 
       expect(
-        applyDispatchAction({ workflowRoot: root, action: { action: 'start_run', graphId: 'daily', runId: 'daily-a' } }),
+        applyDispatchAction({
+          workflowRoot: root,
+          action: {
+            action: 'start_run',
+            graphId: 'daily',
+            runId: 'daily-a',
+            preconditionState: { workspace_ready: true },
+          },
+        }),
       ).toMatchObject({
         status: 'ok',
         run: { id: 'daily-a', rootGraph: 'daily', status: 'active' },

@@ -105,9 +105,11 @@ export function emitJson(payload: unknown): void {
   emitLine(JSON.stringify(payload, null, 2));
 }
 
-export function jsonErrorPayload(error: unknown): { status: 'error'; code: string; message: string } {
+export function jsonErrorPayload(error: unknown): { status: 'error'; code: string; message: string; details?: unknown } {
   if (error instanceof RipplegraphError) {
-    return { status: 'error', code: error.code, message: error.message };
+    return error.details === undefined
+      ? { status: 'error', code: error.code, message: error.message }
+      : { status: 'error', code: error.code, message: error.message, details: error.details };
   }
   return { status: 'error', code: 'E_INTERNAL', message: (error as Error).message };
 }

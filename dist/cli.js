@@ -21,7 +21,7 @@ Compatibility/debug commands:
   graph register <path> [--workflow-root <path>] [--force]
   graph diagram <path> [--format=mermaid|dot]
   graph list [--workflow-root <path>]
-  start --graph <graph-id> --run-id <id> [--workflow-root <path>]
+  start --graph <graph-id> --run-id <id> [--precondition-state <json>] [--workflow-root <path>]
   step --output <json> [--workflow-root <path>]
   decide --decision <json> [--workflow-root <path>]
   suspend [--note <text>] [--workflow-root <path>]
@@ -53,6 +53,7 @@ async function main(argv) {
                 graphId: requiredFlag(flags, 'graph'),
                 runId: requiredFlag(flags, 'run-id'),
                 effectPolicy: effectPolicyFromFlags(flags),
+                preconditionState: optionalBooleanRecordFlag(flags, 'precondition-state'),
             }));
             return;
         case 'state':
@@ -131,6 +132,20 @@ function optionalJsonFlag(flags, name) {
     const value = stringFlag(flags, name);
     return value === undefined ? undefined : parseJson(value, `missing --${name}`, `--${name} is not valid JSON`);
 }
+function optionalBooleanRecordFlag(flags, name) {
+    const parsed = optionalJsonFlag(flags, name);
+    if (parsed === undefined)
+        return undefined;
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        throw new RipplegraphError('E_INVALID_ARGS', `--${name} must be a JSON object`);
+    }
+    for (const [key, value] of Object.entries(parsed)) {
+        if (typeof value !== 'boolean') {
+            throw new RipplegraphError('E_INVALID_ARGS', `--${name}.${key} must be boolean`);
+        }
+    }
+    return parsed;
+}
 function handleDispatchCommand(flags) {
     const request = stringFlag(flags, 'request');
     const action = stringFlag(flags, 'action');
@@ -157,6 +172,7 @@ function packageSummary(manifest) {
         title: manifest.title,
         description: manifest.description,
         activationHints: manifest.activationHints,
+        requires: manifest.requires,
         effects: manifest.effects,
         entry: manifest.entry,
     };

@@ -285,6 +285,55 @@ describe('reference cli', () => {
     }
   });
 
+  it('passes precondition state through direct start and preserves unmet details in errors', () => {
+    const root = makeCliWorkflowRoot();
+    try {
+      const graphPath = path.join(root, '.ripplegraph', 'graphs', 'daily', 'graph.json');
+      const manifest = JSON.parse(fs.readFileSync(graphPath, 'utf8')) as Record<string, unknown>;
+      manifest.requires = [
+        {
+          id: 'workspace_ready',
+          describe: 'a prepared workspace',
+          unmetRedirect: 'setup-workspace',
+          unmetMessage: 'Set up the workspace first.',
+        },
+      ];
+      fs.writeFileSync(graphPath, JSON.stringify(manifest), 'utf8');
+
+      const blocked = run(['start', '--workflow-root', root, '--graph', 'daily', '--run-id', 'daily-a']);
+      expect(blocked.json).toMatchObject({
+        status: 'error',
+        code: 'E_START_REQUIREMENTS_UNMET',
+        details: {
+          graphId: 'daily',
+          unmet: [
+            {
+              id: 'workspace_ready',
+              redirectTo: 'setup-workspace',
+              message: 'Set up the workspace first.',
+            },
+          ],
+        },
+      });
+
+      expect(
+        run([
+          'start',
+          '--workflow-root',
+          root,
+          '--graph',
+          'daily',
+          '--run-id',
+          'daily-a',
+          '--precondition-state',
+          '{"workspace_ready":true}',
+        ]).json.status,
+      ).toBe('ok');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('starts, reads, steps, suspends, and resumes with JSON commands', () => {
     const root = makeCliWorkflowRoot();
     try {

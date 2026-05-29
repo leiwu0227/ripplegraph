@@ -92,7 +92,9 @@ export function emitJson(payload) {
 }
 export function jsonErrorPayload(error) {
     if (error instanceof RipplegraphError) {
-        return { status: 'error', code: error.code, message: error.message };
+        return error.details === undefined
+            ? { status: 'error', code: error.code, message: error.message }
+            : { status: 'error', code: error.code, message: error.message, details: error.details };
     }
     return { status: 'error', code: 'E_INTERNAL', message: error.message };
 }

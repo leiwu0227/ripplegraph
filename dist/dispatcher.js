@@ -17,6 +17,7 @@ const startRunActionSchema = z
     graphId: z.string().min(1),
     runId: z.string().min(1).optional(),
     input: z.unknown().optional(),
+    preconditionState: z.record(z.boolean()).optional(),
     reason: z.string().min(1).optional(),
 })
     .strict();
@@ -66,6 +67,7 @@ export const dispatchActionSchema = {
                 graphId: { type: 'string' },
                 runId: { type: 'string' },
                 input: {},
+                preconditionState: { type: 'object', additionalProperties: { type: 'boolean' } },
                 reason: { type: 'string' },
             },
             additionalProperties: false,
@@ -149,6 +151,7 @@ export function applyDispatchAction(options) {
                 graphId: action.graphId,
                 runId: action.runId ?? generatedRunId(action.graphId),
                 effectPolicy: options.effectPolicy,
+                preconditionState: action.preconditionState,
             });
         }
         case 'call_graph': {
@@ -172,6 +175,7 @@ function graphSummary(entry) {
         title: entry.title,
         description: entry.description,
         activationHints: entry.activationHints,
+        requires: entry.requires,
         effects: entry.effects,
         path: entry.path,
     };
