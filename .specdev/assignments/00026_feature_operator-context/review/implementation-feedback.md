@@ -9,3 +9,19 @@
 
 ### Addressed from changelog
 - (none -- first round)
+
+## Round 2
+
+**Verdict:** approved
+
+### Findings
+- (none)
+
+### Addressed from changelog
+- [F1.1] Confirmed addressed: `operatorContext` is accepted by the strict node schema as optional string-keyed unknown metadata.
+- [F1.2] Confirmed addressed: workflow and callable state response types and builders expose the active node's `operatorContext` without using it in runtime decisions.
+- [F1.3] Confirmed addressed: focused workflow/callable tests and regenerated `dist/` artifacts are present.
+
+### Verification
+- `npm test -- --run tests/coach.test.ts tests/callable.test.ts`
+- `npm run typecheck`
