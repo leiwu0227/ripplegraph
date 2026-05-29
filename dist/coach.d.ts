@@ -68,6 +68,7 @@ export interface StateOk {
         sideChannelActions?: Node['sideChannelActions'];
         toolContract?: Node['toolContract'];
         validators?: Node['validators'];
+        operatorContext?: Node['operatorContext'];
     };
     context: {
         previous: Array<{

@@ -24,6 +24,7 @@ export function stateForCheckpoint(workflow, checkpoint, context) {
             sideChannelActions: node.sideChannelActions,
             toolContract: node.toolContract,
             validators: node.validators,
+            operatorContext: node.operatorContext,
         },
         context: {
             previous: previousNodes(checkpoint, context.scope),

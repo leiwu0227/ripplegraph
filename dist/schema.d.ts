@@ -834,6 +834,7 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
         inputSchema?: JsonSchema | undefined;
         outputSchema?: JsonSchema | undefined;
     }>, "many">>;
+    operatorContext: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
     edges: z.ZodDefault<z.ZodArray<z.ZodObject<{
         to: z.ZodString;
         when: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
@@ -937,6 +938,7 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
         inputSchema?: JsonSchema | undefined;
         outputSchema?: JsonSchema | undefined;
     }[] | undefined;
+    operatorContext?: Record<string, unknown> | undefined;
 }, {
     purpose: string;
     outputSchema?: JsonSchema | undefined;
@@ -1023,6 +1025,7 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
         inputSchema?: JsonSchema | undefined;
         outputSchema?: JsonSchema | undefined;
     }[] | undefined;
+    operatorContext?: Record<string, unknown> | undefined;
     edges?: {
         to: string;
         when?: Record<string, unknown> | undefined;
@@ -1119,6 +1122,7 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
         inputSchema?: JsonSchema | undefined;
         outputSchema?: JsonSchema | undefined;
     }[] | undefined;
+    operatorContext?: Record<string, unknown> | undefined;
 }, {
     purpose: string;
     outputSchema?: JsonSchema | undefined;
@@ -1205,6 +1209,7 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
         inputSchema?: JsonSchema | undefined;
         outputSchema?: JsonSchema | undefined;
     }[] | undefined;
+    operatorContext?: Record<string, unknown> | undefined;
     edges?: {
         to: string;
         when?: Record<string, unknown> | undefined;
@@ -1603,6 +1608,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }>, "many">>;
+        operatorContext: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
         edges: z.ZodDefault<z.ZodArray<z.ZodObject<{
             to: z.ZodString;
             when: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
@@ -1706,6 +1712,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
     }, {
         purpose: string;
         outputSchema?: JsonSchema | undefined;
@@ -1792,6 +1799,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
         edges?: {
             to: string;
             when?: Record<string, unknown> | undefined;
@@ -1888,6 +1896,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
     }, {
         purpose: string;
         outputSchema?: JsonSchema | undefined;
@@ -1974,6 +1983,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
         edges?: {
             to: string;
             when?: Record<string, unknown> | undefined;
@@ -2078,6 +2088,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
     }>;
     description?: string | undefined;
     title?: string | undefined;
@@ -2169,6 +2180,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
         edges?: {
             to: string;
             when?: Record<string, unknown> | undefined;
@@ -2280,6 +2292,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
     }>;
     description?: string | undefined;
     title?: string | undefined;
@@ -2371,6 +2384,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
         edges?: {
             to: string;
             when?: Record<string, unknown> | undefined;
@@ -2777,6 +2791,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }>, "many">>;
+        operatorContext: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
         edges: z.ZodDefault<z.ZodArray<z.ZodObject<{
             to: z.ZodString;
             when: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
@@ -2880,6 +2895,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
     }, {
         purpose: string;
         outputSchema?: JsonSchema | undefined;
@@ -2966,6 +2982,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
         edges?: {
             to: string;
             when?: Record<string, unknown> | undefined;
@@ -3062,6 +3079,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
     }, {
         purpose: string;
         outputSchema?: JsonSchema | undefined;
@@ -3148,6 +3166,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
         edges?: {
             to: string;
             when?: Record<string, unknown> | undefined;
@@ -3256,6 +3275,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
     }>;
     version: string;
     description?: string | undefined;
@@ -3349,6 +3369,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
         edges?: {
             to: string;
             when?: Record<string, unknown> | undefined;
@@ -3462,6 +3483,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
     }>;
     version: string;
     description?: string | undefined;
@@ -3555,6 +3577,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodObject<{
             inputSchema?: JsonSchema | undefined;
             outputSchema?: JsonSchema | undefined;
         }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
         edges?: {
             to: string;
             when?: Record<string, unknown> | undefined;

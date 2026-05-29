@@ -18,9 +18,10 @@
     },
     {
       "number": 3,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-29T00:51:32Z",
+      "completed_at": "2026-05-29T00:52:47Z",
+      "summary": "Regenerated dist artifacts and passed build, typecheck, full test suite, and operatorContext source/test/dist scan."
     }
   ]
 }

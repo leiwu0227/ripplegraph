@@ -44,6 +44,7 @@ export interface CallableState {
         instructions?: string;
         exec: Node['exec'];
         outputSchema: JsonSchema;
+        operatorContext?: Node['operatorContext'];
     };
     context: {
         previous: Array<{

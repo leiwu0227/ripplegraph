@@ -215,6 +215,7 @@ function stateForCallable(manifest, checkpoint) {
             instructions: node.instructions,
             exec: node.exec,
             outputSchema: node.outputSchema,
+            operatorContext: node.operatorContext,
         },
         context: {
             previous: Object.entries(checkpoint.outputs).map(([id, output]) => ({
