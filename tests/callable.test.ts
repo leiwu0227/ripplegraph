@@ -201,6 +201,53 @@ describe('callable start and state', () => {
     }
   });
 
+  it('returns passive operator context for the active callable node', () => {
+    const operatorContext = {
+      table: 'tickets',
+      columns: ['ticket_id', 'summary'],
+      maxRows: 10,
+      editable: false,
+      display: { surface: 'ticket-summary' },
+    };
+    const root = makeRoot();
+    try {
+      writeGraphPackage(
+        root,
+        'graphs/summarize-ticket',
+        callableManifest({
+          nodes: {
+            summarize: {
+              purpose: 'Summarize a support ticket',
+              instructions: 'Return a concise summary.',
+              exec: 'inline',
+              operatorContext,
+              outputSchema: {
+                type: 'object',
+                required: ['summary'],
+                properties: {
+                  summary: { type: 'string' },
+                },
+              },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        }),
+      );
+
+      const state = startCallableCall({
+        workflowRoot: root,
+        graphId: 'summarize-ticket',
+        callId: 'call-operator-context',
+        input: { ticketId: 'TCK-1007' },
+      });
+
+      expect(state.node.operatorContext).toEqual(operatorContext);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('denies effectful callable starts before validating input or creating call state', () => {
     const root = makeRoot();
     try {

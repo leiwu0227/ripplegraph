@@ -572,6 +572,51 @@ describe('coach operations', () => {
     }
   });
 
+  it('returns passive operator context for the active workflow node without changing transitions', () => {
+    const operatorContext = {
+      table: 'fills',
+      columns: ['intent_id', 'execution_price'],
+      retryCount: 2,
+      editable: true,
+      display: { csv: '05_fills.csv', editSurface: '05_fills.csv' },
+    };
+    const root = createTestWorkspace({
+      prefix: 'ripplegraph-operator-context-',
+      workspace: { id: 'operator-context-workspace' },
+      graphs: [
+        {
+          id: 'operator-flow',
+          kind: 'workflow',
+          entry: 'review',
+          nodes: {
+            review: {
+              purpose: 'Review fills',
+              operatorContext,
+              outputSchema: {
+                type: 'object',
+                required: ['decision'],
+                properties: { decision: { type: 'string', enum: ['go'] } },
+              },
+              edges: [{ to: 'done', when: { decision: 'go' } }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        },
+      ],
+    });
+    try {
+      const state = startRun({ workflowRoot: root, graphId: 'operator-flow', runId: 'operator-a' });
+
+      expect(state.node.operatorContext).toEqual(operatorContext);
+      expect(stepRun({ workflowRoot: root, output: { decision: 'go' } })).toMatchObject({
+        status: 'completed',
+        position: { graph: 'operator-flow', node: 'done' },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('continues package-backed workflow runs against the pinned package after registry replacement', () => {
     const root = makePackageWorkflowRoot();
     try {
