@@ -266,7 +266,8 @@ const request = getDispatchRequest({
 const action = {
   action: "start_run",
   graphId: "assignment-lifecycle",
-  runId: "assignment-00024"
+  runId: "assignment-00024",
+  preconditionState: { workspace_ready: true }
 };
 
 const state = applyDispatchAction({ workflowRoot, action });
@@ -284,6 +285,11 @@ Do not say:
 ```text
 Moved Ripplegraph to node brainstorm.create_artifacts.
 ```
+
+If a graph declares `requires`, the product CLI evaluates those opaque
+predicate ids before calling `startRun` or dispatcher `start_run`. Ripplegraph
+only enforces the supplied booleans; it does not know how to inspect product
+state such as workspaces, servers, vessels, tickets, or repositories.
 
 unless the command is explicitly a runtime debugging command.
 
@@ -355,6 +361,32 @@ When done: specdev checkpoint brainstorm
 ## Host-Facing Metadata
 
 Graph packages can declare metadata that the product CLI reads and renders.
+
+Graph-level `requires` declares start prerequisites. Use it when a workflow
+should not create a run until the host confirms a product-specific condition:
+
+```json
+{
+  "id": "daily",
+  "kind": "workflow",
+  "requires": [
+    {
+      "id": "workspace_ready",
+      "describe": "a prepared workspace",
+      "unmetRedirect": "setup-workspace",
+      "unmetMessage": "Set up the workspace first."
+    }
+  ],
+  "entry": "start",
+  "nodes": {
+    "start": { "purpose": "Begin the workflow.", "terminal": true }
+  }
+}
+```
+
+The product CLI maps `workspace_ready` to its own code, then starts the graph
+with `preconditionState`. Missing or false keys are rejected before run state is
+created.
 
 Example:
 

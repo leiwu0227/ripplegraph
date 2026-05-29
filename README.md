@@ -58,10 +58,10 @@ Ripplegraph is a graph package repository for coach CLIs. A workspace is a
 folder with a thin `workflow.json` manifest (workspace identity only) and a
 package registry under `.ripplegraph/registry.json`. Each registered graph is
 a self-contained folder containing a `graph.json` manifest with metadata such
-as `activationHints`, input/output schemas, and declared effects. The runtime
-uses that registry for every graph lookup: dispatcher routing, workflow
-execution, callable graph invocation, and effect checks at execution
-boundaries.
+as `activationHints`, start `requires`, input/output schemas, and declared
+effects. The runtime uses that registry for every graph lookup: dispatcher
+routing, workflow execution, callable graph invocation, and execution-boundary
+checks.
 
 Graph kinds:
 
@@ -123,8 +123,9 @@ Normal dispatch requires exactly one registered graph with `kind:
 `graphId`, optional `callId`, and optional `input`, then starts an isolated
 callable call when the target is registered with `kind: "callable"`.
 
-`start_run` validates that the target graph is registered as a `workflow` and
-starts it directly from its package folder.
+`start_run` validates that the target graph is registered as a `workflow`,
+checks declared start requirements against host-supplied `preconditionState`,
+and starts it directly from its package folder.
 
 Effectful `start_run` and `call_graph` actions are denied by default unless
 the caller explicitly allows every declared graph effect. Read-only dispatcher
@@ -177,6 +178,37 @@ ripplegraph reconcile --source backend-fsm --snapshot '{"status":"waiting"}' --e
 Both commands append transition-log entries with the current graph position as
 both `from` and `to`. `reconcile` returns `reconciliation.aligned` so the host
 can decide whether to stop, ask the user, or advance later.
+
+## Start Requirements
+
+Workflow graphs can declare opaque start requirements that the host evaluates
+before requesting a run start:
+
+```json
+{
+  "requires": [
+    {
+      "id": "workspace_ready",
+      "describe": "a prepared workspace",
+      "unmetRedirect": "setup-workspace",
+      "unmetMessage": "Set up the workspace first."
+    }
+  ]
+}
+```
+
+Ripplegraph does not evaluate those predicates or inspect domain files. The
+host passes booleans at the start boundary:
+
+```sh
+ripplegraph start --graph daily --run-id daily-a --precondition-state '{"workspace_ready":true}' --workflow-root .
+ripplegraph dispatch --action '{"action":"start_run","graphId":"daily","preconditionState":{"workspace_ready":true}}' --workflow-root .
+```
+
+Missing or false predicate values fail closed with
+`E_START_REQUIREMENTS_UNMET` before run state is created. JSON CLI errors
+include `details.unmet[]` so product CLIs can render redirect guidance without
+parsing strings.
 
 ## Effect Policy
 

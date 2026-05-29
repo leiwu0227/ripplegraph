@@ -25,9 +25,10 @@
     },
     {
       "number": 4,
-      "status": "pending",
-      "started_at": null,
-      "completed_at": null
+      "status": "completed",
+      "started_at": "2026-05-29T12:23:43Z",
+      "completed_at": "2026-05-29T12:25:32Z",
+      "summary": "Documented workflow start requirements, recorded verification evidence, and ran full test/build verification."
     }
   ]
 }
