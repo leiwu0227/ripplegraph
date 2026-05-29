@@ -65,6 +65,7 @@ export interface CallableState {
     instructions?: string;
     exec: Node['exec'];
     outputSchema: JsonSchema;
+    operatorContext?: Node['operatorContext'];
   };
   context: {
     previous: Array<{ id: string; purpose: string; output?: unknown }>;
@@ -315,6 +316,7 @@ function stateForCallable(manifest: GraphPackageManifest, checkpoint: CallableCh
       instructions: node.instructions,
       exec: node.exec,
       outputSchema: node.outputSchema,
+      operatorContext: node.operatorContext,
     },
     context: {
       previous: Object.entries(checkpoint.outputs).map(([id, output]) => ({

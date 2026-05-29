@@ -170,6 +170,7 @@ export const nodeSchema = z
     sideChannelActions: z.array(sideChannelActionSchema).optional(),
     toolContract: toolContractSchema.optional(),
     validators: z.array(validatorContractSchema).optional(),
+    operatorContext: z.record(z.string(), z.unknown()).optional(),
     edges: z.array(edgeSchema).default([]),
     terminal: z.boolean().default(false),
     // undefined inherits graph.effects; [] overrides to require nothing; non-empty array overrides with that set.

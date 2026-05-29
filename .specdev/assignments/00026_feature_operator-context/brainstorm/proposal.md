@@ -1,0 +1,3 @@
+Ripplegraph should support optional passive `operatorContext` metadata on graph nodes. Downstream host CLIs such as Oceanlive need to show operator-facing context for the current workflow node, including active tables, files, editable surfaces, relevant columns, or other display hints, without forking Ripplegraph or encoding domain concepts into the runtime.
+
+This assignment will add `operatorContext?: Record<string, unknown>` to the node contract, preserve it through graph parsing/validation, and include it in state-style responses where the current node is already described. Runtime execution semantics must remain unchanged: transitions, gates, validators, effects, side channels, and callable/workflow stepping should ignore this field.
