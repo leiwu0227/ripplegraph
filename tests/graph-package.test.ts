@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { loadGraphPackage } from '../src/index.js';
+import { loadGraphPackage, RipplegraphError } from '../src/index.js';
 
 function makePackageRoot(manifest: unknown): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-package-'));
@@ -39,7 +39,17 @@ const validManifest = {
 
 describe('graph package loader', () => {
   it('loads a valid flat graph package manifest', () => {
-    const root = makePackageRoot(validManifest);
+    const root = makePackageRoot({
+      ...validManifest,
+      requires: [
+        {
+          id: 'workspace_ready',
+          describe: 'a prepared workspace',
+          unmetRedirect: 'setup-workspace',
+          unmetMessage: 'Set up the workspace first.',
+        },
+      ],
+    });
     try {
       expect(loadGraphPackage(root)).toMatchObject({
         path: root,
@@ -49,8 +59,30 @@ describe('graph package loader', () => {
           kind: 'workflow',
           activationHints: ['triage support ticket'],
           effects: ['read_workspace'],
+          requires: [
+            {
+              id: 'workspace_ready',
+              describe: 'a prepared workspace',
+              unmetRedirect: 'setup-workspace',
+              unmetMessage: 'Set up the workspace first.',
+            },
+          ],
           entry: 'classify-ticket',
         },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('defaults requires and preserves structured error details', () => {
+    const root = makePackageRoot(validManifest);
+    try {
+      expect(loadGraphPackage(root).manifest.requires).toEqual([]);
+      expect(new RipplegraphError('E_TEST', 'test message', { example: true })).toMatchObject({
+        code: 'E_TEST',
+        message: 'test message',
+        details: { example: true },
       });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });

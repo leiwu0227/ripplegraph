@@ -26,6 +26,7 @@ export interface RegisteredGraphSummary {
   title?: string;
   description?: string;
   activationHints: string[];
+  requires: RegistryEntry['requires'];
   effects: string[];
   path: string;
 }
@@ -224,6 +225,7 @@ function graphSummary(entry: RegistryEntry): RegisteredGraphSummary {
     title: entry.title,
     description: entry.description,
     activationHints: entry.activationHints,
+    requires: entry.requires,
     effects: entry.effects,
     path: entry.path,
   };

@@ -14,6 +14,14 @@ const manifest = {
   inputSchema: { type: 'object' },
   outputSchema: { type: 'object' },
   effects: ['read_workspace'],
+  requires: [
+    {
+      id: 'workspace_ready',
+      describe: 'a prepared workspace',
+      unmetRedirect: 'setup-workspace',
+      unmetMessage: 'Set up the workspace first.',
+    },
+  ],
   entry: 'classify-ticket',
   nodes: {
     'classify-ticket': {
@@ -49,6 +57,14 @@ describe('graph registry storage', () => {
         kind: 'workflow',
         activationHints: ['triage support ticket'],
         effects: ['read_workspace'],
+        requires: [
+          {
+            id: 'workspace_ready',
+            describe: 'a prepared workspace',
+            unmetRedirect: 'setup-workspace',
+            unmetMessage: 'Set up the workspace first.',
+          },
+        ],
         path: '.ripplegraph/graphs/support-triage',
         registeredAt: '2026-05-21T00:00:00.000Z',
       });

@@ -12,6 +12,7 @@ export interface GraphPackageManifestInput {
   inputSchema?: unknown;
   outputSchema?: unknown;
   effects?: string[];
+  requires?: unknown[];
   entry: string;
   nodes: Record<string, unknown>;
 }
@@ -52,6 +53,7 @@ function normalizedManifest(input: GraphPackageManifestInput): Record<string, un
     ...(input.inputSchema !== undefined ? { inputSchema: input.inputSchema } : {}),
     ...(input.outputSchema !== undefined ? { outputSchema: input.outputSchema } : {}),
     ...(input.effects !== undefined ? { effects: input.effects } : {}),
+    ...(input.requires !== undefined ? { requires: input.requires } : {}),
     entry: input.entry,
     nodes: input.nodes,
   };
@@ -92,6 +94,7 @@ export function createTestWorkspace(options: CreateTestWorkspaceOptions): string
       ...(manifest.description !== undefined ? { description: manifest.description } : {}),
       activationHints: (manifest.activationHints as string[] | undefined) ?? [],
       effects: (manifest.effects as string[] | undefined) ?? [],
+      requires: (manifest.requires as unknown[] | undefined) ?? [],
       path: packageRelativePath(graph.id),
       registeredAt: DEFAULT_REGISTERED_AT,
     };

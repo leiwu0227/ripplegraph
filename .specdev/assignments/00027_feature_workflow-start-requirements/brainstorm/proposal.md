@@ -1,0 +1,3 @@
+Ripplegraph should support graph-level workflow start requirements: declarative prerequisites on a graph manifest that are evaluated by the host and enforced by the kernel before a workflow run is created. This closes the gap where products such as Oceanlive need "vessel must exist before live-day/mockcopy starts" without making the dispatcher or kernel understand domain state.
+
+The design should add a `requires` manifest field, preserve it through registration and dispatch summaries, accept host-supplied `preconditionState` on generic start paths, and fail closed from `startRun()` with a structured `RipplegraphError` when requirements are unmet. Dispatch remains only a caller of start; direct starts and product-specific commands should receive the same protection.

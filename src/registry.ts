@@ -3,7 +3,7 @@ import path from 'node:path';
 import { z } from 'zod';
 import { loadGraphPackage, type GraphPackage } from './graph-package.js';
 import { registryPath } from './storage.js';
-import { idSchema, RipplegraphError } from './schema.js';
+import { idSchema, RipplegraphError, startRequirementSchema } from './schema.js';
 
 export const registryEntrySchema = z
   .object({
@@ -13,6 +13,7 @@ export const registryEntrySchema = z
     title: z.string().min(1).optional(),
     description: z.string().min(1).optional(),
     activationHints: z.array(z.string().min(1)).default([]),
+    requires: z.array(startRequirementSchema).default([]),
     effects: z.array(idSchema).default([]),
     path: z.string().min(1),
     registeredAt: z.string().min(1),
@@ -113,6 +114,7 @@ export function registerGraphPackage(options: RegisterGraphPackageOptions): Regi
     title: graphPackage.manifest.title,
     description: graphPackage.manifest.description,
     activationHints: graphPackage.manifest.activationHints,
+    requires: graphPackage.manifest.requires,
     effects: graphPackage.manifest.effects,
     path: registeredPath,
     registeredAt: options.now ?? new Date().toISOString(),

@@ -61,6 +61,14 @@ describe('dispatcher runtime', () => {
           title: 'Support Triage',
           activationHints: ['triage support tickets'],
           effects: ['read_workspace', 'write_files'],
+          requires: [
+            {
+              id: 'workspace_ready',
+              describe: 'a prepared workspace',
+              unmetRedirect: 'setup-workspace',
+              unmetMessage: 'Set up the workspace first.',
+            },
+          ],
         }),
       });
 
@@ -70,7 +78,19 @@ describe('dispatcher runtime', () => {
         request: 'triage support',
         orientation: expect.any(String),
         availableGraphs: [
-          { id: 'support-triage', kind: 'workflow', activationHints: ['triage support tickets'] },
+          {
+            id: 'support-triage',
+            kind: 'workflow',
+            activationHints: ['triage support tickets'],
+            requires: [
+              {
+                id: 'workspace_ready',
+                describe: 'a prepared workspace',
+                unmetRedirect: 'setup-workspace',
+                unmetMessage: 'Set up the workspace first.',
+              },
+            ],
+          },
           { id: 'workspace-dispatcher', kind: 'dispatcher', activationHints: ['route workspace work'] },
         ],
         actionSchema: { oneOf: expect.any(Array) },

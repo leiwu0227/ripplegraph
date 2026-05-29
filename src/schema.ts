@@ -4,6 +4,7 @@ export class RipplegraphError extends Error {
   constructor(
     public readonly code: string,
     message: string,
+    public readonly details?: unknown,
   ) {
     super(message);
     this.name = 'RipplegraphError';
@@ -150,6 +151,15 @@ export const workflowRefSchema = z
   })
   .strict();
 
+export const startRequirementSchema = z
+  .object({
+    id: idSchema,
+    describe: z.string().min(1),
+    unmetRedirect: idSchema.optional(),
+    unmetMessage: z.string().min(1).optional(),
+  })
+  .strict();
+
 export const edgeSchema = z
   .object({
     to: idSchema,
@@ -193,6 +203,7 @@ const graphFieldsSchema = z
     title: z.string().min(1).optional(),
     description: z.string().min(1).optional(),
     activationHints: z.array(z.string().min(1)).default([]),
+    requires: z.array(startRequirementSchema).default([]),
     inputSchema: jsonSchemaSchema.default({ type: 'object' }),
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
     effects: z.array(idSchema).default([]),
@@ -363,6 +374,7 @@ export const callableTransitionLogEntrySchema = z
 export type Workflow = z.infer<typeof workflowSchema>;
 export type GraphPackageManifest = z.infer<typeof graphPackageManifestSchema>;
 export type Graph = z.infer<typeof graphSchema>;
+export type StartRequirement = z.infer<typeof startRequirementSchema>;
 export type Node = z.infer<typeof nodeSchema>;
 export type Gate = z.infer<typeof gateSchema>;
 export type Interaction = z.infer<typeof interactionSchema>;

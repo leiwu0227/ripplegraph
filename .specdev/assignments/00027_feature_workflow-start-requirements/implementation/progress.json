@@ -1,0 +1,31 @@
+{
+  "plan_file": ".specdev/assignments/00027_feature_workflow-start-requirements/breakdown/plan.md",
+  "total_tasks": 4,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-05-29T12:15:52Z",
+      "completed_at": "2026-05-29T12:17:30Z",
+      "summary": "Added graph start requirement metadata, structured error details, registry preservation, dispatch summaries, and focused metadata tests."
+    },
+    {
+      "number": 2,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 3,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "number": 4,
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null
+    }
+  ]
+}
