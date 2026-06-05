@@ -1,6 +1,6 @@
 {
   "name": "ripplegraph",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A lightweight, host-agent-driven workflow framework. The graph owns flow; the LLM is free within nodes.",
   "type": "module",
   "main": "./dist/index.js",
