@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { type GraphPackage } from './graph-package.js';
+import { type DispatcherGraphManifest, type ExecutableGraphManifest, type GraphPackageManifest } from './schema.js';
 export declare const registryEntrySchema: z.ZodObject<{
     id: z.ZodString;
     version: z.ZodString;
@@ -28,36 +29,36 @@ export declare const registryEntrySchema: z.ZodObject<{
     registeredAt: z.ZodString;
 }, "strict", z.ZodTypeAny, {
     path: string;
-    kind: "dispatcher" | "workflow" | "callable";
+    kind: "workflow" | "callable" | "dispatcher";
     id: string;
     effects: string[];
-    activationHints: string[];
     requires: {
         id: string;
         describe: string;
         unmetRedirect?: string | undefined;
         unmetMessage?: string | undefined;
     }[];
+    activationHints: string[];
     version: string;
     registeredAt: string;
     description?: string | undefined;
     title?: string | undefined;
 }, {
     path: string;
-    kind: "dispatcher" | "workflow" | "callable";
+    kind: "workflow" | "callable" | "dispatcher";
     id: string;
     version: string;
     registeredAt: string;
     description?: string | undefined;
     effects?: string[] | undefined;
-    title?: string | undefined;
-    activationHints?: string[] | undefined;
     requires?: {
         id: string;
         describe: string;
         unmetRedirect?: string | undefined;
         unmetMessage?: string | undefined;
     }[] | undefined;
+    title?: string | undefined;
+    activationHints?: string[] | undefined;
 }>;
 export declare const registrySchema: z.ZodObject<{
     version: z.ZodLiteral<1>;
@@ -89,51 +90,51 @@ export declare const registrySchema: z.ZodObject<{
         registeredAt: z.ZodString;
     }, "strict", z.ZodTypeAny, {
         path: string;
-        kind: "dispatcher" | "workflow" | "callable";
+        kind: "workflow" | "callable" | "dispatcher";
         id: string;
         effects: string[];
-        activationHints: string[];
         requires: {
             id: string;
             describe: string;
             unmetRedirect?: string | undefined;
             unmetMessage?: string | undefined;
         }[];
+        activationHints: string[];
         version: string;
         registeredAt: string;
         description?: string | undefined;
         title?: string | undefined;
     }, {
         path: string;
-        kind: "dispatcher" | "workflow" | "callable";
+        kind: "workflow" | "callable" | "dispatcher";
         id: string;
         version: string;
         registeredAt: string;
         description?: string | undefined;
         effects?: string[] | undefined;
-        title?: string | undefined;
-        activationHints?: string[] | undefined;
         requires?: {
             id: string;
             describe: string;
             unmetRedirect?: string | undefined;
             unmetMessage?: string | undefined;
         }[] | undefined;
+        title?: string | undefined;
+        activationHints?: string[] | undefined;
     }>>>;
 }, "strict", z.ZodTypeAny, {
     version: 1;
     graphs: Record<string, {
         path: string;
-        kind: "dispatcher" | "workflow" | "callable";
+        kind: "workflow" | "callable" | "dispatcher";
         id: string;
         effects: string[];
-        activationHints: string[];
         requires: {
             id: string;
             describe: string;
             unmetRedirect?: string | undefined;
             unmetMessage?: string | undefined;
         }[];
+        activationHints: string[];
         version: string;
         registeredAt: string;
         description?: string | undefined;
@@ -143,20 +144,20 @@ export declare const registrySchema: z.ZodObject<{
     version: 1;
     graphs?: Record<string, {
         path: string;
-        kind: "dispatcher" | "workflow" | "callable";
+        kind: "workflow" | "callable" | "dispatcher";
         id: string;
         version: string;
         registeredAt: string;
         description?: string | undefined;
         effects?: string[] | undefined;
-        title?: string | undefined;
-        activationHints?: string[] | undefined;
         requires?: {
             id: string;
             describe: string;
             unmetRedirect?: string | undefined;
             unmetMessage?: string | undefined;
         }[] | undefined;
+        title?: string | undefined;
+        activationHints?: string[] | undefined;
     }> | undefined;
 }>;
 export type RegistryEntry = z.infer<typeof registryEntrySchema>;
@@ -167,16 +168,17 @@ export interface RegisterGraphPackageOptions {
     force?: boolean;
     now?: string;
 }
-export interface ResolveRegisteredGraphPackageOptions {
+export type ManifestForKind<K extends RegistryEntry['kind'] | undefined> = K extends 'dispatcher' ? DispatcherGraphManifest : K extends 'workflow' | 'callable' ? ExecutableGraphManifest : GraphPackageManifest;
+export interface ResolveRegisteredGraphPackageOptions<K extends RegistryEntry['kind'] | undefined = RegistryEntry['kind'] | undefined> {
     workflowRoot: string;
     graphId: string;
-    kind?: RegistryEntry['kind'];
+    kind?: K;
 }
 export declare function readRegistry(workflowRoot: string): GraphRegistry;
 export declare function writeRegistry(workflowRoot: string, registry: GraphRegistry): void;
 export declare function listRegisteredGraphs(workflowRoot: string): RegistryEntry[];
 export declare function registerGraphPackage(options: RegisterGraphPackageOptions): RegistryEntry;
-export declare function resolveRegisteredGraphPackage(options: ResolveRegisteredGraphPackageOptions): {
+export declare function resolveRegisteredGraphPackage<K extends RegistryEntry['kind'] | undefined = undefined>(options: ResolveRegisteredGraphPackageOptions<K>): {
     entry: RegistryEntry;
-    graphPackage: GraphPackage;
+    graphPackage: GraphPackage<ManifestForKind<K>>;
 };

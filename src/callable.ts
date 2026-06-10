@@ -12,7 +12,7 @@ import { resolveRegisteredGraphPackage } from './registry.js';
 import {
   RipplegraphError,
   type CallableCheckpoint,
-  type GraphPackageManifest,
+  type ExecutableGraphManifest,
   type JsonSchema,
   type Node,
   type Position,
@@ -261,7 +261,7 @@ export function listCallableCalls(opts: CallableRootOptions): CallableCallList {
   };
 }
 
-function assertCallableSupported(manifest: GraphPackageManifest): void {
+function assertCallableSupported(manifest: ExecutableGraphManifest): void {
   assertSupportedCallableSchema(manifest.inputSchema);
   assertSupportedCallableSchema(manifest.outputSchema);
   for (const [nodeId, node] of Object.entries(manifest.nodes)) {
@@ -283,7 +283,7 @@ function assertCallableSupported(manifest: GraphPackageManifest): void {
   }
 }
 
-function loadCheckpointedCallablePackage(workflowRoot: string, checkpoint: CallableCheckpoint): GraphPackageManifest {
+function loadCheckpointedCallablePackage(workflowRoot: string, checkpoint: CallableCheckpoint): ExecutableGraphManifest {
   const packageRoot = path.isAbsolute(checkpoint.packagePath)
     ? checkpoint.packagePath
     : path.join(workflowRoot, checkpoint.packagePath);
@@ -298,7 +298,7 @@ function loadCheckpointedCallablePackage(workflowRoot: string, checkpoint: Calla
   return manifest;
 }
 
-function stateForCallable(manifest: GraphPackageManifest, checkpoint: CallableCheckpoint): CallableState {
+function stateForCallable(manifest: ExecutableGraphManifest, checkpoint: CallableCheckpoint): CallableState {
   const node = getNode(manifest, checkpoint.position.node);
   return {
     status: 'active',

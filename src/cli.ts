@@ -22,6 +22,7 @@ import {
   suspendRun,
   validateWorkflowRoot,
   type GraphPackageManifest,
+  type StartRequirement,
 } from './index.js';
 import {
   effectPolicyFromFlags,
@@ -214,18 +215,30 @@ function handleDispatchCommand(flags: ReturnType<typeof parseArgs>['flags']): un
   throw new RipplegraphError('E_MISSING_ARG', 'missing --request or --action');
 }
 
-function packageSummary(manifest: GraphPackageManifest): Omit<GraphPackageManifest, 'nodes' | 'inputSchema' | 'outputSchema' | 'entry'> & { entry: string } {
-  return {
+interface GraphPackageSummary {
+  id: string;
+  version: string;
+  kind: GraphPackageManifest['kind'];
+  title?: string;
+  description?: string;
+  activationHints: string[];
+  requires: StartRequirement[];
+  effects: string[];
+  entry?: string;
+}
+
+function packageSummary(manifest: GraphPackageManifest): GraphPackageSummary {
+  const summary = {
     id: manifest.id,
     version: manifest.version,
     kind: manifest.kind,
     title: manifest.title,
     description: manifest.description,
     activationHints: manifest.activationHints,
-    requires: manifest.requires,
     effects: manifest.effects,
-    entry: manifest.entry,
   };
+  if (manifest.kind === 'dispatcher') return { ...summary, requires: [] };
+  return { ...summary, requires: manifest.requires, entry: manifest.entry };
 }
 
 function handleGraphCommand(flags: ReturnType<typeof parseArgs>['flags'], positional: string[]): unknown {

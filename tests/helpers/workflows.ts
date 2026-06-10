@@ -157,16 +157,6 @@ function workspaceDispatcherGraph(): GraphPackageManifestInput {
     id: 'workspace-dispatcher',
     kind: 'dispatcher',
     title: 'Workspace Dispatcher',
-    entry: 'route',
-    nodes: {
-      route: {
-        purpose: 'Choose the best graph for an engineering request',
-        exec: 'inline',
-        outputSchema: { type: 'object' },
-        edges: [{ to: 'done' }],
-      },
-      done: { purpose: 'Dispatcher recommendation complete', terminal: true },
-    },
   };
 }
 
@@ -229,31 +219,7 @@ export function makeGraphMetadataWorkflowRoot(): string {
         title: 'Workspace Dispatcher',
         description: 'Selects the right workflow.',
         activationHints: ['route user requests'],
-        inputSchema: {
-          type: 'object',
-          required: ['request'],
-          properties: { request: { type: 'string' } },
-        },
-        outputSchema: {
-          type: 'object',
-          required: ['action'],
-          properties: { action: { type: 'string' } },
-        },
         effects: ['read_workspace'],
-        entry: 'route',
-        nodes: {
-          route: {
-            purpose: 'Route a user request',
-            exec: 'inline',
-            outputSchema: {
-              type: 'object',
-              required: ['action'],
-              properties: { action: { type: 'string' } },
-            },
-            edges: [{ to: 'done' }],
-          },
-          done: { purpose: 'Complete', terminal: true },
-        },
       },
       {
         id: 'legacy',

@@ -5,7 +5,14 @@ import { loadGraphPackage, type GraphPackage } from './graph-package.js';
 import { readJson, writeJson } from './internal/json-io.js';
 import { formatIssues } from './internal/zod-issues.js';
 import { registryPath } from './storage.js';
-import { idSchema, RipplegraphError, startRequirementSchema } from './schema.js';
+import {
+  idSchema,
+  RipplegraphError,
+  startRequirementSchema,
+  type DispatcherGraphManifest,
+  type ExecutableGraphManifest,
+  type GraphPackageManifest,
+} from './schema.js';
 
 export const registryEntrySchema = z
   .object({
@@ -39,10 +46,20 @@ export interface RegisterGraphPackageOptions {
   now?: string;
 }
 
-export interface ResolveRegisteredGraphPackageOptions {
+// Maps the requested kind to the manifest variant the runtime kind checks below guarantee,
+// so callers that pass an explicit kind get a narrowed manifest without local guards.
+export type ManifestForKind<K extends RegistryEntry['kind'] | undefined> = K extends 'dispatcher'
+  ? DispatcherGraphManifest
+  : K extends 'workflow' | 'callable'
+    ? ExecutableGraphManifest
+    : GraphPackageManifest;
+
+export interface ResolveRegisteredGraphPackageOptions<
+  K extends RegistryEntry['kind'] | undefined = RegistryEntry['kind'] | undefined,
+> {
   workflowRoot: string;
   graphId: string;
-  kind?: RegistryEntry['kind'];
+  kind?: K;
 }
 
 function sortRegistry(registry: GraphRegistry): GraphRegistry {
@@ -97,7 +114,7 @@ export function registerGraphPackage(options: RegisterGraphPackageOptions): Regi
     title: graphPackage.manifest.title,
     description: graphPackage.manifest.description,
     activationHints: graphPackage.manifest.activationHints,
-    requires: graphPackage.manifest.requires,
+    requires: graphPackage.manifest.kind === 'dispatcher' ? [] : graphPackage.manifest.requires,
     effects: graphPackage.manifest.effects,
     path: registeredPath,
     registeredAt: options.now ?? new Date().toISOString(),
@@ -107,9 +124,11 @@ export function registerGraphPackage(options: RegisterGraphPackageOptions): Regi
   return entry;
 }
 
-export function resolveRegisteredGraphPackage(options: ResolveRegisteredGraphPackageOptions): {
+export function resolveRegisteredGraphPackage<K extends RegistryEntry['kind'] | undefined = undefined>(
+  options: ResolveRegisteredGraphPackageOptions<K>,
+): {
   entry: RegistryEntry;
-  graphPackage: GraphPackage;
+  graphPackage: GraphPackage<ManifestForKind<K>>;
 } {
   const entry = readRegistry(options.workflowRoot).graphs[options.graphId];
   if (!entry) throw new RipplegraphError('E_UNKNOWN_GRAPH', `unknown registered graph: ${options.graphId}`);
@@ -124,5 +143,6 @@ export function resolveRegisteredGraphPackage(options: ResolveRegisteredGraphPac
       `registered graph ${entry.id} points to package ${graphPackage.manifest.id} (${graphPackage.manifest.kind})`,
     );
   }
-  return { entry, graphPackage };
+  // The kind checks above guarantee the manifest matches the requested kind's variant.
+  return { entry, graphPackage: graphPackage as GraphPackage<ManifestForKind<K>> };
 }

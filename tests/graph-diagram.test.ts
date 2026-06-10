@@ -7,6 +7,7 @@ const manifest: GraphPackageManifest = {
   kind: 'workflow',
   entry: 'classify.ticket',
   activationHints: [],
+  requires: [],
   inputSchema: { type: 'object' },
   outputSchema: { type: 'object' },
   effects: [],
@@ -60,5 +61,22 @@ describe('graph diagram renderer', () => {
     expect(diagram).toContain('"done" [label="done');
     expect(diagram).toContain('terminal');
     expect(diagram).toContain('"classify_ticket" -> "done" [label="decision=approved"];');
+  });
+
+  it('renders a metadata-only note for dispatcher packages in both formats', () => {
+    const dispatcher: GraphPackageManifest = {
+      id: 'workspace-dispatcher',
+      version: '0.1.0',
+      kind: 'dispatcher',
+      activationHints: [],
+      effects: [],
+    };
+
+    expect(renderGraphDiagram(dispatcher)).toBe(
+      '%% workspace-dispatcher (dispatcher) v0.1.0: metadata-only dispatcher package, no nodes to diagram\n',
+    );
+    expect(renderGraphDiagram(dispatcher, 'dot')).toBe(
+      '// workspace-dispatcher (dispatcher) v0.1.0: metadata-only dispatcher package, no nodes to diagram\n',
+    );
   });
 });

@@ -169,16 +169,19 @@ export const nodeSchema = z
         });
     }
 });
-const graphFieldsSchema = z
-    .object({
-    kind: z.enum(['dispatcher', 'workflow', 'callable']).default('workflow'),
+const graphMetadataFields = {
     title: z.string().min(1).optional(),
     description: z.string().min(1).optional(),
     activationHints: z.array(z.string().min(1)).default([]),
+    effects: z.array(idSchema).default([]),
+};
+const executableGraphFieldsSchema = z
+    .object({
+    kind: z.enum(['workflow', 'callable']),
+    ...graphMetadataFields,
     requires: z.array(startRequirementSchema).default([]),
     inputSchema: jsonSchemaSchema.default({ type: 'object' }),
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
-    effects: z.array(idSchema).default([]),
     entry: idSchema,
     nodes: z.record(idSchema, nodeSchema),
 })
@@ -203,13 +206,27 @@ function validateGraphReferences(graph, ctx) {
         }
     }
 }
-export const graphSchema = graphFieldsSchema.superRefine(validateGraphReferences);
-export const graphPackageManifestSchema = graphFieldsSchema
-    .extend({
+export const graphSchema = executableGraphFieldsSchema.superRefine(validateGraphReferences);
+// Dispatchers are resolved by registry metadata only and never execute, so their
+// manifests carry no body (entry/nodes) and no I/O contract (inputSchema/outputSchema/requires);
+// the dispatch contract is hardcoded in dispatcher.ts. strict() rejects body-carrying manifests.
+export const dispatcherGraphManifestSchema = z
+    .object({
     id: idSchema,
     version: z.string().min(1),
+    kind: z.literal('dispatcher'),
+    ...graphMetadataFields,
 })
+    .strict();
+export const executableGraphManifestSchema = executableGraphFieldsSchema.extend({
+    id: idSchema,
+    version: z.string().min(1),
+});
+export const graphPackageManifestSchema = z
+    .discriminatedUnion('kind', [dispatcherGraphManifestSchema, executableGraphManifestSchema])
     .superRefine((manifest, ctx) => {
+    if (manifest.kind === 'dispatcher')
+        return;
     validateGraphReferences(manifest, ctx);
 });
 export const workflowSchema = z

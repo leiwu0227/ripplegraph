@@ -1,15 +1,25 @@
-import { RipplegraphError, type GraphPackageManifest, type Node } from '../schema.js';
+import {
+  RipplegraphError,
+  type ExecutableGraphManifest,
+  type GraphPackageManifest,
+  type Node,
+} from '../schema.js';
 import { stableValue } from '../internal/json-utils.js';
 
 export type DiagramFormat = 'mermaid' | 'dot';
 
 export function renderGraphDiagram(manifest: GraphPackageManifest, format: DiagramFormat = 'mermaid'): string {
-  if (format === 'mermaid') return renderMermaid(manifest);
-  if (format === 'dot') return renderDot(manifest);
-  throw new RipplegraphError('E_INVALID_DIAGRAM_FORMAT', `unsupported graph diagram format: ${format}`);
+  if (format !== 'mermaid' && format !== 'dot') {
+    throw new RipplegraphError('E_INVALID_DIAGRAM_FORMAT', `unsupported graph diagram format: ${format}`);
+  }
+  if (manifest.kind === 'dispatcher') {
+    const note = `${graphLabel(manifest)}: metadata-only dispatcher package, no nodes to diagram`;
+    return format === 'mermaid' ? `%% ${note}\n` : `// ${note}\n`;
+  }
+  return format === 'mermaid' ? renderMermaid(manifest) : renderDot(manifest);
 }
 
-function renderMermaid(manifest: GraphPackageManifest): string {
+function renderMermaid(manifest: ExecutableGraphManifest): string {
   const lines = [`%% ${graphLabel(manifest)}`, 'flowchart LR'];
   for (const [nodeId, node] of Object.entries(manifest.nodes)) {
     lines.push(`  ${diagramNodeId(nodeId)}["${mermaidLabel(nodeLabel(manifest, nodeId, node))}"]`);
@@ -23,7 +33,7 @@ function renderMermaid(manifest: GraphPackageManifest): string {
   return `${lines.join('\n')}\n`;
 }
 
-function renderDot(manifest: GraphPackageManifest): string {
+function renderDot(manifest: ExecutableGraphManifest): string {
   const lines = [`digraph "${dotLabel(manifest.id)}" {`, '  rankdir=LR;', `  label="${dotLabel(graphLabel(manifest))}";`];
   for (const [nodeId, node] of Object.entries(manifest.nodes)) {
     lines.push(`  "${diagramNodeId(nodeId)}" [label="${dotLabel(nodeLabel(manifest, nodeId, node))}"];`);
@@ -42,7 +52,7 @@ function graphLabel(manifest: GraphPackageManifest): string {
   return `${manifest.id} (${manifest.kind}) v${manifest.version}`;
 }
 
-function nodeLabel(manifest: GraphPackageManifest, nodeId: string, node: Node): string {
+function nodeLabel(manifest: ExecutableGraphManifest, nodeId: string, node: Node): string {
   const tags = [
     nodeId === manifest.entry ? 'entry' : undefined,
     node.gate ? 'gate' : undefined,

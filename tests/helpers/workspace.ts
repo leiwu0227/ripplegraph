@@ -2,20 +2,29 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-export interface GraphPackageManifestInput {
+interface GraphPackageManifestBaseInput {
   id: string;
   version?: string;
-  kind?: 'workflow' | 'dispatcher' | 'callable';
   title?: string;
   description?: string;
   activationHints?: string[];
+  effects?: string[];
+}
+
+export interface DispatcherGraphPackageManifestInput extends GraphPackageManifestBaseInput {
+  kind: 'dispatcher';
+}
+
+export interface ExecutableGraphPackageManifestInput extends GraphPackageManifestBaseInput {
+  kind?: 'workflow' | 'callable';
   inputSchema?: unknown;
   outputSchema?: unknown;
-  effects?: string[];
   requires?: unknown[];
   entry: string;
   nodes: Record<string, unknown>;
 }
+
+export type GraphPackageManifestInput = DispatcherGraphPackageManifestInput | ExecutableGraphPackageManifestInput;
 
 export interface WorkspaceManifestInput {
   id?: string;
@@ -43,16 +52,20 @@ function packageRelativePath(graphId: string): string {
 }
 
 function normalizedManifest(input: GraphPackageManifestInput): Record<string, unknown> {
-  return {
+  const base = {
     id: input.id,
     version: input.version ?? '0.1.0',
     kind: input.kind ?? 'workflow',
     ...(input.title !== undefined ? { title: input.title } : {}),
     ...(input.description !== undefined ? { description: input.description } : {}),
     ...(input.activationHints !== undefined ? { activationHints: input.activationHints } : {}),
+    ...(input.effects !== undefined ? { effects: input.effects } : {}),
+  };
+  if (input.kind === 'dispatcher') return base;
+  return {
+    ...base,
     ...(input.inputSchema !== undefined ? { inputSchema: input.inputSchema } : {}),
     ...(input.outputSchema !== undefined ? { outputSchema: input.outputSchema } : {}),
-    ...(input.effects !== undefined ? { effects: input.effects } : {}),
     ...(input.requires !== undefined ? { requires: input.requires } : {}),
     entry: input.entry,
     nodes: input.nodes,

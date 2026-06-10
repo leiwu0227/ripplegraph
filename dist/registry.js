@@ -5,7 +5,7 @@ import { loadGraphPackage } from './graph-package.js';
 import { readJson, writeJson } from './internal/json-io.js';
 import { formatIssues } from './internal/zod-issues.js';
 import { registryPath } from './storage.js';
-import { idSchema, RipplegraphError, startRequirementSchema } from './schema.js';
+import { idSchema, RipplegraphError, startRequirementSchema, } from './schema.js';
 export const registryEntrySchema = z
     .object({
     id: idSchema,
@@ -70,7 +70,7 @@ export function registerGraphPackage(options) {
         title: graphPackage.manifest.title,
         description: graphPackage.manifest.description,
         activationHints: graphPackage.manifest.activationHints,
-        requires: graphPackage.manifest.requires,
+        requires: graphPackage.manifest.kind === 'dispatcher' ? [] : graphPackage.manifest.requires,
         effects: graphPackage.manifest.effects,
         path: registeredPath,
         registeredAt: options.now ?? new Date().toISOString(),
@@ -91,5 +91,6 @@ export function resolveRegisteredGraphPackage(options) {
     if (graphPackage.manifest.id !== entry.id || graphPackage.manifest.kind !== entry.kind) {
         throw new RipplegraphError('E_REGISTRY_PACKAGE_MISMATCH', `registered graph ${entry.id} points to package ${graphPackage.manifest.id} (${graphPackage.manifest.kind})`);
     }
-    return { entry, graphPackage };
+    // The kind checks above guarantee the manifest matches the requested kind's variant.
+    return { entry, graphPackage: graphPackage };
 }

@@ -1,11 +1,14 @@
-import { RipplegraphError } from '../schema.js';
+import { RipplegraphError, } from '../schema.js';
 import { stableValue } from '../internal/json-utils.js';
 export function renderGraphDiagram(manifest, format = 'mermaid') {
-    if (format === 'mermaid')
-        return renderMermaid(manifest);
-    if (format === 'dot')
-        return renderDot(manifest);
-    throw new RipplegraphError('E_INVALID_DIAGRAM_FORMAT', `unsupported graph diagram format: ${format}`);
+    if (format !== 'mermaid' && format !== 'dot') {
+        throw new RipplegraphError('E_INVALID_DIAGRAM_FORMAT', `unsupported graph diagram format: ${format}`);
+    }
+    if (manifest.kind === 'dispatcher') {
+        const note = `${graphLabel(manifest)}: metadata-only dispatcher package, no nodes to diagram`;
+        return format === 'mermaid' ? `%% ${note}\n` : `// ${note}\n`;
+    }
+    return format === 'mermaid' ? renderMermaid(manifest) : renderDot(manifest);
 }
 function renderMermaid(manifest) {
     const lines = [`%% ${graphLabel(manifest)}`, 'flowchart LR'];

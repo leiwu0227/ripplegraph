@@ -165,17 +165,18 @@ function handleDispatchCommand(flags) {
     throw new RipplegraphError('E_MISSING_ARG', 'missing --request or --action');
 }
 function packageSummary(manifest) {
-    return {
+    const summary = {
         id: manifest.id,
         version: manifest.version,
         kind: manifest.kind,
         title: manifest.title,
         description: manifest.description,
         activationHints: manifest.activationHints,
-        requires: manifest.requires,
         effects: manifest.effects,
-        entry: manifest.entry,
     };
+    if (manifest.kind === 'dispatcher')
+        return { ...summary, requires: [] };
+    return { ...summary, requires: manifest.requires, entry: manifest.entry };
 }
 function handleGraphCommand(flags, positional) {
     const [subcommand, packageRoot] = positional;

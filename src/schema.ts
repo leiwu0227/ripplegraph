@@ -197,22 +197,26 @@ export const nodeSchema = z
     }
   });
 
-const graphFieldsSchema = z
+const graphMetadataFields = {
+  title: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+  activationHints: z.array(z.string().min(1)).default([]),
+  effects: z.array(idSchema).default([]),
+};
+
+const executableGraphFieldsSchema = z
   .object({
-    kind: z.enum(['dispatcher', 'workflow', 'callable']).default('workflow'),
-    title: z.string().min(1).optional(),
-    description: z.string().min(1).optional(),
-    activationHints: z.array(z.string().min(1)).default([]),
+    kind: z.enum(['workflow', 'callable']),
+    ...graphMetadataFields,
     requires: z.array(startRequirementSchema).default([]),
     inputSchema: jsonSchemaSchema.default({ type: 'object' }),
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
-    effects: z.array(idSchema).default([]),
     entry: idSchema,
     nodes: z.record(idSchema, nodeSchema),
   })
   .strict();
 
-function validateGraphReferences(graph: z.infer<typeof graphFieldsSchema>, ctx: z.RefinementCtx): void {
+function validateGraphReferences(graph: z.infer<typeof executableGraphFieldsSchema>, ctx: z.RefinementCtx): void {
   if (!graph.nodes[graph.entry]) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -233,14 +237,29 @@ function validateGraphReferences(graph: z.infer<typeof graphFieldsSchema>, ctx: 
   }
 }
 
-export const graphSchema = graphFieldsSchema.superRefine(validateGraphReferences);
+export const graphSchema = executableGraphFieldsSchema.superRefine(validateGraphReferences);
 
-export const graphPackageManifestSchema = graphFieldsSchema
-  .extend({
+// Dispatchers are resolved by registry metadata only and never execute, so their
+// manifests carry no body (entry/nodes) and no I/O contract (inputSchema/outputSchema/requires);
+// the dispatch contract is hardcoded in dispatcher.ts. strict() rejects body-carrying manifests.
+export const dispatcherGraphManifestSchema = z
+  .object({
     id: idSchema,
     version: z.string().min(1),
+    kind: z.literal('dispatcher'),
+    ...graphMetadataFields,
   })
+  .strict();
+
+export const executableGraphManifestSchema = executableGraphFieldsSchema.extend({
+  id: idSchema,
+  version: z.string().min(1),
+});
+
+export const graphPackageManifestSchema = z
+  .discriminatedUnion('kind', [dispatcherGraphManifestSchema, executableGraphManifestSchema])
   .superRefine((manifest, ctx) => {
+    if (manifest.kind === 'dispatcher') return;
     validateGraphReferences(manifest, ctx);
   });
 
@@ -373,6 +392,8 @@ export const callableTransitionLogEntrySchema = z
 
 export type Workflow = z.infer<typeof workflowSchema>;
 export type GraphPackageManifest = z.infer<typeof graphPackageManifestSchema>;
+export type DispatcherGraphManifest = z.infer<typeof dispatcherGraphManifestSchema>;
+export type ExecutableGraphManifest = z.infer<typeof executableGraphManifestSchema>;
 export type Graph = z.infer<typeof graphSchema>;
 export type StartRequirement = z.infer<typeof startRequirementSchema>;
 export type Node = z.infer<typeof nodeSchema>;

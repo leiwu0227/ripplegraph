@@ -4,10 +4,10 @@ import { graphPackageManifestSchema, RipplegraphError, type GraphPackageManifest
 import { readJson } from './internal/json-io.js';
 import { formatIssues } from './internal/zod-issues.js';
 
-export interface GraphPackage {
+export interface GraphPackage<M extends GraphPackageManifest = GraphPackageManifest> {
   path: string;
   manifestPath: string;
-  manifest: GraphPackageManifest;
+  manifest: M;
 }
 
 export function graphPackagePath(packageRoot: string): string {

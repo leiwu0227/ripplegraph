@@ -142,14 +142,27 @@ describe('reference cli', () => {
       fs.writeFileSync(
         path.join(dispatcherRoot, 'graph.json'),
         JSON.stringify({
-          ...manifest,
           id: 'workspace-dispatcher',
+          version: '0.1.0',
           kind: 'dispatcher',
           title: 'Workspace Dispatcher',
+          description: 'Routes user requests to registered graphs.',
           activationHints: ['route workspace work'],
+          effects: ['read_workspace'],
         }),
         'utf8',
       );
+      const dispatcherValidate = run(['graph', 'validate', dispatcherRoot]).json;
+      expect(dispatcherValidate).toMatchObject({
+        status: 'ok',
+        package: {
+          id: 'workspace-dispatcher',
+          kind: 'dispatcher',
+          requires: [],
+        },
+      });
+      expect(dispatcherValidate.package).not.toHaveProperty('entry');
+      expect(dispatcherValidate.package).not.toHaveProperty('nodes');
       expect(run(['graph', 'register', dispatcherRoot, '--workflow-root', root]).json.status).toBe('ok');
       expect(run(['graph', 'list', '--workflow-root', root]).json).toMatchObject({
         status: 'ok',

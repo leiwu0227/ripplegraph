@@ -13,9 +13,13 @@ const baseManifest = {
   title: 'Workspace Dispatcher',
   description: 'Routes user requests to registered graphs.',
   activationHints: ['route workspace work'],
+  effects: ['read_workspace'],
+};
+
+// Dispatchers are metadata-only; executable kinds need a body on top of the shared metadata.
+const executableBody = {
   inputSchema: { type: 'object' },
   outputSchema: { type: 'object' },
-  effects: ['read_workspace'],
   entry: 'route',
   nodes: {
     route: {
@@ -34,9 +38,16 @@ function makeRoot(prefix = 'ripplegraph-dispatcher-'): string {
 }
 
 function writePackage(root: string, id: string, overrides: Record<string, unknown> = {}): string {
+  const kind = (overrides.kind as string | undefined) ?? baseManifest.kind;
+  const manifest = {
+    ...baseManifest,
+    ...(kind === 'dispatcher' ? {} : executableBody),
+    id,
+    ...overrides,
+  };
   const packageRoot = path.join(root, '.ripplegraph', 'graphs', id);
   fs.mkdirSync(packageRoot, { recursive: true });
-  fs.writeFileSync(path.join(packageRoot, 'graph.json'), JSON.stringify({ ...baseManifest, id, ...overrides }), 'utf8');
+  fs.writeFileSync(path.join(packageRoot, 'graph.json'), JSON.stringify(manifest), 'utf8');
   return packageRoot;
 }
 

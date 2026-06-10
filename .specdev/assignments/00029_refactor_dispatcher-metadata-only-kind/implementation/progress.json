@@ -1,0 +1,49 @@
+{
+  "plan_file": ".specdev/assignments/00029_refactor_dispatcher-metadata-only-kind/breakdown/plan.md",
+  "total_tasks": 6,
+  "note": "Implementation was completed directly by the user (breakdown skipped). Summaries below were verified post-hoc by the agent: typecheck exit 0, full vitest suite 92/92 green, fresh build produced no dist drift.",
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-06-10T07:34:52Z",
+      "completed_at": "2026-06-10T07:34:52Z",
+      "summary": "schema.ts split into discriminatedUnion('kind', [dispatcherGraphManifestSchema (strict, metadata-only), executableGraphManifestSchema]); graphMetadataFields extracted; validateGraphReferences skipped for dispatcher; graphSchema restricted to executable-only; kind now required (default removed); DispatcherGraphManifest/ExecutableGraphManifest exported; GraphPackage<M> made generic. Typecheck clean."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-06-10T07:34:52Z",
+      "completed_at": "2026-06-10T07:34:52Z",
+      "summary": "registry.ts: added ManifestForKind<K>; resolveRegisteredGraphPackage<K> now returns GraphPackage<ManifestForKind<K>> (single justified cast); registerGraphPackage sets requires:[] for dispatcher. callable.ts internal helpers retyped to ExecutableGraphManifest. coach.ts unchanged (auto-narrows via resolver), as the design predicted."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "started_at": "2026-06-10T07:34:52Z",
+      "completed_at": "2026-06-10T07:34:52Z",
+      "summary": "cli.ts packageSummary now returns GraphPackageSummary with optional entry?; branches on kind (dispatcher -> requires:[], no entry). graph/diagram.ts validates format first, returns a metadata-only note for dispatcher, and narrows render helpers to ExecutableGraphManifest."
+    },
+    {
+      "number": 4,
+      "status": "completed",
+      "started_at": "2026-06-10T07:34:52Z",
+      "completed_at": "2026-06-10T07:34:52Z",
+      "summary": "Template workspace-dispatcher/graph.json stripped to metadata-only (id, version, kind, title, description, activationHints, effects). tests/helpers/workspace.ts GraphPackageManifestInput now a discriminated union; normalizedManifest omits body/IO/requires for dispatcher. Dispatcher fixtures in workflows.ts, dispatcher.test.ts, cli.test.ts, graph-diagram.test.ts updated to metadata-only shape."
+    },
+    {
+      "number": 5,
+      "status": "completed",
+      "started_at": "2026-06-10T07:34:52Z",
+      "completed_at": "2026-06-10T07:34:52Z",
+      "summary": "tests/schema.test.ts: accepts metadata-only dispatcher (defaults applied, no entry/nodes); rejects no-kind manifest; it.each rejects dispatcher carrying entry/nodes/inputSchema/outputSchema/requires. schema.test.ts 9/9 pass."
+    },
+    {
+      "number": 6,
+      "status": "completed",
+      "started_at": "2026-06-10T07:34:52Z",
+      "completed_at": "2026-06-10T07:34:52Z",
+      "summary": "Verification: tsc --noEmit exit 0; vitest run 92/92 across 13 files; fresh tsc build produced no new dist drift (committed dist matches src). dist/ rebuilt (cli, graph-package.d.ts, graph/diagram, registry, schema)."
+    }
+  ]
+}
