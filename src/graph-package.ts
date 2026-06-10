@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { graphPackageManifestSchema, RipplegraphError, type GraphPackageManifest } from './schema.js';
+import { readJson } from './internal/json-io.js';
 
 export interface GraphPackage {
   path: string;
@@ -14,14 +15,6 @@ export function graphPackagePath(packageRoot: string): string {
 
 function formatIssues(issues: Array<{ path: Array<string | number>; message: string }>): string {
   return issues.map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`).join('; ');
-}
-
-function readJson(filePath: string): unknown {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch (error) {
-    throw new RipplegraphError('E_BAD_JSON', `failed to read JSON at ${filePath}: ${(error as Error).message}`);
-  }
 }
 
 export function loadGraphPackage(packageRoot: string): GraphPackage {
