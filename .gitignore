@@ -7,3 +7,4 @@ runs/
 .e2e-*/
 .specdev/.session-state.json
 .specdev/cache/
+*.tgz
