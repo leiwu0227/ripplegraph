@@ -1,0 +1,62 @@
+{
+  "plan_file": ".specdev/assignments/00028_refactor_codebase-tidy-up/breakdown/plan.md",
+  "total_tasks": 8,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-06-10T00:16:26Z",
+      "completed_at": "2026-06-10T00:16:41Z",
+      "summary": "Deleted ripplegraph-0.0.1.tgz and ripplegraph-0.0.2.tgz from git, added *.tgz to .gitignore. Verified: git ls-files '*.tgz' empty, check-ignore passes."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-06-10T00:16:41Z",
+      "completed_at": "2026-06-10T00:18:06Z",
+      "summary": "Created src/internal/json-io.ts; storage.ts, registry.ts, graph-package.ts now import shared readJson/writeJson. Typecheck clean, 49 focused tests pass."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "started_at": "2026-06-10T00:18:06Z",
+      "completed_at": "2026-06-10T00:21:44Z",
+      "summary": "Created internal/zod-issues.ts and internal/json-utils.ts; exported exampleOutput from coach-responses. Removed 6 duplicate definitions across registry, dispatcher, graph-package, coach, diagram, demo-cli. Full suite 79/79 green."
+    },
+    {
+      "number": 4,
+      "status": "completed",
+      "started_at": "2026-06-10T00:21:45Z",
+      "completed_at": "2026-06-10T00:29:19Z",
+      "summary": "TDD: added I/O-count test (RED), introduced stepRunWith/decideGateWith private variants reusing activeFocusedRun; advanceRun now loads state once (GREEN). Reviewer: Spec PASS / READY, zero findings. 35/35 coach tests pass."
+    },
+    {
+      "number": 5,
+      "status": "completed",
+      "started_at": "2026-06-10T00:29:20Z",
+      "completed_at": "2026-06-10T00:33:22Z",
+      "summary": "Created tests/helpers/setup.ts (makeRoot, writeGraphPackage with timestamp param, errorCode); five test files now import shared helpers with file-local timestamp/prefix bindings; removed 3 errorCode copies and duplicated mkdtemp/writeGraphPackage bodies. Full suite 80/80 green."
+    },
+    {
+      "number": 6,
+      "status": "completed",
+      "started_at": "2026-06-10T00:33:22Z",
+      "completed_at": "2026-06-10T00:35:28Z",
+      "summary": "Added tests/storage.test.ts: checkpoint+current round-trip (incl. no leftover tmp files from atomic write) and E_BAD_JSON on corrupt checkpoint. 2/2 pass."
+    },
+    {
+      "number": 7,
+      "status": "completed",
+      "started_at": "2026-06-10T00:35:28Z",
+      "completed_at": "2026-06-10T00:36:14Z",
+      "summary": "Added tests/schema.test.ts: valid manifest accept with defaults, and reject case asserting entry/edge dangling-reference issue paths and messages. 2/2 pass."
+    },
+    {
+      "number": 8,
+      "status": "completed",
+      "started_at": "2026-06-10T00:36:15Z",
+      "completed_at": "2026-06-10T00:37:38Z",
+      "summary": "Full suite 84/84 green (13 files incl. new storage/schema tests). Build clean; dist regenerated and committed. src/index.ts unchanged (public API preserved). Grep confirms single definition of each consolidated helper."
+    }
+  ]
+}

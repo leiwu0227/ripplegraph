@@ -1,0 +1,5 @@
+# Proposal: Codebase Tidy-Up
+
+Three independent scan passes (cross-verified, false positives retracted) identified mechanical duplication and cruft in the ripplegraph codebase: four helper functions duplicated across `src/` files (`formatIssues` ×3, `readJson` ×3, `writeJson` ×2, `stableValue` ×2, `exampleOutput` ×2), an `advanceRun()` code path that re-reads workflow state from disk twice per call (5–8 file reads where ~3 suffice), two stale git-tracked package tarballs (v0.0.1/v0.0.2 while the package is at v0.0.3), duplicated test scaffolding across five test files, and missing direct test coverage for the two most critical modules (`storage.ts`, `schema.ts`).
+
+This refactor consolidates the duplicated helpers into focused `src/internal/` modules, fixes the double-load, removes the tarballs, consolidates test helpers, and adds dedicated tests for `storage.ts` and `schema.ts`. Strictly no behavior changes and no public API changes — the unused storage path-builder exports stay public by explicit owner decision.
