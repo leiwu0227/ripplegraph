@@ -58,6 +58,44 @@ describe('graph package manifest schema', () => {
     delete input.kind;
     expect(graphPackageManifestSchema.safeParse(input).success).toBe(false);
   });
+
+  it('rejects a workflow manifest that carries inputSchema (workflow runs take no input)', () => {
+    expect(graphPackageManifestSchema.safeParse(manifest({ inputSchema: { type: 'object' } })).success).toBe(false);
+  });
+
+  it('accepts a workflow manifest with requires and rejects requires on a callable', () => {
+    const requires = [{ id: 'workspace_ready', describe: 'a prepared workspace' }];
+    expect(graphPackageManifestSchema.safeParse(manifest({ requires })).success).toBe(true);
+    expect(graphPackageManifestSchema.safeParse(manifest({ kind: 'callable', requires })).success).toBe(false);
+  });
+
+  it('accepts a callable manifest with inputSchema', () => {
+    const result = graphPackageManifestSchema.safeParse(manifest({ kind: 'callable', inputSchema: { type: 'object' } }));
+    expect(result.success).toBe(true);
+    if (result.success && result.data.kind === 'callable') {
+      expect(result.data.inputSchema).toEqual({ type: 'object' });
+    }
+  });
+
+  it('rejects workflowRef nodes that carry inputMap or outputMap (never applied or exposed)', () => {
+    for (const mapField of [{ inputMap: { request: 'ticket' } }, { outputMap: { summary: 'result' } }]) {
+      const result = graphPackageManifestSchema.safeParse(
+        manifest({
+          nodes: {
+            classify: {
+              purpose: 'Classify the ticket',
+              exec: 'inline',
+              outputSchema: { type: 'object' },
+              workflowRef: { graphId: 'child-graph', ...mapField },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Complete', terminal: true },
+          },
+        }),
+      );
+      expect(result.success).toBe(false);
+    }
+  });
 });
 
 describe('dispatcher manifest schema (metadata-only)', () => {
@@ -69,7 +107,6 @@ describe('dispatcher manifest schema (metadata-only)', () => {
       title: 'Workspace Dispatcher',
       description: 'Routes user requests to registered graphs.',
       activationHints: ['route workspace work'],
-      effects: ['read_workspace'],
       ...overrides,
     };
   }
@@ -84,9 +121,9 @@ describe('dispatcher manifest schema (metadata-only)', () => {
     if (result.success) {
       expect(result.data.kind).toBe('dispatcher');
       expect(result.data.activationHints).toEqual([]);
-      expect(result.data.effects).toEqual([]);
       expect(result.data).not.toHaveProperty('entry');
       expect(result.data).not.toHaveProperty('nodes');
+      expect(result.data).not.toHaveProperty('effects');
     }
   });
 
@@ -96,6 +133,7 @@ describe('dispatcher manifest schema (metadata-only)', () => {
     ['inputSchema', { inputSchema: { type: 'object' } }],
     ['outputSchema', { outputSchema: { type: 'object' } }],
     ['requires', { requires: [] }],
+    ['effects', { effects: [] }],
   ])('rejects a dispatcher manifest that carries %s', (_field, override) => {
     expect(graphPackageManifestSchema.safeParse(dispatcherManifest(override)).success).toBe(false);
   });

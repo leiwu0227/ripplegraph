@@ -122,8 +122,6 @@ export const gateSchema = z
 export const workflowRefSchema = z
     .object({
     graphId: idSchema,
-    inputMap: z.record(z.string().min(1)).optional(),
-    outputMap: z.record(z.string().min(1)).optional(),
 })
     .strict();
 export const startRequirementSchema = z
@@ -169,21 +167,33 @@ export const nodeSchema = z
         });
     }
 });
+// Every declared field below must be runtime-enforced or host-exposed; fields with
+// neither (workflow inputSchema, callable requires, dispatcher effects, workflowRef
+// input/output maps) are deliberately absent so manifests cannot drift from behavior.
 const graphMetadataFields = {
     title: z.string().min(1).optional(),
     description: z.string().min(1).optional(),
     activationHints: z.array(z.string().min(1)).default([]),
-    effects: z.array(idSchema).default([]),
 };
-const executableGraphFieldsSchema = z
-    .object({
-    kind: z.enum(['workflow', 'callable']),
+const executableGraphFields = {
     ...graphMetadataFields,
-    requires: z.array(startRequirementSchema).default([]),
-    inputSchema: jsonSchemaSchema.default({ type: 'object' }),
+    effects: z.array(idSchema).default([]),
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
     entry: idSchema,
     nodes: z.record(idSchema, nodeSchema),
+};
+const workflowGraphFieldsSchema = z
+    .object({
+    kind: z.literal('workflow'),
+    ...executableGraphFields,
+    requires: z.array(startRequirementSchema).default([]),
+})
+    .strict();
+const callableGraphFieldsSchema = z
+    .object({
+    kind: z.literal('callable'),
+    ...executableGraphFields,
+    inputSchema: jsonSchemaSchema.default({ type: 'object' }),
 })
     .strict();
 function validateGraphReferences(graph, ctx) {
@@ -206,10 +216,13 @@ function validateGraphReferences(graph, ctx) {
         }
     }
 }
-export const graphSchema = executableGraphFieldsSchema.superRefine(validateGraphReferences);
+export const graphSchema = z
+    .discriminatedUnion('kind', [workflowGraphFieldsSchema, callableGraphFieldsSchema])
+    .superRefine(validateGraphReferences);
 // Dispatchers are resolved by registry metadata only and never execute, so their
-// manifests carry no body (entry/nodes) and no I/O contract (inputSchema/outputSchema/requires);
-// the dispatch contract is hardcoded in dispatcher.ts. strict() rejects body-carrying manifests.
+// manifests carry no body (entry/nodes), no I/O contract, no requires, and no effects
+// (dispatch is read-only); the dispatch contract is hardcoded in dispatcher.ts.
+// strict() rejects manifests that still carry any of those fields.
 export const dispatcherGraphManifestSchema = z
     .object({
     id: idSchema,
@@ -218,12 +231,16 @@ export const dispatcherGraphManifestSchema = z
     ...graphMetadataFields,
 })
     .strict();
-export const executableGraphManifestSchema = executableGraphFieldsSchema.extend({
+export const workflowGraphManifestSchema = workflowGraphFieldsSchema.extend({
+    id: idSchema,
+    version: z.string().min(1),
+});
+export const callableGraphManifestSchema = callableGraphFieldsSchema.extend({
     id: idSchema,
     version: z.string().min(1),
 });
 export const graphPackageManifestSchema = z
-    .discriminatedUnion('kind', [dispatcherGraphManifestSchema, executableGraphManifestSchema])
+    .discriminatedUnion('kind', [dispatcherGraphManifestSchema, workflowGraphManifestSchema, callableGraphManifestSchema])
     .superRefine((manifest, ctx) => {
     if (manifest.kind === 'dispatcher')
         return;

@@ -8,23 +8,33 @@ interface GraphPackageManifestBaseInput {
   title?: string;
   description?: string;
   activationHints?: string[];
-  effects?: string[];
 }
 
 export interface DispatcherGraphPackageManifestInput extends GraphPackageManifestBaseInput {
   kind: 'dispatcher';
 }
 
-export interface ExecutableGraphPackageManifestInput extends GraphPackageManifestBaseInput {
-  kind?: 'workflow' | 'callable';
-  inputSchema?: unknown;
+interface ExecutableGraphPackageManifestBaseInput extends GraphPackageManifestBaseInput {
+  effects?: string[];
   outputSchema?: unknown;
-  requires?: unknown[];
   entry: string;
   nodes: Record<string, unknown>;
 }
 
-export type GraphPackageManifestInput = DispatcherGraphPackageManifestInput | ExecutableGraphPackageManifestInput;
+export interface WorkflowGraphPackageManifestInput extends ExecutableGraphPackageManifestBaseInput {
+  kind?: 'workflow';
+  requires?: unknown[];
+}
+
+export interface CallableGraphPackageManifestInput extends ExecutableGraphPackageManifestBaseInput {
+  kind: 'callable';
+  inputSchema?: unknown;
+}
+
+export type GraphPackageManifestInput =
+  | DispatcherGraphPackageManifestInput
+  | WorkflowGraphPackageManifestInput
+  | CallableGraphPackageManifestInput;
 
 export interface WorkspaceManifestInput {
   id?: string;
@@ -59,14 +69,14 @@ function normalizedManifest(input: GraphPackageManifestInput): Record<string, un
     ...(input.title !== undefined ? { title: input.title } : {}),
     ...(input.description !== undefined ? { description: input.description } : {}),
     ...(input.activationHints !== undefined ? { activationHints: input.activationHints } : {}),
-    ...(input.effects !== undefined ? { effects: input.effects } : {}),
   };
   if (input.kind === 'dispatcher') return base;
   return {
     ...base,
-    ...(input.inputSchema !== undefined ? { inputSchema: input.inputSchema } : {}),
+    ...(input.effects !== undefined ? { effects: input.effects } : {}),
     ...(input.outputSchema !== undefined ? { outputSchema: input.outputSchema } : {}),
-    ...(input.requires !== undefined ? { requires: input.requires } : {}),
+    ...(input.kind === 'callable' && input.inputSchema !== undefined ? { inputSchema: input.inputSchema } : {}),
+    ...(input.kind !== 'callable' && input.requires !== undefined ? { requires: input.requires } : {}),
     entry: input.entry,
     nodes: input.nodes,
   };

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { type GraphPackage } from './graph-package.js';
-import { type DispatcherGraphManifest, type ExecutableGraphManifest, type GraphPackageManifest } from './schema.js';
+import { type CallableGraphManifest, type DispatcherGraphManifest, type GraphPackageManifest, type WorkflowGraphManifest } from './schema.js';
 export declare const registryEntrySchema: z.ZodObject<{
     id: z.ZodString;
     version: z.ZodString;
@@ -168,7 +168,7 @@ export interface RegisterGraphPackageOptions {
     force?: boolean;
     now?: string;
 }
-export type ManifestForKind<K extends RegistryEntry['kind'] | undefined> = K extends 'dispatcher' ? DispatcherGraphManifest : K extends 'workflow' | 'callable' ? ExecutableGraphManifest : GraphPackageManifest;
+export type ManifestForKind<K extends RegistryEntry['kind'] | undefined> = K extends 'dispatcher' ? DispatcherGraphManifest : K extends 'workflow' ? WorkflowGraphManifest : K extends 'callable' ? CallableGraphManifest : GraphPackageManifest;
 export interface ResolveRegisteredGraphPackageOptions<K extends RegistryEntry['kind'] | undefined = RegistryEntry['kind'] | undefined> {
     workflowRoot: string;
     graphId: string;

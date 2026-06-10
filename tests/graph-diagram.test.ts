@@ -8,7 +8,6 @@ const manifest: GraphPackageManifest = {
   entry: 'classify.ticket',
   activationHints: [],
   requires: [],
-  inputSchema: { type: 'object' },
   outputSchema: { type: 'object' },
   effects: [],
   nodes: {
@@ -69,7 +68,6 @@ describe('graph diagram renderer', () => {
       version: '0.1.0',
       kind: 'dispatcher',
       activationHints: [],
-      effects: [],
     };
 
     expect(renderGraphDiagram(dispatcher)).toBe(

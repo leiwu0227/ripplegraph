@@ -13,12 +13,11 @@ const baseManifest = {
   title: 'Workspace Dispatcher',
   description: 'Routes user requests to registered graphs.',
   activationHints: ['route workspace work'],
-  effects: ['read_workspace'],
 };
 
 // Dispatchers are metadata-only; executable kinds need a body on top of the shared metadata.
 const executableBody = {
-  inputSchema: { type: 'object' },
+  effects: ['read_workspace'],
   outputSchema: { type: 'object' },
   entry: 'route',
   nodes: {

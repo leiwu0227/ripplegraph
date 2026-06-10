@@ -1,0 +1,34 @@
+{
+  "plan_file": ".specdev/assignments/00030_refactor_schema-fields-tied-to-behavior/breakdown/plan.md",
+  "total_tasks": 4,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-06-10T08:20:00Z",
+      "completed_at": "2026-06-10T08:24:00Z",
+      "summary": "TDD schema split into dispatcher/workflow/callable strict variants; workflowRef maps dropped. 5 new schema tests written first and watched fail. Verified npm run typecheck and npm test -- tests/schema.test.ts."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-06-10T08:24:00Z",
+      "completed_at": "2026-06-10T08:27:00Z",
+      "summary": "ManifestForKind per-kind mapping, registerGraphPackage requires/effects sourcing, packageSummary kind branching, callable.ts retypes, diagram.ts union alias. Verified npm run typecheck."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "started_at": "2026-06-10T08:27:00Z",
+      "completed_at": "2026-06-10T08:46:00Z",
+      "summary": "Root-run outputSchema enforcement via shared rootCompletionValidationError helper at all completion paths; validation hoisted before persistence per review round 1 finding F1.1. 3 new coach tests including durable-state consistency assertions. Verified npm test -- tests/coach.test.ts."
+    },
+    {
+      "number": 4,
+      "status": "completed",
+      "started_at": "2026-06-10T08:30:00Z",
+      "completed_at": "2026-06-10T08:45:00Z",
+      "summary": "Template dispatcher effects dropped, helper input types split three ways, fixtures migrated, README/docs inputMap references removed, dist rebuilt. Verified full suite 101/101 before and after rebuild; external reviewloop round 2 approved."
+    }
+  ]
+}

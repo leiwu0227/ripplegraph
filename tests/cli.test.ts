@@ -105,7 +105,6 @@ describe('reference cli', () => {
       title: 'Support Triage',
       description: 'Classify support tickets.',
       activationHints: ['triage support ticket'],
-      inputSchema: { type: 'object' },
       outputSchema: { type: 'object' },
       effects: ['read_workspace'],
       entry: 'classify-ticket',
@@ -148,7 +147,6 @@ describe('reference cli', () => {
           title: 'Workspace Dispatcher',
           description: 'Routes user requests to registered graphs.',
           activationHints: ['route workspace work'],
-          effects: ['read_workspace'],
         }),
         'utf8',
       );

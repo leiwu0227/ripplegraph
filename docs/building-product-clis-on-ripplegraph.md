@@ -444,14 +444,7 @@ Example:
 {
   "purpose": "Run implementation reviewloop",
   "workflowRef": {
-    "graphId": "reviewloop",
-    "inputMap": {
-      "phase": "$.phase",
-      "assignment": "$.assignment"
-    },
-    "outputMap": {
-      "verdict": "$.verdict"
-    }
+    "graphId": "reviewloop"
   },
   "edges": [{ "to": "apply-review-result" }]
 }

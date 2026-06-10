@@ -9,9 +9,10 @@ import {
   idSchema,
   RipplegraphError,
   startRequirementSchema,
+  type CallableGraphManifest,
   type DispatcherGraphManifest,
-  type ExecutableGraphManifest,
   type GraphPackageManifest,
+  type WorkflowGraphManifest,
 } from './schema.js';
 
 export const registryEntrySchema = z
@@ -50,9 +51,11 @@ export interface RegisterGraphPackageOptions {
 // so callers that pass an explicit kind get a narrowed manifest without local guards.
 export type ManifestForKind<K extends RegistryEntry['kind'] | undefined> = K extends 'dispatcher'
   ? DispatcherGraphManifest
-  : K extends 'workflow' | 'callable'
-    ? ExecutableGraphManifest
-    : GraphPackageManifest;
+  : K extends 'workflow'
+    ? WorkflowGraphManifest
+    : K extends 'callable'
+      ? CallableGraphManifest
+      : GraphPackageManifest;
 
 export interface ResolveRegisteredGraphPackageOptions<
   K extends RegistryEntry['kind'] | undefined = RegistryEntry['kind'] | undefined,
@@ -114,8 +117,8 @@ export function registerGraphPackage(options: RegisterGraphPackageOptions): Regi
     title: graphPackage.manifest.title,
     description: graphPackage.manifest.description,
     activationHints: graphPackage.manifest.activationHints,
-    requires: graphPackage.manifest.kind === 'dispatcher' ? [] : graphPackage.manifest.requires,
-    effects: graphPackage.manifest.effects,
+    requires: graphPackage.manifest.kind === 'workflow' ? graphPackage.manifest.requires : [],
+    effects: graphPackage.manifest.kind === 'dispatcher' ? [] : graphPackage.manifest.effects,
     path: registeredPath,
     registeredAt: options.now ?? new Date().toISOString(),
   };

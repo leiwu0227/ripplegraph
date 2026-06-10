@@ -70,8 +70,8 @@ export function registerGraphPackage(options) {
         title: graphPackage.manifest.title,
         description: graphPackage.manifest.description,
         activationHints: graphPackage.manifest.activationHints,
-        requires: graphPackage.manifest.kind === 'dispatcher' ? [] : graphPackage.manifest.requires,
-        effects: graphPackage.manifest.effects,
+        requires: graphPackage.manifest.kind === 'workflow' ? graphPackage.manifest.requires : [],
+        effects: graphPackage.manifest.kind === 'dispatcher' ? [] : graphPackage.manifest.effects,
         path: registeredPath,
         registeredAt: options.now ?? new Date().toISOString(),
     };

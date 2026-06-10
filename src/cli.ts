@@ -235,10 +235,14 @@ function packageSummary(manifest: GraphPackageManifest): GraphPackageSummary {
     title: manifest.title,
     description: manifest.description,
     activationHints: manifest.activationHints,
-    effects: manifest.effects,
   };
-  if (manifest.kind === 'dispatcher') return { ...summary, requires: [] };
-  return { ...summary, requires: manifest.requires, entry: manifest.entry };
+  if (manifest.kind === 'dispatcher') return { ...summary, requires: [], effects: [] };
+  return {
+    ...summary,
+    requires: manifest.kind === 'workflow' ? manifest.requires : [],
+    effects: manifest.effects,
+    entry: manifest.entry,
+  };
 }
 
 function handleGraphCommand(flags: ReturnType<typeof parseArgs>['flags'], positional: string[]): unknown {

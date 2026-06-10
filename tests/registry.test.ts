@@ -11,7 +11,6 @@ const manifest = {
   title: 'Support Triage',
   description: 'Classify support tickets.',
   activationHints: ['triage support ticket'],
-  inputSchema: { type: 'object' },
   outputSchema: { type: 'object' },
   effects: ['read_workspace'],
   requires: [

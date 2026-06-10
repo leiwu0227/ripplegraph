@@ -318,9 +318,11 @@ describe('callable start and state', () => {
     const root = makeRoot();
     try {
       writeGraphPackage(root, 'graphs/summarize-ticket', callableManifest());
-      writeGraphPackage(root, 'graphs/workflow-ticket', {
-        ...callableManifest({ id: 'workflow-ticket', kind: 'workflow' }),
+      const { inputSchema: _workflowInputSchema, ...workflowTicket } = callableManifest({
+        id: 'workflow-ticket',
+        kind: 'workflow',
       });
+      writeGraphPackage(root, 'graphs/workflow-ticket', workflowTicket);
       writeGraphPackage(root, 'graphs/gated-ticket', {
         ...callableManifest({
           id: 'gated-ticket',

@@ -431,16 +431,10 @@ export declare const gateSchema: z.ZodObject<{
 }>;
 export declare const workflowRefSchema: z.ZodObject<{
     graphId: z.ZodString;
-    inputMap: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
-    outputMap: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
 }, "strict", z.ZodTypeAny, {
     graphId: string;
-    inputMap?: Record<string, string> | undefined;
-    outputMap?: Record<string, string> | undefined;
 }, {
     graphId: string;
-    inputMap?: Record<string, string> | undefined;
-    outputMap?: Record<string, string> | undefined;
 }>;
 export declare const startRequirementSchema: z.ZodObject<{
     id: z.ZodString;
@@ -777,16 +771,10 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     }>>;
     workflowRef: z.ZodOptional<z.ZodObject<{
         graphId: z.ZodString;
-        inputMap: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
-        outputMap: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
     }, "strict", z.ZodTypeAny, {
         graphId: string;
-        inputMap?: Record<string, string> | undefined;
-        outputMap?: Record<string, string> | undefined;
     }, {
         graphId: string;
-        inputMap?: Record<string, string> | undefined;
-        outputMap?: Record<string, string> | undefined;
     }>>;
     sideChannelActions: z.ZodOptional<z.ZodArray<z.ZodObject<{
         id: z.ZodString;
@@ -929,8 +917,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     } | undefined;
     workflowRef?: {
         graphId: string;
-        inputMap?: Record<string, string> | undefined;
-        outputMap?: Record<string, string> | undefined;
     } | undefined;
     sideChannelActions?: {
         id: string;
@@ -1016,8 +1002,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     } | undefined;
     workflowRef?: {
         graphId: string;
-        inputMap?: Record<string, string> | undefined;
-        outputMap?: Record<string, string> | undefined;
     } | undefined;
     sideChannelActions?: {
         id: string;
@@ -1113,8 +1097,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     } | undefined;
     workflowRef?: {
         graphId: string;
-        inputMap?: Record<string, string> | undefined;
-        outputMap?: Record<string, string> | undefined;
     } | undefined;
     sideChannelActions?: {
         id: string;
@@ -1200,8 +1182,6 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     } | undefined;
     workflowRef?: {
         graphId: string;
-        inputMap?: Record<string, string> | undefined;
-        outputMap?: Record<string, string> | undefined;
     } | undefined;
     sideChannelActions?: {
         id: string;
@@ -1233,7 +1213,7 @@ export declare const nodeSchema: z.ZodEffects<z.ZodObject<{
     }[] | undefined;
     terminal?: boolean | undefined;
 }>;
-export declare const graphSchema: z.ZodEffects<z.ZodObject<{
+export declare const graphSchema: z.ZodEffects<z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
     requires: z.ZodDefault<z.ZodArray<z.ZodObject<{
         id: z.ZodString;
         describe: z.ZodString;
@@ -1250,7 +1230,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         unmetRedirect?: string | undefined;
         unmetMessage?: string | undefined;
     }>, "many">>;
-    inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     entry: z.ZodString;
     nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
@@ -1562,16 +1542,10 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         }>>;
         workflowRef: z.ZodOptional<z.ZodObject<{
             graphId: z.ZodString;
-            inputMap: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
-            outputMap: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
         }, "strict", z.ZodTypeAny, {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         }, {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         }>>;
         sideChannelActions: z.ZodOptional<z.ZodArray<z.ZodObject<{
             id: z.ZodString;
@@ -1714,8 +1688,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -1801,8 +1773,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -1898,8 +1868,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -1985,8 +1953,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -2021,11 +1987,9 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     title: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
     activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    kind: z.ZodEnum<["workflow", "callable"]>;
+    kind: z.ZodLiteral<"workflow">;
 }, "strict", z.ZodTypeAny, {
-    kind: "workflow" | "callable";
-    inputSchema: JsonSchema;
+    kind: "workflow";
     outputSchema: JsonSchema;
     effects: string[];
     requires: {
@@ -2100,8 +2064,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -2132,7 +2094,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     description?: string | undefined;
     title?: string | undefined;
 }, {
-    kind: "workflow" | "callable";
+    kind: "workflow";
     entry: string;
     nodes: Record<string, {
         purpose: string;
@@ -2194,8 +2156,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -2228,7 +2188,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         terminal?: boolean | undefined;
     }>;
     description?: string | undefined;
-    inputSchema?: JsonSchema | undefined;
     outputSchema?: JsonSchema | undefined;
     effects?: string[] | undefined;
     requires?: {
@@ -2239,9 +2198,968 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     }[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
-}>, {
-    kind: "workflow" | "callable";
+}>, z.ZodObject<{
+    inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    entry: z.ZodString;
+    nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
+        purpose: z.ZodString;
+        instructions: z.ZodOptional<z.ZodString>;
+        exec: z.ZodDefault<z.ZodLiteral<"inline">>;
+        outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+        interaction: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+            id: z.ZodString;
+            kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+            prompt: z.ZodString;
+            renderVia: z.ZodOptional<z.ZodString>;
+            choices: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                label: z.ZodString;
+                value: z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>;
+                description: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }, {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }>, "many">>;
+            schema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            followUp: z.ZodOptional<z.ZodObject<{
+                when: z.ZodString;
+                id: z.ZodString;
+                kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+                source: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            }, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            }>>;
+        }, "strict", z.ZodTypeAny, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }>, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }>>;
+        interrupt: z.ZodOptional<z.ZodObject<{
+            requiresUserTurn: z.ZodLiteral<true>;
+            reason: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        }, {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        }>>;
+        gate: z.ZodOptional<z.ZodObject<{
+            type: z.ZodLiteral<"external_decision">;
+            decisionSource: z.ZodOptional<z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
+                kind: z.ZodLiteral<"human">;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "human";
+                label?: string | undefined;
+            }, {
+                kind: "human";
+                label?: string | undefined;
+            }>, z.ZodObject<{
+                kind: z.ZodLiteral<"tool">;
+                tool: z.ZodString;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            }, {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            }>]>>;
+            interaction: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+                id: z.ZodString;
+                kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+                prompt: z.ZodString;
+                renderVia: z.ZodOptional<z.ZodString>;
+                choices: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                    label: z.ZodString;
+                    value: z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>;
+                    description: z.ZodOptional<z.ZodString>;
+                }, "strict", z.ZodTypeAny, {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }, {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }>, "many">>;
+                schema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+                followUp: z.ZodOptional<z.ZodObject<{
+                    when: z.ZodString;
+                    id: z.ZodString;
+                    kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+                    source: z.ZodOptional<z.ZodString>;
+                }, "strict", z.ZodTypeAny, {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                }, {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                }>>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }>, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }>>;
+            decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
+        }, "strict", z.ZodTypeAny, {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        }, {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        }>>;
+        workflowRef: z.ZodOptional<z.ZodObject<{
+            graphId: z.ZodString;
+        }, "strict", z.ZodTypeAny, {
+            graphId: string;
+        }, {
+            graphId: string;
+        }>>;
+        sideChannelActions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            purpose: z.ZodString;
+            commandRef: z.ZodOptional<z.ZodString>;
+            effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            validator: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }, {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }>, "many">>;
+        toolContract: z.ZodOptional<z.ZodObject<{
+            id: z.ZodString;
+            command: z.ZodString;
+            purpose: z.ZodOptional<z.ZodString>;
+            effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            inputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            validator: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        }, {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        }>>;
+        validators: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            purpose: z.ZodOptional<z.ZodString>;
+            inputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+        }, "strict", z.ZodTypeAny, {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }, {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }>, "many">>;
+        operatorContext: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+        edges: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            to: z.ZodString;
+            when: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+        }, "strict", z.ZodTypeAny, {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }, {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }>, "many">>;
+        terminal: z.ZodDefault<z.ZodBoolean>;
+        effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    }, "strict", z.ZodTypeAny, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>>;
+    title: z.ZodOptional<z.ZodString>;
+    description: z.ZodOptional<z.ZodString>;
+    activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    kind: z.ZodLiteral<"callable">;
+}, "strict", z.ZodTypeAny, {
+    kind: "callable";
     inputSchema: JsonSchema;
+    outputSchema: JsonSchema;
+    effects: string[];
+    entry: string;
+    nodes: Record<string, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }>;
+    activationHints: string[];
+    description?: string | undefined;
+    title?: string | undefined;
+}, {
+    kind: "callable";
+    entry: string;
+    nodes: Record<string, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>;
+    description?: string | undefined;
+    inputSchema?: JsonSchema | undefined;
+    outputSchema?: JsonSchema | undefined;
+    effects?: string[] | undefined;
+    title?: string | undefined;
+    activationHints?: string[] | undefined;
+}>]>, {
+    kind: "workflow";
     outputSchema: JsonSchema;
     effects: string[];
     requires: {
@@ -2316,8 +3234,106 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }>;
+    activationHints: string[];
+    description?: string | undefined;
+    title?: string | undefined;
+} | {
+    kind: "callable";
+    inputSchema: JsonSchema;
+    outputSchema: JsonSchema;
+    effects: string[];
+    entry: string;
+    nodes: Record<string, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -2348,7 +3364,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     description?: string | undefined;
     title?: string | undefined;
 }, {
-    kind: "workflow" | "callable";
+    kind: "workflow";
     entry: string;
     nodes: Record<string, {
         purpose: string;
@@ -2410,8 +3426,111 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>;
+    description?: string | undefined;
+    outputSchema?: JsonSchema | undefined;
+    effects?: string[] | undefined;
+    requires?: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[] | undefined;
+    title?: string | undefined;
+    activationHints?: string[] | undefined;
+} | {
+    kind: "callable";
+    entry: string;
+    nodes: Record<string, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -2447,12 +3566,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodObject<{
     inputSchema?: JsonSchema | undefined;
     outputSchema?: JsonSchema | undefined;
     effects?: string[] | undefined;
-    requires?: {
-        id: string;
-        describe: string;
-        unmetRedirect?: string | undefined;
-        unmetMessage?: string | undefined;
-    }[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
 }>;
@@ -2460,14 +3573,12 @@ export declare const dispatcherGraphManifestSchema: z.ZodObject<{
     title: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
     activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     id: z.ZodString;
     version: z.ZodString;
     kind: z.ZodLiteral<"dispatcher">;
 }, "strict", z.ZodTypeAny, {
     kind: "dispatcher";
     id: string;
-    effects: string[];
     activationHints: string[];
     version: string;
     description?: string | undefined;
@@ -2477,11 +3588,10 @@ export declare const dispatcherGraphManifestSchema: z.ZodObject<{
     id: string;
     version: string;
     description?: string | undefined;
-    effects?: string[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
 }>;
-export declare const executableGraphManifestSchema: z.ZodObject<{
+export declare const workflowGraphManifestSchema: z.ZodObject<{
     requires: z.ZodDefault<z.ZodArray<z.ZodObject<{
         id: z.ZodString;
         describe: z.ZodString;
@@ -2498,7 +3608,7 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
         unmetRedirect?: string | undefined;
         unmetMessage?: string | undefined;
     }>, "many">>;
-    inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     entry: z.ZodString;
     nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
@@ -2810,16 +3920,10 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
         }>>;
         workflowRef: z.ZodOptional<z.ZodObject<{
             graphId: z.ZodString;
-            inputMap: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
-            outputMap: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
         }, "strict", z.ZodTypeAny, {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         }, {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         }>>;
         sideChannelActions: z.ZodOptional<z.ZodArray<z.ZodObject<{
             id: z.ZodString;
@@ -2962,8 +4066,6 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -3049,8 +4151,6 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -3146,8 +4246,6 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -3233,8 +4331,6 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -3269,15 +4365,13 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
     title: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
     activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    kind: z.ZodEnum<["workflow", "callable"]>;
+    kind: z.ZodLiteral<"workflow">;
 } & {
     id: z.ZodString;
     version: z.ZodString;
 }, "strict", z.ZodTypeAny, {
-    kind: "workflow" | "callable";
+    kind: "workflow";
     id: string;
-    inputSchema: JsonSchema;
     outputSchema: JsonSchema;
     effects: string[];
     requires: {
@@ -3352,8 +4446,6 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -3385,7 +4477,7 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
     description?: string | undefined;
     title?: string | undefined;
 }, {
-    kind: "workflow" | "callable";
+    kind: "workflow";
     id: string;
     entry: string;
     nodes: Record<string, {
@@ -3448,8 +4540,979 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>;
+    version: string;
+    description?: string | undefined;
+    outputSchema?: JsonSchema | undefined;
+    effects?: string[] | undefined;
+    requires?: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[] | undefined;
+    title?: string | undefined;
+    activationHints?: string[] | undefined;
+}>;
+export declare const callableGraphManifestSchema: z.ZodObject<{
+    inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    entry: z.ZodString;
+    nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
+        purpose: z.ZodString;
+        instructions: z.ZodOptional<z.ZodString>;
+        exec: z.ZodDefault<z.ZodLiteral<"inline">>;
+        outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+        interaction: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+            id: z.ZodString;
+            kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+            prompt: z.ZodString;
+            renderVia: z.ZodOptional<z.ZodString>;
+            choices: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                label: z.ZodString;
+                value: z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>;
+                description: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }, {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }>, "many">>;
+            schema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            followUp: z.ZodOptional<z.ZodObject<{
+                when: z.ZodString;
+                id: z.ZodString;
+                kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+                source: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            }, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            }>>;
+        }, "strict", z.ZodTypeAny, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }>, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }>>;
+        interrupt: z.ZodOptional<z.ZodObject<{
+            requiresUserTurn: z.ZodLiteral<true>;
+            reason: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        }, {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        }>>;
+        gate: z.ZodOptional<z.ZodObject<{
+            type: z.ZodLiteral<"external_decision">;
+            decisionSource: z.ZodOptional<z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
+                kind: z.ZodLiteral<"human">;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "human";
+                label?: string | undefined;
+            }, {
+                kind: "human";
+                label?: string | undefined;
+            }>, z.ZodObject<{
+                kind: z.ZodLiteral<"tool">;
+                tool: z.ZodString;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            }, {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            }>]>>;
+            interaction: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+                id: z.ZodString;
+                kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+                prompt: z.ZodString;
+                renderVia: z.ZodOptional<z.ZodString>;
+                choices: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                    label: z.ZodString;
+                    value: z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>;
+                    description: z.ZodOptional<z.ZodString>;
+                }, "strict", z.ZodTypeAny, {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }, {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }>, "many">>;
+                schema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+                followUp: z.ZodOptional<z.ZodObject<{
+                    when: z.ZodString;
+                    id: z.ZodString;
+                    kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+                    source: z.ZodOptional<z.ZodString>;
+                }, "strict", z.ZodTypeAny, {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                }, {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                }>>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }>, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }>>;
+            decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
+        }, "strict", z.ZodTypeAny, {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        }, {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        }>>;
+        workflowRef: z.ZodOptional<z.ZodObject<{
+            graphId: z.ZodString;
+        }, "strict", z.ZodTypeAny, {
+            graphId: string;
+        }, {
+            graphId: string;
+        }>>;
+        sideChannelActions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            purpose: z.ZodString;
+            commandRef: z.ZodOptional<z.ZodString>;
+            effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            validator: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }, {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }>, "many">>;
+        toolContract: z.ZodOptional<z.ZodObject<{
+            id: z.ZodString;
+            command: z.ZodString;
+            purpose: z.ZodOptional<z.ZodString>;
+            effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            inputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            validator: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        }, {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        }>>;
+        validators: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            purpose: z.ZodOptional<z.ZodString>;
+            inputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+        }, "strict", z.ZodTypeAny, {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }, {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }>, "many">>;
+        operatorContext: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+        edges: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            to: z.ZodString;
+            when: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+        }, "strict", z.ZodTypeAny, {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }, {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }>, "many">>;
+        terminal: z.ZodDefault<z.ZodBoolean>;
+        effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    }, "strict", z.ZodTypeAny, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>>;
+    title: z.ZodOptional<z.ZodString>;
+    description: z.ZodOptional<z.ZodString>;
+    activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    kind: z.ZodLiteral<"callable">;
+} & {
+    id: z.ZodString;
+    version: z.ZodString;
+}, "strict", z.ZodTypeAny, {
+    kind: "callable";
+    id: string;
+    inputSchema: JsonSchema;
+    outputSchema: JsonSchema;
+    effects: string[];
+    entry: string;
+    nodes: Record<string, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }>;
+    activationHints: string[];
+    version: string;
+    description?: string | undefined;
+    title?: string | undefined;
+}, {
+    kind: "callable";
+    id: string;
+    entry: string;
+    nodes: Record<string, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -3486,12 +5549,6 @@ export declare const executableGraphManifestSchema: z.ZodObject<{
     inputSchema?: JsonSchema | undefined;
     outputSchema?: JsonSchema | undefined;
     effects?: string[] | undefined;
-    requires?: {
-        id: string;
-        describe: string;
-        unmetRedirect?: string | undefined;
-        unmetMessage?: string | undefined;
-    }[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
 }>;
@@ -3499,14 +5556,12 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
     title: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
     activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     id: z.ZodString;
     version: z.ZodString;
     kind: z.ZodLiteral<"dispatcher">;
 }, "strict", z.ZodTypeAny, {
     kind: "dispatcher";
     id: string;
-    effects: string[];
     activationHints: string[];
     version: string;
     description?: string | undefined;
@@ -3516,7 +5571,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
     id: string;
     version: string;
     description?: string | undefined;
-    effects?: string[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
 }>, z.ZodObject<{
@@ -3536,7 +5590,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         unmetRedirect?: string | undefined;
         unmetMessage?: string | undefined;
     }>, "many">>;
-    inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     entry: z.ZodString;
     nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
@@ -3848,16 +5902,10 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         }>>;
         workflowRef: z.ZodOptional<z.ZodObject<{
             graphId: z.ZodString;
-            inputMap: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
-            outputMap: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
         }, "strict", z.ZodTypeAny, {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         }, {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         }>>;
         sideChannelActions: z.ZodOptional<z.ZodArray<z.ZodObject<{
             id: z.ZodString;
@@ -4000,8 +6048,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -4087,8 +6133,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -4184,8 +6228,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -4271,8 +6313,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -4307,15 +6347,13 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
     title: z.ZodOptional<z.ZodString>;
     description: z.ZodOptional<z.ZodString>;
     activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    kind: z.ZodEnum<["workflow", "callable"]>;
+    kind: z.ZodLiteral<"workflow">;
 } & {
     id: z.ZodString;
     version: z.ZodString;
 }, "strict", z.ZodTypeAny, {
-    kind: "workflow" | "callable";
+    kind: "workflow";
     id: string;
-    inputSchema: JsonSchema;
     outputSchema: JsonSchema;
     effects: string[];
     requires: {
@@ -4390,8 +6428,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -4423,7 +6459,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
     description?: string | undefined;
     title?: string | undefined;
 }, {
-    kind: "workflow" | "callable";
+    kind: "workflow";
     id: string;
     entry: string;
     nodes: Record<string, {
@@ -4486,8 +6522,978 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>;
+    version: string;
+    description?: string | undefined;
+    outputSchema?: JsonSchema | undefined;
+    effects?: string[] | undefined;
+    requires?: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[] | undefined;
+    title?: string | undefined;
+    activationHints?: string[] | undefined;
+}>, z.ZodObject<{
+    inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    entry: z.ZodString;
+    nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
+        purpose: z.ZodString;
+        instructions: z.ZodOptional<z.ZodString>;
+        exec: z.ZodDefault<z.ZodLiteral<"inline">>;
+        outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+        interaction: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+            id: z.ZodString;
+            kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+            prompt: z.ZodString;
+            renderVia: z.ZodOptional<z.ZodString>;
+            choices: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                label: z.ZodString;
+                value: z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>;
+                description: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }, {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }>, "many">>;
+            schema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            followUp: z.ZodOptional<z.ZodObject<{
+                when: z.ZodString;
+                id: z.ZodString;
+                kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+                source: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            }, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            }>>;
+        }, "strict", z.ZodTypeAny, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }>, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }, {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        }>>;
+        interrupt: z.ZodOptional<z.ZodObject<{
+            requiresUserTurn: z.ZodLiteral<true>;
+            reason: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        }, {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        }>>;
+        gate: z.ZodOptional<z.ZodObject<{
+            type: z.ZodLiteral<"external_decision">;
+            decisionSource: z.ZodOptional<z.ZodDiscriminatedUnion<"kind", [z.ZodObject<{
+                kind: z.ZodLiteral<"human">;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "human";
+                label?: string | undefined;
+            }, {
+                kind: "human";
+                label?: string | undefined;
+            }>, z.ZodObject<{
+                kind: z.ZodLiteral<"tool">;
+                tool: z.ZodString;
+                label: z.ZodOptional<z.ZodString>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            }, {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            }>]>>;
+            interaction: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+                id: z.ZodString;
+                kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+                prompt: z.ZodString;
+                renderVia: z.ZodOptional<z.ZodString>;
+                choices: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                    label: z.ZodString;
+                    value: z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>;
+                    description: z.ZodOptional<z.ZodString>;
+                }, "strict", z.ZodTypeAny, {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }, {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }>, "many">>;
+                schema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+                followUp: z.ZodOptional<z.ZodObject<{
+                    when: z.ZodString;
+                    id: z.ZodString;
+                    kind: z.ZodEnum<["choice", "free_text", "confirm", "form"]>;
+                    source: z.ZodOptional<z.ZodString>;
+                }, "strict", z.ZodTypeAny, {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                }, {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                }>>;
+            }, "strict", z.ZodTypeAny, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }>, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }, {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            }>>;
+            decisionSchema: z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>;
+        }, "strict", z.ZodTypeAny, {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        }, {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        }>>;
+        workflowRef: z.ZodOptional<z.ZodObject<{
+            graphId: z.ZodString;
+        }, "strict", z.ZodTypeAny, {
+            graphId: string;
+        }, {
+            graphId: string;
+        }>>;
+        sideChannelActions: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            purpose: z.ZodString;
+            commandRef: z.ZodOptional<z.ZodString>;
+            effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            validator: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }, {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }>, "many">>;
+        toolContract: z.ZodOptional<z.ZodObject<{
+            id: z.ZodString;
+            command: z.ZodString;
+            purpose: z.ZodOptional<z.ZodString>;
+            effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            inputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            validator: z.ZodOptional<z.ZodString>;
+        }, "strict", z.ZodTypeAny, {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        }, {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        }>>;
+        validators: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            purpose: z.ZodOptional<z.ZodString>;
+            inputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+            outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+        }, "strict", z.ZodTypeAny, {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }, {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }>, "many">>;
+        operatorContext: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+        edges: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            to: z.ZodString;
+            when: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+        }, "strict", z.ZodTypeAny, {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }, {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }>, "many">>;
+        terminal: z.ZodDefault<z.ZodBoolean>;
+        effects: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    }, "strict", z.ZodTypeAny, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>>;
+    title: z.ZodOptional<z.ZodString>;
+    description: z.ZodOptional<z.ZodString>;
+    activationHints: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    kind: z.ZodLiteral<"callable">;
+} & {
+    id: z.ZodString;
+    version: z.ZodString;
+}, "strict", z.ZodTypeAny, {
+    kind: "callable";
+    id: string;
+    inputSchema: JsonSchema;
+    outputSchema: JsonSchema;
+    effects: string[];
+    entry: string;
+    nodes: Record<string, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }>;
+    activationHints: string[];
+    version: string;
+    description?: string | undefined;
+    title?: string | undefined;
+}, {
+    kind: "callable";
+    id: string;
+    entry: string;
+    nodes: Record<string, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -4524,26 +7530,18 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
     inputSchema?: JsonSchema | undefined;
     outputSchema?: JsonSchema | undefined;
     effects?: string[] | undefined;
-    requires?: {
-        id: string;
-        describe: string;
-        unmetRedirect?: string | undefined;
-        unmetMessage?: string | undefined;
-    }[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
 }>]>, {
     kind: "dispatcher";
     id: string;
-    effects: string[];
     activationHints: string[];
     version: string;
     description?: string | undefined;
     title?: string | undefined;
 } | {
-    kind: "workflow" | "callable";
+    kind: "workflow";
     id: string;
-    inputSchema: JsonSchema;
     outputSchema: JsonSchema;
     effects: string[];
     requires: {
@@ -4618,8 +7616,108 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+    }>;
+    activationHints: string[];
+    version: string;
+    description?: string | undefined;
+    title?: string | undefined;
+} | {
+    kind: "callable";
+    id: string;
+    inputSchema: JsonSchema;
+    outputSchema: JsonSchema;
+    effects: string[];
+    entry: string;
+    nodes: Record<string, {
+        purpose: string;
+        outputSchema: JsonSchema;
+        exec: "inline";
+        edges: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[];
+        terminal: boolean;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -4655,11 +7753,10 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
     id: string;
     version: string;
     description?: string | undefined;
-    effects?: string[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
 } | {
-    kind: "workflow" | "callable";
+    kind: "workflow";
     id: string;
     entry: string;
     nodes: Record<string, {
@@ -4722,8 +7819,113 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         } | undefined;
         workflowRef?: {
             graphId: string;
-            inputMap?: Record<string, string> | undefined;
-            outputMap?: Record<string, string> | undefined;
+        } | undefined;
+        sideChannelActions?: {
+            id: string;
+            purpose: string;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+            commandRef?: string | undefined;
+        }[] | undefined;
+        toolContract?: {
+            id: string;
+            command: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+            effects?: string[] | undefined;
+            validator?: string | undefined;
+        } | undefined;
+        validators?: {
+            id: string;
+            purpose?: string | undefined;
+            inputSchema?: JsonSchema | undefined;
+            outputSchema?: JsonSchema | undefined;
+        }[] | undefined;
+        operatorContext?: Record<string, unknown> | undefined;
+        edges?: {
+            to: string;
+            when?: Record<string, unknown> | undefined;
+        }[] | undefined;
+        terminal?: boolean | undefined;
+    }>;
+    version: string;
+    description?: string | undefined;
+    outputSchema?: JsonSchema | undefined;
+    effects?: string[] | undefined;
+    requires?: {
+        id: string;
+        describe: string;
+        unmetRedirect?: string | undefined;
+        unmetMessage?: string | undefined;
+    }[] | undefined;
+    title?: string | undefined;
+    activationHints?: string[] | undefined;
+} | {
+    kind: "callable";
+    id: string;
+    entry: string;
+    nodes: Record<string, {
+        purpose: string;
+        outputSchema?: JsonSchema | undefined;
+        effects?: string[] | undefined;
+        interaction?: {
+            kind: "choice" | "free_text" | "confirm" | "form";
+            id: string;
+            prompt: string;
+            renderVia?: string | undefined;
+            choices?: {
+                value: string | number | boolean;
+                label: string;
+                description?: string | undefined;
+            }[] | undefined;
+            schema?: JsonSchema | undefined;
+            followUp?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                when: string;
+                id: string;
+                source?: string | undefined;
+            } | undefined;
+        } | undefined;
+        instructions?: string | undefined;
+        exec?: "inline" | undefined;
+        interrupt?: {
+            requiresUserTurn: true;
+            reason?: string | undefined;
+        } | undefined;
+        gate?: {
+            type: "external_decision";
+            decisionSchema: JsonSchema;
+            decisionSource?: {
+                kind: "human";
+                label?: string | undefined;
+            } | {
+                kind: "tool";
+                tool: string;
+                label?: string | undefined;
+            } | undefined;
+            interaction?: {
+                kind: "choice" | "free_text" | "confirm" | "form";
+                id: string;
+                prompt: string;
+                renderVia?: string | undefined;
+                choices?: {
+                    value: string | number | boolean;
+                    label: string;
+                    description?: string | undefined;
+                }[] | undefined;
+                schema?: JsonSchema | undefined;
+                followUp?: {
+                    kind: "choice" | "free_text" | "confirm" | "form";
+                    when: string;
+                    id: string;
+                    source?: string | undefined;
+                } | undefined;
+            } | undefined;
+        } | undefined;
+        workflowRef?: {
+            graphId: string;
         } | undefined;
         sideChannelActions?: {
             id: string;
@@ -4760,12 +7962,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
     inputSchema?: JsonSchema | undefined;
     outputSchema?: JsonSchema | undefined;
     effects?: string[] | undefined;
-    requires?: {
-        id: string;
-        describe: string;
-        unmetRedirect?: string | undefined;
-        unmetMessage?: string | undefined;
-    }[] | undefined;
     title?: string | undefined;
     activationHints?: string[] | undefined;
 }>;
@@ -5469,7 +8665,8 @@ export declare const callableTransitionLogEntrySchema: z.ZodObject<{
 export type Workflow = z.infer<typeof workflowSchema>;
 export type GraphPackageManifest = z.infer<typeof graphPackageManifestSchema>;
 export type DispatcherGraphManifest = z.infer<typeof dispatcherGraphManifestSchema>;
-export type ExecutableGraphManifest = z.infer<typeof executableGraphManifestSchema>;
+export type WorkflowGraphManifest = z.infer<typeof workflowGraphManifestSchema>;
+export type CallableGraphManifest = z.infer<typeof callableGraphManifestSchema>;
 export type Graph = z.infer<typeof graphSchema>;
 export type StartRequirement = z.infer<typeof startRequirementSchema>;
 export type Node = z.infer<typeof nodeSchema>;

@@ -17,7 +17,6 @@ const validManifest = {
   title: 'Support Triage',
   description: 'Classify support tickets.',
   activationHints: ['triage support ticket'],
-  inputSchema: { type: 'object' },
   outputSchema: { type: 'object' },
   effects: ['read_workspace'],
   entry: 'classify-ticket',
@@ -78,7 +77,8 @@ describe('graph package loader', () => {
   it('defaults requires and preserves structured error details', () => {
     const root = makePackageRoot(validManifest);
     try {
-      expect(loadGraphPackage(root).manifest.requires).toEqual([]);
+      const manifest = loadGraphPackage(root).manifest;
+      expect(manifest.kind === 'workflow' ? manifest.requires : undefined).toEqual([]);
       expect(new RipplegraphError('E_TEST', 'test message', { example: true })).toMatchObject({
         code: 'E_TEST',
         message: 'test message',
@@ -108,7 +108,7 @@ describe('graph package loader', () => {
     }
   });
 
-  it('loads host contract metadata and workflowRef maps', () => {
+  it('loads host contract metadata and workflowRef targets', () => {
     const root = makePackageRoot({
       ...validManifest,
       effects: ['read_workspace'],
@@ -161,15 +161,14 @@ describe('graph package loader', () => {
           purpose: 'Run child workflow',
           workflowRef: {
             graphId: 'support-child',
-            inputMap: { ticketId: '$.ticket.id' },
-            outputMap: { summary: '$.result.summary' },
           },
           terminal: true,
         },
       },
     });
     try {
-      expect(loadGraphPackage(root).manifest.nodes['classify-ticket']).toMatchObject({
+      const manifest = loadGraphPackage(root).manifest;
+      expect(manifest.kind === 'dispatcher' ? undefined : manifest.nodes['classify-ticket']).toMatchObject({
         interaction: { id: 'classify-choice', kind: 'choice', choices: [{ value: 'bug' }] },
         interrupt: { requiresUserTurn: true },
         toolContract: { id: 'ticket-loader', effects: ['read_workspace'] },
@@ -177,11 +176,36 @@ describe('graph package loader', () => {
         sideChannelActions: [{ id: 'refresh-ticket', commandRef: 'ticket-loader' }],
         gate: { interaction: { id: 'category-confirm', kind: 'confirm' } },
       });
-      expect(loadGraphPackage(root).manifest.nodes.child.workflowRef).toMatchObject({
+      expect(manifest.kind === 'dispatcher' ? undefined : manifest.nodes.child?.workflowRef).toEqual({
         graphId: 'support-child',
-        inputMap: { ticketId: '$.ticket.id' },
-        outputMap: { summary: '$.result.summary' },
       });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects workflowRef nodes that still carry inputMap or outputMap', () => {
+    const root = makePackageRoot({
+      ...validManifest,
+      nodes: {
+        'classify-ticket': {
+          purpose: 'Classify the newest support ticket',
+          exec: 'inline',
+          outputSchema: { type: 'object' },
+          edges: [{ to: 'child' }],
+        },
+        child: {
+          purpose: 'Run child workflow',
+          workflowRef: {
+            graphId: 'support-child',
+            inputMap: { ticketId: '$.ticket.id' },
+          },
+          terminal: true,
+        },
+      },
+    });
+    try {
+      expect(() => loadGraphPackage(root)).toThrow(/inputMap|unrecognized/i);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }

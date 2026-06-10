@@ -21,6 +21,7 @@ import {
   startRun,
   stepRun,
   suspendRun,
+  transitionLogPath,
   writeCheckpoint,
   writeCurrent,
   writeNodeOutput,
@@ -99,7 +100,7 @@ describe('coach runtime storage', () => {
         title: 'Workspace Dispatcher',
         description: 'Selects the right workflow.',
         activationHints: ['route user requests'],
-        effects: ['read_workspace'],
+        effects: [],
       });
       expect(registered.find((entry) => entry.id === 'legacy')?.kind).toBe('workflow');
     } finally {
@@ -1374,6 +1375,197 @@ describe('coach operations', () => {
       expect(response.status).toBe('completed');
       const repeated = [...readCounts.entries()].filter(([, count]) => count > 1).map(([file]) => file);
       expect(repeated).toEqual([]);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('root run outputSchema enforcement', () => {
+  const strictOutputSchema = {
+    type: 'object',
+    required: ['summary'],
+    properties: { summary: { type: 'string' } },
+  };
+
+  it('rejects a completing output that violates the graph outputSchema on a single-node graph and stays active', () => {
+    const root = createTestWorkspace({
+      prefix: 'ripplegraph-root-output-single-',
+      workspace: { id: 'root-output-demo' },
+      graphs: [
+        {
+          id: 'single',
+          outputSchema: strictOutputSchema,
+          entry: 'work',
+          nodes: {
+            work: { purpose: 'Do all the work', exec: 'inline', outputSchema: { type: 'object' }, terminal: true },
+          },
+        },
+      ],
+    });
+    try {
+      startRun({ workflowRoot: root, graphId: 'single', runId: 'single-a' });
+
+      const rejected = stepRun({ workflowRoot: root, output: { note: 'no summary' } });
+      expect(rejected).toMatchObject({
+        status: 'validation_error',
+        run: { id: 'single-a', status: 'active' },
+      });
+      expect(getState({ workflowRoot: root })).toMatchObject({
+        status: 'ok',
+        run: { id: 'single-a', status: 'active' },
+      });
+
+      expect(stepRun({ workflowRoot: root, output: { summary: 'done' } })).toMatchObject({
+        status: 'completed',
+        run: { id: 'single-a', status: 'completed' },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects a violating output when stepping into a terminal node, then completes with a conforming one', () => {
+    const root = createTestWorkspace({
+      prefix: 'ripplegraph-root-output-step-',
+      workspace: { id: 'root-output-demo' },
+      graphs: [
+        {
+          id: 'two-step',
+          outputSchema: strictOutputSchema,
+          entry: 'review',
+          nodes: {
+            review: {
+              purpose: 'Review the work',
+              exec: 'inline',
+              outputSchema: { type: 'object' },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        },
+      ],
+    });
+    try {
+      startRun({ workflowRoot: root, graphId: 'two-step', runId: 'two-step-a' });
+
+      const rejected = stepRun({ workflowRoot: root, output: { note: 'no summary' } });
+      expect(rejected).toMatchObject({
+        status: 'validation_error',
+        run: { id: 'two-step-a', status: 'active' },
+        position: { graph: 'two-step', node: 'review' },
+      });
+      expect(getState({ workflowRoot: root })).toMatchObject({
+        status: 'ok',
+        run: { id: 'two-step-a', status: 'active' },
+        position: { graph: 'two-step', node: 'review' },
+      });
+      const loggedAfterRejection = fs
+        .readFileSync(transitionLogPath(root, 'two-step-a'), 'utf8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as { op: string; to: { node: string } | null; validation: { ok: boolean } });
+      expect(loggedAfterRejection.filter((entry) => entry.to?.node === 'done' && entry.validation.ok)).toEqual([]);
+
+      expect(stepRun({ workflowRoot: root, output: { summary: 'all reviewed' } })).toMatchObject({
+        status: 'completed',
+        run: { id: 'two-step-a', status: 'completed' },
+        position: { graph: 'two-step', node: 'done' },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects a violating child result that would complete the root run, before persisting the child terminal step', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackageAt(
+        root,
+        'graphs/strict-child',
+        {
+          id: 'strict-child',
+          version: '0.1.0',
+          kind: 'workflow',
+          entry: 'work',
+          nodes: {
+            work: { purpose: 'Run child work', outputSchema: { type: 'object' }, edges: [{ to: 'done' }] },
+            done: { purpose: 'Child done', terminal: true },
+          },
+        },
+        '2026-06-10T00:00:00.000Z',
+      );
+      writeGraphPackageAt(
+        root,
+        'graphs/strict-parent',
+        {
+          id: 'strict-parent',
+          version: '0.1.0',
+          kind: 'workflow',
+          outputSchema: strictOutputSchema,
+          entry: 'review',
+          nodes: {
+            review: { purpose: 'Run child ref', workflowRef: { graphId: 'strict-child' }, edges: [{ to: 'done' }] },
+            done: { purpose: 'Parent done', terminal: true },
+          },
+        },
+        '2026-06-10T00:00:00.000Z',
+      );
+
+      startRun({ workflowRoot: root, graphId: 'strict-parent', runId: 'strict-a' });
+      expect(getState({ workflowRoot: root })).toMatchObject({
+        status: 'ok',
+        position: { graph: 'strict-child', node: 'work' },
+      });
+
+      const rejected = stepRun({ workflowRoot: root, output: { note: 'no summary' } });
+      expect(rejected).toMatchObject({
+        status: 'validation_error',
+        run: { id: 'strict-a', status: 'active' },
+        position: { graph: 'strict-child', node: 'work' },
+      });
+      expect(getState({ workflowRoot: root })).toMatchObject({
+        status: 'ok',
+        run: { id: 'strict-a', status: 'active' },
+        position: { graph: 'strict-child', node: 'work' },
+      });
+      const loggedAfterRejection = fs
+        .readFileSync(transitionLogPath(root, 'strict-a'), 'utf8')
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as { op: string; to: { node: string } | null; validation: { ok: boolean } });
+      expect(loggedAfterRejection.filter((entry) => entry.to?.node === 'done' && entry.validation.ok)).toEqual([]);
+
+      expect(stepRun({ workflowRoot: root, output: { summary: 'child summary' } })).toMatchObject({
+        status: 'completed',
+        run: { id: 'strict-a', status: 'completed' },
+        position: { graph: 'strict-parent', node: 'done' },
+      });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('completes runs with the default outputSchema exactly as before', () => {
+    const root = createTestWorkspace({
+      prefix: 'ripplegraph-root-output-default-',
+      workspace: { id: 'root-output-demo' },
+      graphs: [
+        {
+          id: 'default-schema',
+          entry: 'work',
+          nodes: {
+            work: { purpose: 'Do all the work', exec: 'inline', outputSchema: { type: 'object' }, terminal: true },
+          },
+        },
+      ],
+    });
+    try {
+      startRun({ workflowRoot: root, graphId: 'default-schema', runId: 'default-a' });
+      expect(stepRun({ workflowRoot: root, output: {} })).toMatchObject({
+        status: 'completed',
+        run: { id: 'default-a', status: 'completed' },
+      });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }

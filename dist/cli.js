@@ -172,11 +172,15 @@ function packageSummary(manifest) {
         title: manifest.title,
         description: manifest.description,
         activationHints: manifest.activationHints,
-        effects: manifest.effects,
     };
     if (manifest.kind === 'dispatcher')
-        return { ...summary, requires: [] };
-    return { ...summary, requires: manifest.requires, entry: manifest.entry };
+        return { ...summary, requires: [], effects: [] };
+    return {
+        ...summary,
+        requires: manifest.kind === 'workflow' ? manifest.requires : [],
+        effects: manifest.effects,
+        entry: manifest.entry,
+    };
 }
 function handleGraphCommand(flags, positional) {
     const [subcommand, packageRoot] = positional;

@@ -1,10 +1,13 @@
 import {
   RipplegraphError,
-  type ExecutableGraphManifest,
+  type CallableGraphManifest,
   type GraphPackageManifest,
   type Node,
+  type WorkflowGraphManifest,
 } from '../schema.js';
 import { stableValue } from '../internal/json-utils.js';
+
+type ExecutableGraphManifest = WorkflowGraphManifest | CallableGraphManifest;
 
 export type DiagramFormat = 'mermaid' | 'dot';
 

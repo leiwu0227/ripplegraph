@@ -219,7 +219,6 @@ export function makeGraphMetadataWorkflowRoot(): string {
         title: 'Workspace Dispatcher',
         description: 'Selects the right workflow.',
         activationHints: ['route user requests'],
-        effects: ['read_workspace'],
       },
       {
         id: 'legacy',

@@ -197,7 +197,7 @@ function stepRunWith(loaded, opts) {
     const { workflow, checkpoint, active } = loaded;
     const node = getNode(active.graph, checkpoint.position.node);
     if (node.terminal) {
-        return completeRun(opts.workflowRoot, checkpoint, checkpoint.position);
+        return completeRun(opts.workflowRoot, checkpoint, checkpoint.position, active.graph, opts.output);
     }
     if (node.gate) {
         throw new RipplegraphError('E_GATE_DECISION_REQUIRED', `node ${checkpoint.position.node} requires an external decision`);
@@ -216,11 +216,18 @@ function stepRunWith(loaded, opts) {
             errors,
         };
     }
-    const artifact = writeNodeOutput(opts.workflowRoot, checkpoint.runId, checkpoint.position.node, opts.output, active.scope);
     const nextNodeId = selectEdge(node.edges, opts.output)?.to;
     if (!nextNodeId) {
         throw new RipplegraphError('E_NO_EDGE', `node ${checkpoint.position.node} has no matching edge`);
     }
+    const nextNode = getNode(active.graph, nextNodeId);
+    if (nextNode.terminal) {
+        const rootGraph = rootCompletionGraph(opts.workflowRoot, checkpoint, active.graph, opts.output);
+        const completionError = rootGraph && rootCompletionValidationError(opts.workflowRoot, checkpoint, rootGraph, opts.output, 'step');
+        if (completionError)
+            return completionError;
+    }
+    const artifact = writeNodeOutput(opts.workflowRoot, checkpoint.runId, checkpoint.position.node, opts.output, active.scope);
     const from = checkpoint.position;
     const to = { graph: active.graphId, node: nextNodeId };
     checkpoint.outputs[nodeOutputKey(active.scope, checkpoint.position.node)] = opts.output;
@@ -231,12 +238,11 @@ function stepRunWith(loaded, opts) {
         input: { artifact },
         output: { artifact },
     });
-    const nextNode = getNode(active.graph, nextNodeId);
     if (nextNode.terminal) {
         if (checkpoint.stack.length > 0) {
             return exitChildWorkflow(opts.workflowRoot, workflow, checkpoint, active, opts.output, to);
         }
-        return completeRun(opts.workflowRoot, checkpoint, to);
+        return completeRun(opts.workflowRoot, checkpoint, to, active.graph, opts.output);
     }
     writeCheckpoint(opts.workflowRoot, checkpoint);
     return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint);
@@ -272,11 +278,18 @@ function decideGateWith(loaded, opts) {
             errors,
         };
     }
-    const artifact = writeNodeOutput(opts.workflowRoot, checkpoint.runId, checkpoint.position.node, opts.decision, active.scope);
     const nextNodeId = selectEdge(node.edges, opts.decision)?.to;
     if (!nextNodeId) {
         throw new RipplegraphError('E_NO_EDGE', `node ${checkpoint.position.node} has no matching edge`);
     }
+    const nextNode = getNode(active.graph, nextNodeId);
+    if (nextNode.terminal) {
+        const rootGraph = rootCompletionGraph(opts.workflowRoot, checkpoint, active.graph, opts.decision);
+        const completionError = rootGraph && rootCompletionValidationError(opts.workflowRoot, checkpoint, rootGraph, opts.decision, 'decide');
+        if (completionError)
+            return completionError;
+    }
+    const artifact = writeNodeOutput(opts.workflowRoot, checkpoint.runId, checkpoint.position.node, opts.decision, active.scope);
     const from = checkpoint.position;
     const to = { graph: active.graphId, node: nextNodeId };
     checkpoint.gateDecisions[nodeOutputKey(active.scope, checkpoint.position.node)] = opts.decision;
@@ -289,12 +302,11 @@ function decideGateWith(loaded, opts) {
         output: null,
         gateDecision: opts.decision,
     });
-    const nextNode = getNode(active.graph, nextNodeId);
     if (nextNode.terminal) {
         if (checkpoint.stack.length > 0) {
             return exitChildWorkflow(opts.workflowRoot, workflow, checkpoint, active, opts.decision, to);
         }
-        return completeRun(opts.workflowRoot, checkpoint, to);
+        return completeRun(opts.workflowRoot, checkpoint, to, active.graph, opts.decision);
     }
     writeCheckpoint(opts.workflowRoot, checkpoint);
     return enterWorkflowRefs(opts.workflowRoot, workflow, checkpoint);
@@ -496,7 +508,7 @@ function exitChildWorkflow(rootPath, workflow, checkpoint, child, childResult, c
     }
     const frame = checkpoint.stack.pop();
     if (!frame) {
-        return completeRun(rootPath, checkpoint, childTerminalPosition);
+        return completeRun(rootPath, checkpoint, childTerminalPosition, child.graph, childResult);
     }
     const parentGraphSource = frame.parent.graphSource ?? checkpoint.graphSource;
     if (!parentGraphSource) {
@@ -504,12 +516,13 @@ function exitChildWorkflow(rootPath, workflow, checkpoint, child, childResult, c
     }
     const parentGraph = graphForSource(rootPath, checkpoint, parentGraphSource);
     const parentNode = getNode(parentGraph, frame.parent.node);
-    const artifact = writeNodeOutput(rootPath, checkpoint.runId, frame.parent.node, childResult, frame.parent.scope);
-    checkpoint.outputs[nodeOutputKey(frame.parent.scope, frame.parent.node)] = childResult;
     const nextNodeId = selectEdge(parentNode.edges, childResult)?.to;
     if (!nextNodeId) {
         throw new RipplegraphError('E_NO_EDGE', `node ${frame.parent.node} has no matching edge`);
     }
+    const nextNode = getNode(parentGraph, nextNodeId);
+    const artifact = writeNodeOutput(rootPath, checkpoint.runId, frame.parent.node, childResult, frame.parent.scope);
+    checkpoint.outputs[nodeOutputKey(frame.parent.scope, frame.parent.node)] = childResult;
     const to = { graph: frame.parent.graph, node: nextNodeId };
     checkpoint.position = to;
     checkpoint.updatedAt = new Date().toISOString();
@@ -518,12 +531,11 @@ function exitChildWorkflow(rootPath, workflow, checkpoint, child, childResult, c
         input: { artifact },
         output: { artifact },
     });
-    const nextNode = getNode(parentGraph, nextNodeId);
     if (nextNode.terminal) {
         if (checkpoint.stack.length > 0) {
             return exitChildWorkflow(rootPath, workflow, checkpoint, { graph: parentGraph, graphSource: parentGraphSource, graphId: frame.parent.graph, scope: frame.parent.scope }, childResult, to);
         }
-        return completeRun(rootPath, checkpoint, to);
+        return completeRun(rootPath, checkpoint, to, parentGraph, childResult);
     }
     writeCheckpoint(rootPath, checkpoint);
     return enterWorkflowRefs(rootPath, workflow, checkpoint);
@@ -556,7 +568,57 @@ function graphForSource(rootPath, checkpoint, source) {
     }
     return manifest;
 }
-function completeRun(rootPath, checkpoint, to) {
+// A step that lands on a terminal node completes the root run only if every pending
+// child frame's exit also lands on a terminal parent node. Walks that cascade with pure
+// reads and returns the root graph when this step would complete the run, so the caller
+// can validate the completing value before anything is persisted. Returns null when the
+// cascade stops at a non-terminal parent node, or when the commit path will surface its
+// own outcome first (intermediate child outputSchema rejection, missing graph source,
+// no matching parent edge).
+function rootCompletionGraph(rootPath, checkpoint, activeGraph, result) {
+    let graph = activeGraph;
+    for (let index = checkpoint.stack.length - 1; index >= 0; index -= 1) {
+        if (validateOutput(graph.outputSchema, result).length > 0)
+            return null;
+        const frame = checkpoint.stack[index];
+        const parentSource = frame.parent.graphSource ?? checkpoint.graphSource;
+        if (!parentSource)
+            return null;
+        const parentGraph = graphForSource(rootPath, checkpoint, parentSource);
+        const nextNodeId = selectEdge(getNode(parentGraph, frame.parent.node).edges, result)?.to;
+        if (!nextNodeId)
+            return null;
+        if (!getNode(parentGraph, nextNodeId).terminal)
+            return null;
+        graph = parentGraph;
+    }
+    return graph;
+}
+// Validates the run's completing value against the root graph's outputSchema before any
+// terminal transition or artifact is persisted; checkpoint.position must still be the
+// durable pre-completion position when this runs, so a rejection leaves no trace beyond
+// the failed-validation log entry.
+function rootCompletionValidationError(rootPath, checkpoint, graph, result, op) {
+    const errors = validateOutput(graph.outputSchema, result);
+    if (errors.length === 0)
+        return null;
+    appendTransition(rootPath, checkpoint.runId, {
+        ...transitionEntry(op, checkpoint.runId, checkpoint.position, checkpoint.position),
+        validation: { ok: false, errors },
+        ...(op === 'decide' ? { gateDecision: result } : {}),
+        error: { code: 'E_VALIDATION', message: 'run output failed validation' },
+    });
+    return {
+        status: 'validation_error',
+        run: { id: checkpoint.runId, status: checkpoint.status, rootGraph: checkpoint.rootGraph },
+        position: checkpoint.position,
+        errors,
+    };
+}
+function completeRun(rootPath, checkpoint, to, graph, result) {
+    const completionError = rootCompletionValidationError(rootPath, checkpoint, graph, result, 'step');
+    if (completionError)
+        return completionError;
     checkpoint.status = 'completed';
     checkpoint.position = to;
     checkpoint.updatedAt = new Date().toISOString();

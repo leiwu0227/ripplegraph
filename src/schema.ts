@@ -146,8 +146,6 @@ export const gateSchema = z
 export const workflowRefSchema = z
   .object({
     graphId: idSchema,
-    inputMap: z.record(z.string().min(1)).optional(),
-    outputMap: z.record(z.string().min(1)).optional(),
   })
   .strict();
 
@@ -197,26 +195,42 @@ export const nodeSchema = z
     }
   });
 
+// Every declared field below must be runtime-enforced or host-exposed; fields with
+// neither (workflow inputSchema, callable requires, dispatcher effects, workflowRef
+// input/output maps) are deliberately absent so manifests cannot drift from behavior.
 const graphMetadataFields = {
   title: z.string().min(1).optional(),
   description: z.string().min(1).optional(),
   activationHints: z.array(z.string().min(1)).default([]),
-  effects: z.array(idSchema).default([]),
 };
 
-const executableGraphFieldsSchema = z
+const executableGraphFields = {
+  ...graphMetadataFields,
+  effects: z.array(idSchema).default([]),
+  outputSchema: jsonSchemaSchema.default({ type: 'object' }),
+  entry: idSchema,
+  nodes: z.record(idSchema, nodeSchema),
+};
+
+const workflowGraphFieldsSchema = z
   .object({
-    kind: z.enum(['workflow', 'callable']),
-    ...graphMetadataFields,
+    kind: z.literal('workflow'),
+    ...executableGraphFields,
     requires: z.array(startRequirementSchema).default([]),
-    inputSchema: jsonSchemaSchema.default({ type: 'object' }),
-    outputSchema: jsonSchemaSchema.default({ type: 'object' }),
-    entry: idSchema,
-    nodes: z.record(idSchema, nodeSchema),
   })
   .strict();
 
-function validateGraphReferences(graph: z.infer<typeof executableGraphFieldsSchema>, ctx: z.RefinementCtx): void {
+const callableGraphFieldsSchema = z
+  .object({
+    kind: z.literal('callable'),
+    ...executableGraphFields,
+    inputSchema: jsonSchemaSchema.default({ type: 'object' }),
+  })
+  .strict();
+
+type ExecutableGraphFields = z.infer<typeof workflowGraphFieldsSchema> | z.infer<typeof callableGraphFieldsSchema>;
+
+function validateGraphReferences(graph: Pick<ExecutableGraphFields, 'entry' | 'nodes'>, ctx: z.RefinementCtx): void {
   if (!graph.nodes[graph.entry]) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -237,11 +251,14 @@ function validateGraphReferences(graph: z.infer<typeof executableGraphFieldsSche
   }
 }
 
-export const graphSchema = executableGraphFieldsSchema.superRefine(validateGraphReferences);
+export const graphSchema = z
+  .discriminatedUnion('kind', [workflowGraphFieldsSchema, callableGraphFieldsSchema])
+  .superRefine(validateGraphReferences);
 
 // Dispatchers are resolved by registry metadata only and never execute, so their
-// manifests carry no body (entry/nodes) and no I/O contract (inputSchema/outputSchema/requires);
-// the dispatch contract is hardcoded in dispatcher.ts. strict() rejects body-carrying manifests.
+// manifests carry no body (entry/nodes), no I/O contract, no requires, and no effects
+// (dispatch is read-only); the dispatch contract is hardcoded in dispatcher.ts.
+// strict() rejects manifests that still carry any of those fields.
 export const dispatcherGraphManifestSchema = z
   .object({
     id: idSchema,
@@ -251,13 +268,18 @@ export const dispatcherGraphManifestSchema = z
   })
   .strict();
 
-export const executableGraphManifestSchema = executableGraphFieldsSchema.extend({
+export const workflowGraphManifestSchema = workflowGraphFieldsSchema.extend({
+  id: idSchema,
+  version: z.string().min(1),
+});
+
+export const callableGraphManifestSchema = callableGraphFieldsSchema.extend({
   id: idSchema,
   version: z.string().min(1),
 });
 
 export const graphPackageManifestSchema = z
-  .discriminatedUnion('kind', [dispatcherGraphManifestSchema, executableGraphManifestSchema])
+  .discriminatedUnion('kind', [dispatcherGraphManifestSchema, workflowGraphManifestSchema, callableGraphManifestSchema])
   .superRefine((manifest, ctx) => {
     if (manifest.kind === 'dispatcher') return;
     validateGraphReferences(manifest, ctx);
@@ -393,7 +415,8 @@ export const callableTransitionLogEntrySchema = z
 export type Workflow = z.infer<typeof workflowSchema>;
 export type GraphPackageManifest = z.infer<typeof graphPackageManifestSchema>;
 export type DispatcherGraphManifest = z.infer<typeof dispatcherGraphManifestSchema>;
-export type ExecutableGraphManifest = z.infer<typeof executableGraphManifestSchema>;
+export type WorkflowGraphManifest = z.infer<typeof workflowGraphManifestSchema>;
+export type CallableGraphManifest = z.infer<typeof callableGraphManifestSchema>;
 export type Graph = z.infer<typeof graphSchema>;
 export type StartRequirement = z.infer<typeof startRequirementSchema>;
 export type Node = z.infer<typeof nodeSchema>;
