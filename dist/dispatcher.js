@@ -3,6 +3,7 @@ import { startCallableCall } from './callable.js';
 import { listRuns, resumeRun, startRun } from './coach.js';
 import { listRegisteredGraphs } from './registry.js';
 import { resolveDispatcherEntry } from './internal/dispatcher-resolution.js';
+import { formatIssues } from './internal/zod-issues.js';
 import { RipplegraphError } from './schema.js';
 import { assertEffectsAllowed } from './effects.js';
 // The dispatcher carries two schemas for the same action shapes:
@@ -194,7 +195,4 @@ function requireRegisteredGraph(graphs, graphId, kind) {
 }
 function generatedRunId(graphId) {
     return `${graphId}-${new Date().toISOString().replace(/[^0-9A-Za-z]/g, '').slice(0, 17)}`;
-}
-function formatIssues(issues) {
-    return issues.map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`).join('; ');
 }

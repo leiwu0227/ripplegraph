@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 import { loadGraphPackage } from './graph-package.js';
+import { readJson, writeJson } from './internal/json-io.js';
+import { formatIssues } from './internal/zod-issues.js';
 import { registryPath } from './storage.js';
 import { idSchema, RipplegraphError, startRequirementSchema } from './schema.js';
 export const registryEntrySchema = z
@@ -24,23 +26,6 @@ export const registrySchema = z
     graphs: z.record(idSchema, registryEntrySchema).default({}),
 })
     .strict();
-function readJson(filePath) {
-    try {
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    }
-    catch (error) {
-        throw new RipplegraphError('E_BAD_JSON', `failed to read JSON at ${filePath}: ${error.message}`);
-    }
-}
-function writeJson(filePath, payload) {
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    const tmp = `${filePath}.tmp.${process.pid}.${Date.now()}`;
-    fs.writeFileSync(tmp, JSON.stringify(payload, null, 2), 'utf8');
-    fs.renameSync(tmp, filePath);
-}
-function formatIssues(issues) {
-    return issues.map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`).join('; ');
-}
 function sortRegistry(registry) {
     return {
         version: 1,

@@ -1,19 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { graphPackageManifestSchema, RipplegraphError } from './schema.js';
+import { readJson } from './internal/json-io.js';
+import { formatIssues } from './internal/zod-issues.js';
 export function graphPackagePath(packageRoot) {
     return path.join(packageRoot, 'graph.json');
-}
-function formatIssues(issues) {
-    return issues.map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`).join('; ');
-}
-function readJson(filePath) {
-    try {
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    }
-    catch (error) {
-        throw new RipplegraphError('E_BAD_JSON', `failed to read JSON at ${filePath}: ${error.message}`);
-    }
 }
 export function loadGraphPackage(packageRoot) {
     if (!fs.existsSync(packageRoot) || !fs.statSync(packageRoot).isDirectory()) {

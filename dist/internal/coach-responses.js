@@ -45,7 +45,7 @@ export function stateForCheckpoint(workflow, checkpoint, context) {
             : { command: 'step', acceptedFormats: ['json'] },
     };
 }
-function exampleOutput(schema) {
+export function exampleOutput(schema) {
     const payload = {};
     for (const [name, property] of Object.entries(schema.properties ?? {})) {
         payload[name] = property.enum?.[0] ?? property.type ?? 'value';

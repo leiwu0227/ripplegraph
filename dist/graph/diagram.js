@@ -1,4 +1,5 @@
 import { RipplegraphError } from '../schema.js';
+import { stableValue } from '../internal/json-utils.js';
 export function renderGraphDiagram(manifest, format = 'mermaid') {
     if (format === 'mermaid')
         return renderMermaid(manifest);
@@ -55,16 +56,6 @@ function formatValue(value) {
     if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
         return String(value);
     return JSON.stringify(stableValue(value));
-}
-function stableValue(value) {
-    if (Array.isArray(value))
-        return value.map(stableValue);
-    if (value && typeof value === 'object') {
-        return Object.fromEntries(Object.entries(value)
-            .sort(([left], [right]) => left.localeCompare(right))
-            .map(([key, item]) => [key, stableValue(item)]));
-    }
-    return value;
 }
 function diagramNodeId(nodeId) {
     const safe = nodeId.replace(/[^A-Za-z0-9_]/g, '_');
