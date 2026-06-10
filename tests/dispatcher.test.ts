@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { applyDispatchAction, getDispatchRequest, registerGraphPackage, stepRun, suspendRun } from '../src/index.js';
 import { dispatchActionSchema, dispatcherActionSchema } from '../src/dispatcher.js';
 import { makeCliWorkflowRoot } from './helpers/workflows.js';
+import { errorCode, makeRoot as makeTempRoot } from './helpers/setup.js';
 
 const baseManifest = {
   id: 'workspace-dispatcher',
@@ -28,7 +28,7 @@ const baseManifest = {
 };
 
 function makeRoot(prefix = 'ripplegraph-dispatcher-'): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  const root = makeTempRoot(prefix);
   fs.writeFileSync(path.join(root, 'workflow.json'), JSON.stringify({ id: 'dispatcher-demo', version: '0.1.0' }), 'utf8');
   return root;
 }
@@ -38,15 +38,6 @@ function writePackage(root: string, id: string, overrides: Record<string, unknow
   fs.mkdirSync(packageRoot, { recursive: true });
   fs.writeFileSync(path.join(packageRoot, 'graph.json'), JSON.stringify({ ...baseManifest, id, ...overrides }), 'utf8');
   return packageRoot;
-}
-
-function errorCode(fn: () => unknown): string | undefined {
-  try {
-    fn();
-  } catch (error) {
-    return (error as { code?: string }).code;
-  }
-  return undefined;
 }
 
 describe('dispatcher runtime', () => {

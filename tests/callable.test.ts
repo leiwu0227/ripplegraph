@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import {
   appendCallableTransition,
@@ -13,22 +12,18 @@ import {
   listCallableCalls,
   readCallableCheckpoint,
   readCurrent,
-  registerGraphPackage,
   startCallableCall,
   stepCallableCall,
   writeCallableOutput,
 } from '../src/index.js';
+import { errorCode, makeRoot as makeTempRoot, writeGraphPackage as writeGraphPackageAt } from './helpers/setup.js';
 
 function makeRoot(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-callable-'));
+  return makeTempRoot('ripplegraph-callable-');
 }
 
 function writeGraphPackage(root: string, folder: string, manifest: Record<string, unknown>, force = false): string {
-  const packageRoot = path.join(root, folder);
-  fs.mkdirSync(packageRoot, { recursive: true });
-  fs.writeFileSync(path.join(packageRoot, 'graph.json'), JSON.stringify(manifest), 'utf8');
-  registerGraphPackage({ workflowRoot: root, packageRoot, force, now: '2026-05-21T00:00:00.000Z' });
-  return packageRoot;
+  return writeGraphPackageAt(root, folder, manifest, '2026-05-21T00:00:00.000Z', force);
 }
 
 function callableManifest(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -70,15 +65,6 @@ function callableManifest(overrides: Record<string, unknown> = {}): Record<strin
     },
     ...overrides,
   };
-}
-
-function errorCode(fn: () => unknown): string | undefined {
-  try {
-    fn();
-  } catch (error) {
-    return (error as { code?: string }).code;
-  }
-  return undefined;
 }
 
 describe('callable storage', () => {

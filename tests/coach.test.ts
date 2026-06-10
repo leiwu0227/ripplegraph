@@ -34,6 +34,7 @@ import {
   makeStorageWorkflowRoot,
 } from './helpers/workflows.js';
 import { createTestWorkspace } from './helpers/workspace.js';
+import { errorCode, writeGraphPackage as writeGraphPackageAt } from './helpers/setup.js';
 
 function workflowPackageManifest(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -67,11 +68,7 @@ function makePackageWorkflowRoot(): string {
 }
 
 function writeGraphPackage(root: string, folder: string, manifest: Record<string, unknown>, force = false): string {
-  const packageRoot = path.join(root, folder);
-  fs.mkdirSync(packageRoot, { recursive: true });
-  fs.writeFileSync(path.join(packageRoot, 'graph.json'), JSON.stringify(manifest), 'utf8');
-  registerGraphPackage({ workflowRoot: root, packageRoot, force, now: '2026-05-23T00:00:00.000Z' });
-  return packageRoot;
+  return writeGraphPackageAt(root, folder, manifest, '2026-05-23T00:00:00.000Z', force);
 }
 
 describe('coach runtime storage', () => {
@@ -1340,14 +1337,6 @@ describe('coach operations', () => {
       ],
     });
     try {
-      const errorCode = (fn: () => unknown): string | undefined => {
-        try {
-          fn();
-        } catch (error) {
-          return (error as { code?: string }).code;
-        }
-        return undefined;
-      };
       expect(errorCode(() => startRun({ workflowRoot: root, graphId: 'missing', runId: 'r1' }))).toBe('E_UNKNOWN_GRAPH');
       expect(errorCode(() => startRun({ workflowRoot: root, graphId: 'callable-only', runId: 'r2' }))).toBe('E_WRONG_GRAPH_KIND');
     } finally {

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { loadGraphPackage, RipplegraphError } from '../src/index.js';
+import { makeRoot } from './helpers/setup.js';
 
 function makePackageRoot(manifest: unknown): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-package-'));
+  const root = makeRoot('ripplegraph-package-');
   fs.writeFileSync(path.join(root, 'graph.json'), JSON.stringify(manifest), 'utf8');
   return root;
 }
@@ -90,7 +90,7 @@ describe('graph package loader', () => {
   });
 
   it('rejects invalid package folders and graph references', () => {
-    const missingFileRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ripplegraph-missing-package-'));
+    const missingFileRoot = makeRoot('ripplegraph-missing-package-');
     try {
       expect(() => loadGraphPackage(missingFileRoot)).toThrow(/no graph.json found/);
     } finally {

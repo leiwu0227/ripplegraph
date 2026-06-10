@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { listRegisteredGraphs, readRegistry, registerGraphPackage } from '../src/index.js';
+import { makeRoot } from './helpers/setup.js';
 
 const manifest = {
   id: 'support-triage',
@@ -32,10 +32,6 @@ const manifest = {
     },
   },
 };
-
-function makeRoot(prefix: string): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-}
 
 function writePackage(packageRoot: string, overrides: Record<string, unknown> = {}): void {
   fs.mkdirSync(packageRoot, { recursive: true });
