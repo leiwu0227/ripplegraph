@@ -70,6 +70,9 @@ export function runSummary(rootPath: string, runId: string): RunSummary {
     rootGraph: checkpoint.rootGraph,
     position: checkpoint.position,
     updatedAt: checkpoint.updatedAt,
+    ...(checkpoint.status === 'completed' && checkpoint.finalOutput !== undefined
+      ? { output: checkpoint.finalOutput }
+      : {}),
   };
 }
 

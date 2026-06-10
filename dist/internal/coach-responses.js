@@ -60,6 +60,9 @@ export function runSummary(rootPath, runId) {
         rootGraph: checkpoint.rootGraph,
         position: checkpoint.position,
         updatedAt: checkpoint.updatedAt,
+        ...(checkpoint.status === 'completed' && checkpoint.finalOutput !== undefined
+            ? { output: checkpoint.finalOutput }
+            : {}),
     };
 }
 export function resumableRuns(rootPath) {

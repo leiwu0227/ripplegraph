@@ -3,7 +3,7 @@ import { loadGraphPackage } from './graph-package.js';
 import { appendCallableTransition, createCallableCheckpoint, listCallIds, readCallableCheckpoint, writeCallableCheckpoint, writeCallableOutput, } from './storage.js';
 import { resolveRegisteredGraphPackage } from './registry.js';
 import { RipplegraphError, } from './schema.js';
-import { assertSupportedCallableSchema, validateOutput } from './internal/output-validation.js';
+import { assertSupportedSchema, validateOutput } from './internal/output-validation.js';
 import { getNode, selectEdge } from './internal/runtime-graph.js';
 import { assertEffectsAllowed } from './effects.js';
 export function startCallableCall(opts) {
@@ -168,8 +168,8 @@ export function listCallableCalls(opts) {
     };
 }
 function assertCallableSupported(manifest) {
-    assertSupportedCallableSchema(manifest.inputSchema);
-    assertSupportedCallableSchema(manifest.outputSchema);
+    assertSupportedSchema(manifest.inputSchema);
+    assertSupportedSchema(manifest.outputSchema);
     for (const [nodeId, node] of Object.entries(manifest.nodes)) {
         if (node.gate)
             throw new RipplegraphError('E_CALLABLE_GATE_UNSUPPORTED', `callable node ${nodeId} uses a gate`);
@@ -183,7 +183,7 @@ function assertCallableSupported(manifest) {
         if (hostContractFields.length > 0) {
             throw new RipplegraphError('E_CALLABLE_HOST_CONTRACT_UNSUPPORTED', `callable node ${nodeId} uses host contract metadata: ${hostContractFields.join(', ')}`);
         }
-        assertSupportedCallableSchema(node.outputSchema);
+        assertSupportedSchema(node.outputSchema);
     }
 }
 function loadCheckpointedCallablePackage(workflowRoot, checkpoint) {

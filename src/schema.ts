@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { collectUnsupportedSchemaKeywords } from './internal/schema-keywords.js';
 
 export class RipplegraphError extends Error {
   constructor(
@@ -170,6 +171,9 @@ export const nodeSchema = z
     purpose: z.string().min(1),
     instructions: z.string().min(1).optional(),
     exec: z.literal('inline').default('inline'),
+    // Deliberate default: node outputs feed checkpoint.outputs maps and `when`
+    // edge-matching, which are built on object values — unlike the graph-level
+    // workflow outputSchema, this default is a load-bearing runtime convention.
     outputSchema: jsonSchemaSchema.default({ type: 'object' }),
     interaction: interactionSchema.optional(),
     interrupt: interruptSchema.optional(),
@@ -207,7 +211,6 @@ const graphMetadataFields = {
 const executableGraphFields = {
   ...graphMetadataFields,
   effects: z.array(idSchema).default([]),
-  outputSchema: jsonSchemaSchema.default({ type: 'object' }),
   entry: idSchema,
   nodes: z.record(idSchema, nodeSchema),
 };
@@ -217,6 +220,10 @@ const workflowGraphFieldsSchema = z
     kind: z.literal('workflow'),
     ...executableGraphFields,
     requires: z.array(startRequirementSchema).default([]),
+    // Optional on purpose: absent means the run has no completion contract and
+    // completion validation is skipped — a default here would be a contract the
+    // graph author never declared.
+    outputSchema: jsonSchemaSchema.optional(),
   })
   .strict();
 
@@ -225,6 +232,9 @@ const callableGraphFieldsSchema = z
     kind: z.literal('callable'),
     ...executableGraphFields,
     inputSchema: jsonSchemaSchema.default({ type: 'object' }),
+    // Callable I/O schemas keep object defaults: both are enforced on every call
+    // (start input, terminal output), so the default is a real, coherent contract.
+    outputSchema: jsonSchemaSchema.default({ type: 'object' }),
   })
   .strict();
 
@@ -251,9 +261,41 @@ function validateGraphReferences(graph: Pick<ExecutableGraphFields, 'entry' | 'n
   }
 }
 
+// Asserts the schemas the runtime actually hands to validateOutput — graph-level
+// outputSchema, callable inputSchema, node outputSchema, gate decisionSchema — so a
+// keyword the validator would silently ignore fails the manifest at load with a
+// path-named issue. Host-facing schemas (interaction.schema, toolContract I/O,
+// validators, sideChannelActions.outputSchema) are deliberately NOT asserted: the
+// runtime never validates with them and hosts may support richer JSON Schema.
+function validateRuntimeSchemaKeywords(graph: ExecutableGraphFields, ctx: z.RefinementCtx): void {
+  const slots: Array<{ schema: JsonSchema | undefined; path: Array<string | number> }> = [
+    { schema: graph.outputSchema, path: ['outputSchema'] },
+  ];
+  if (graph.kind === 'callable') {
+    slots.push({ schema: graph.inputSchema, path: ['inputSchema'] });
+  }
+  for (const [nodeId, node] of Object.entries(graph.nodes)) {
+    slots.push({ schema: node.outputSchema, path: ['nodes', nodeId, 'outputSchema'] });
+    if (node.gate) {
+      slots.push({ schema: node.gate.decisionSchema, path: ['nodes', nodeId, 'gate', 'decisionSchema'] });
+    }
+  }
+  for (const slot of slots) {
+    if (!slot.schema) continue;
+    for (const issue of collectUnsupportedSchemaKeywords(slot.schema, slot.path)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: issue.path, message: issue.message });
+    }
+  }
+}
+
+function validateExecutableGraph(graph: ExecutableGraphFields, ctx: z.RefinementCtx): void {
+  validateGraphReferences(graph, ctx);
+  validateRuntimeSchemaKeywords(graph, ctx);
+}
+
 export const graphSchema = z
   .discriminatedUnion('kind', [workflowGraphFieldsSchema, callableGraphFieldsSchema])
-  .superRefine(validateGraphReferences);
+  .superRefine(validateExecutableGraph);
 
 // Dispatchers are resolved by registry metadata only and never execute, so their
 // manifests carry no body (entry/nodes), no I/O contract, no requires, and no effects
@@ -282,7 +324,7 @@ export const graphPackageManifestSchema = z
   .discriminatedUnion('kind', [dispatcherGraphManifestSchema, workflowGraphManifestSchema, callableGraphManifestSchema])
   .superRefine((manifest, ctx) => {
     if (manifest.kind === 'dispatcher') return;
-    validateGraphReferences(manifest, ctx);
+    validateExecutableGraph(manifest, ctx);
   });
 
 export const workflowSchema = z
@@ -345,6 +387,9 @@ export const checkpointSchema = z
     stack: z.array(checkpointStackFrameSchema).default([]),
     frameCounter: z.number().int().nonnegative().default(0),
     resumeNote: z.string().optional(),
+    // The value that completed the run (terminal step output, gate decision, or
+    // child result); absent on runs that have not completed.
+    finalOutput: z.unknown().optional(),
   })
   .strict()
   .superRefine((checkpoint, ctx) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assertSupportedCallableSchema, validateOutput } from '../src/internal/output-validation.js';
+import { assertSupportedSchema, validateOutput } from '../src/internal/output-validation.js';
 
 describe('output validation', () => {
   it('validates callable contract keywords with object and array paths', () => {
@@ -65,7 +65,7 @@ describe('output validation', () => {
     for (const schema of unsupportedSchemas) {
       let error: unknown;
       try {
-        assertSupportedCallableSchema(schema);
+        assertSupportedSchema(schema);
       } catch (caught) {
         error = caught;
       }

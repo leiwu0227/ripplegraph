@@ -492,7 +492,7 @@ function ensureFrameCounter(checkpoint) {
     checkpoint.frameCounter = max;
 }
 function exitChildWorkflow(rootPath, workflow, checkpoint, child, childResult, childTerminalPosition) {
-    const outputErrors = validateOutput(child.graph.outputSchema, childResult);
+    const outputErrors = child.graph.outputSchema ? validateOutput(child.graph.outputSchema, childResult) : [];
     if (outputErrors.length > 0) {
         appendTransition(rootPath, checkpoint.runId, {
             ...transitionEntry('step', checkpoint.runId, childTerminalPosition, childTerminalPosition),
@@ -578,7 +578,7 @@ function graphForSource(rootPath, checkpoint, source) {
 function rootCompletionGraph(rootPath, checkpoint, activeGraph, result) {
     let graph = activeGraph;
     for (let index = checkpoint.stack.length - 1; index >= 0; index -= 1) {
-        if (validateOutput(graph.outputSchema, result).length > 0)
+        if (graph.outputSchema && validateOutput(graph.outputSchema, result).length > 0)
             return null;
         const frame = checkpoint.stack[index];
         const parentSource = frame.parent.graphSource ?? checkpoint.graphSource;
@@ -599,6 +599,8 @@ function rootCompletionGraph(rootPath, checkpoint, activeGraph, result) {
 // durable pre-completion position when this runs, so a rejection leaves no trace beyond
 // the failed-validation log entry.
 function rootCompletionValidationError(rootPath, checkpoint, graph, result, op) {
+    if (!graph.outputSchema)
+        return null;
     const errors = validateOutput(graph.outputSchema, result);
     if (errors.length === 0)
         return null;
@@ -615,12 +617,17 @@ function rootCompletionValidationError(rootPath, checkpoint, graph, result, op) 
         errors,
     };
 }
+// A run's output is the value that completes it — the terminal step output, the gate
+// decision, or the child result that lands on the root terminal. It is validated against
+// the root graph's declared outputSchema (no declaration, no contract), persisted on the
+// checkpoint, and returned to the host.
 function completeRun(rootPath, checkpoint, to, graph, result) {
     const completionError = rootCompletionValidationError(rootPath, checkpoint, graph, result, 'step');
     if (completionError)
         return completionError;
     checkpoint.status = 'completed';
     checkpoint.position = to;
+    checkpoint.finalOutput = result;
     checkpoint.updatedAt = new Date().toISOString();
     writeCheckpoint(rootPath, checkpoint);
     writeCurrent(rootPath, { focusedRunId: null });
@@ -628,5 +635,6 @@ function completeRun(rootPath, checkpoint, to, graph, result) {
         status: 'completed',
         run: { id: checkpoint.runId, status: 'completed', rootGraph: checkpoint.rootGraph },
         position: checkpoint.position,
+        output: result,
     };
 }

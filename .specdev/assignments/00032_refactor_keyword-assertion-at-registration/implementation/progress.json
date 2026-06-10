@@ -1,0 +1,20 @@
+{
+  "plan_file": ".specdev/assignments/00032_refactor_keyword-assertion-at-registration/breakdown/plan.md",
+  "total_tasks": 2,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-06-10T10:35:00Z",
+      "completed_at": "2026-06-10T10:50:00Z",
+      "summary": "TDD: per-slot rejection tests (graph outputSchema/format, node outputSchema/minLength, gate decisionSchema/pattern, callable inputSchema/pattern) with path assertions plus host-facing exemption acceptance, written first and watched fail. New leaf module src/internal/schema-keywords.ts holds SUPPORTED_SCHEMA_KEYWORDS + collectUnsupportedSchemaKeywords; validateRuntimeSchemaKeywords wired into both graphSchema and graphPackageManifestSchema superRefines; assertSupportedCallableSchema renamed assertSupportedSchema and reimplemented on the walker (run-time defense kept); dead helpers removed. Verified typecheck + targeted suites."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-06-10T10:50:00Z",
+      "completed_at": "2026-06-10T10:55:00Z",
+      "summary": "loadGraphPackage rejection test added (covers registration and graph validate inheritance). No fixture stragglers — all in-repo schemas use supported keywords. Full suite 111/111 before and after dist rebuild. No version bump (folds into unvendored 0.1.0 per decision)."
+    }
+  ]
+}

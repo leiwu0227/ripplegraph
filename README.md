@@ -209,6 +209,21 @@ Missing or false predicate values fail closed with
 include `details.unmet[]` so product CLIs can render redirect guidance without
 parsing strings.
 
+## Run Output
+
+A run's output is the value that completes it — the terminal step output, the
+gate decision, or the child result that lands on the root terminal. Workflow
+graphs may declare a graph-level `outputSchema`; if declared, the completing
+value is validated against it before the run completes (a rejection leaves the
+run active at its durable position). If absent, there is no completion
+contract and validation is skipped — absence means "no contract", not "must be
+an object".
+
+The completing value is persisted on the run checkpoint (`finalOutput`),
+returned on the completed response (`output`), and included on completed-run
+summaries in `ripplegraph runs`, so hosts can answer "what did that run
+produce" after the fact.
+
 ## Effect Policy
 
 Graphs can declare effects such as `read_repo`, `write_files`, `network`, or

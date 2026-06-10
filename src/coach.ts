@@ -134,6 +134,8 @@ export interface RunSummary {
   rootGraph: string;
   position: Position;
   updatedAt: string;
+  // Present only on completed runs: the value that completed the run.
+  output?: unknown;
 }
 
 export interface RunList {
@@ -162,7 +164,10 @@ export interface ReconciliationResponse extends RuntimeAuditResponse {
 }
 
 export type CoachState = StateOk | StateNoFocusedRun;
-export type AdvanceResponse = StateOk | { status: 'completed'; run: { id: string; status: 'completed'; rootGraph: string }; position: Position } | ValidationErrorResponse;
+export type AdvanceResponse =
+  | StateOk
+  | { status: 'completed'; run: { id: string; status: 'completed'; rootGraph: string }; position: Position; output: unknown }
+  | ValidationErrorResponse;
 export type StepRunResponse = AdvanceResponse;
 export type AdvanceRunResponse = AdvanceResponse;
 export type DecideGateResponse = AdvanceResponse;
@@ -705,7 +710,7 @@ function exitChildWorkflow(
   childResult: unknown,
   childTerminalPosition: Position,
 ): StepRunResponse {
-  const outputErrors = validateOutput(child.graph.outputSchema, childResult);
+  const outputErrors = child.graph.outputSchema ? validateOutput(child.graph.outputSchema, childResult) : [];
   if (outputErrors.length > 0) {
     appendTransition(rootPath, checkpoint.runId, {
       ...transitionEntry('step', checkpoint.runId, childTerminalPosition, childTerminalPosition),
@@ -819,7 +824,7 @@ function graphForSource(rootPath: string, checkpoint: Checkpoint, source: GraphS
 function rootCompletionGraph(rootPath: string, checkpoint: Checkpoint, activeGraph: Graph, result: unknown): Graph | null {
   let graph = activeGraph;
   for (let index = checkpoint.stack.length - 1; index >= 0; index -= 1) {
-    if (validateOutput(graph.outputSchema, result).length > 0) return null;
+    if (graph.outputSchema && validateOutput(graph.outputSchema, result).length > 0) return null;
     const frame = checkpoint.stack[index]!;
     const parentSource = frame.parent.graphSource ?? checkpoint.graphSource;
     if (!parentSource) return null;
@@ -843,6 +848,7 @@ function rootCompletionValidationError(
   result: unknown,
   op: 'step' | 'decide',
 ): ValidationErrorResponse | null {
+  if (!graph.outputSchema) return null;
   const errors = validateOutput(graph.outputSchema, result);
   if (errors.length === 0) return null;
   appendTransition(rootPath, checkpoint.runId, {
@@ -859,6 +865,10 @@ function rootCompletionValidationError(
   };
 }
 
+// A run's output is the value that completes it — the terminal step output, the gate
+// decision, or the child result that lands on the root terminal. It is validated against
+// the root graph's declared outputSchema (no declaration, no contract), persisted on the
+// checkpoint, and returned to the host.
 function completeRun(
   rootPath: string,
   checkpoint: Checkpoint,
@@ -870,6 +880,7 @@ function completeRun(
   if (completionError) return completionError;
   checkpoint.status = 'completed';
   checkpoint.position = to;
+  checkpoint.finalOutput = result;
   checkpoint.updatedAt = new Date().toISOString();
   writeCheckpoint(rootPath, checkpoint);
   writeCurrent(rootPath, { focusedRunId: null });
@@ -877,5 +888,6 @@ function completeRun(
     status: 'completed',
     run: { id: checkpoint.runId, status: 'completed', rootGraph: checkpoint.rootGraph },
     position: checkpoint.position,
+    output: result,
   };
 }

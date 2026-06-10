@@ -1419,6 +1419,95 @@ describe('root run outputSchema enforcement', () => {
       expect(stepRun({ workflowRoot: root, output: { summary: 'done' } })).toMatchObject({
         status: 'completed',
         run: { id: 'single-a', status: 'completed' },
+        output: { summary: 'done' },
+      });
+      expect(readCheckpoint(root, 'single-a').finalOutput).toEqual({ summary: 'done' });
+      expect(listRuns({ workflowRoot: root }).runs).toMatchObject([
+        { id: 'single-a', status: 'completed', output: { summary: 'done' } },
+      ]);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('completes a run with no outputSchema via a boolean gate decision (no undeclared default contract)', () => {
+    const root = createTestWorkspace({
+      prefix: 'ripplegraph-root-output-gate-',
+      workspace: { id: 'root-output-demo' },
+      graphs: [
+        {
+          id: 'gate-flow',
+          entry: 'approve',
+          nodes: {
+            approve: {
+              purpose: 'Approve completion',
+              gate: { type: 'external_decision', decisionSchema: { type: 'boolean' } },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Done', terminal: true },
+          },
+        },
+      ],
+    });
+    try {
+      startRun({ workflowRoot: root, graphId: 'gate-flow', runId: 'gate-a' });
+      expect(decideGate({ workflowRoot: root, decision: true })).toMatchObject({
+        status: 'completed',
+        run: { id: 'gate-a', status: 'completed' },
+        output: true,
+      });
+      expect(readCheckpoint(root, 'gate-a').finalOutput).toBe(true);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('skips child completion validation when the child declares no outputSchema (boolean child result)', () => {
+    const root = makePackageWorkflowRoot();
+    try {
+      writeGraphPackageAt(
+        root,
+        'graphs/loose-child',
+        {
+          id: 'loose-child',
+          version: '0.1.0',
+          kind: 'workflow',
+          entry: 'confirm',
+          nodes: {
+            confirm: {
+              purpose: 'Confirm child work',
+              gate: { type: 'external_decision', decisionSchema: { type: 'boolean' } },
+              edges: [{ to: 'done' }],
+            },
+            done: { purpose: 'Child done', terminal: true },
+          },
+        },
+        '2026-06-10T00:00:00.000Z',
+      );
+      writeGraphPackageAt(
+        root,
+        'graphs/loose-parent',
+        {
+          id: 'loose-parent',
+          version: '0.1.0',
+          kind: 'workflow',
+          entry: 'review',
+          nodes: {
+            review: { purpose: 'Run child ref', workflowRef: { graphId: 'loose-child' }, edges: [{ to: 'done' }] },
+            done: { purpose: 'Parent done', terminal: true },
+          },
+        },
+        '2026-06-10T00:00:00.000Z',
+      );
+
+      startRun({ workflowRoot: root, graphId: 'loose-parent', runId: 'loose-a' });
+      // The boolean decision exits the child (child schema absent -> skipped; previously the
+      // undeclared object default rejected it) and cascades to the root terminal.
+      expect(decideGate({ workflowRoot: root, decision: false })).toMatchObject({
+        status: 'completed',
+        run: { id: 'loose-a', status: 'completed' },
+        position: { graph: 'loose-parent', node: 'done' },
+        output: false,
       });
     } finally {
       fs.rmSync(root, { recursive: true, force: true });

@@ -1,0 +1,27 @@
+{
+  "plan_file": ".specdev/assignments/00031_refactor_run-output-real-contract/breakdown/plan.md",
+  "total_tasks": 3,
+  "tasks": [
+    {
+      "number": 1,
+      "status": "completed",
+      "started_at": "2026-06-10T09:55:00Z",
+      "completed_at": "2026-06-10T10:00:00Z",
+      "summary": "Workflow outputSchema made truly optional (callable keeps defaults; node-level default kept with deliberate-convention comment); checkpointSchema gained optional finalOutput. TDD: schema test for absent-vs-declared-vs-callable written first and watched fail. Verified typecheck and tests/schema.test.ts."
+    },
+    {
+      "number": 2,
+      "status": "completed",
+      "started_at": "2026-06-10T10:00:00Z",
+      "completed_at": "2026-06-10T10:08:00Z",
+      "summary": "Completion validation skipped when no outputSchema declared (root helper, cascade probe, child exit); completeRun persists finalOutput and returns output; runSummary exposes output for completed runs; provenance rule documented on completeRun. New tests: boolean gate decision completes no-schema root; child exit with undeclared schema accepts boolean result; output/finalOutput/listRuns assertions. Verified tests/coach.test.ts 41/41."
+    },
+    {
+      "number": 3,
+      "status": "completed",
+      "started_at": "2026-06-10T10:08:00Z",
+      "completed_at": "2026-06-10T10:12:00Z",
+      "summary": "README Run Output section added (absence = no contract; provenance rule; exposure surfaces); dist rebuilt. Full suite 105/105 before and after rebuild. No version bump (non-breaking, folds into 0.1.0)."
+    }
+  ]
+}

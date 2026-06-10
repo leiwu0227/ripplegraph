@@ -1230,8 +1230,8 @@ export declare const graphSchema: z.ZodEffects<z.ZodDiscriminatedUnion<"kind", [
         unmetRedirect?: string | undefined;
         unmetMessage?: string | undefined;
     }>, "many">>;
+    outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     entry: z.ZodString;
     nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
         purpose: z.ZodString;
@@ -1990,7 +1990,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodDiscriminatedUnion<"kind", [
     kind: z.ZodLiteral<"workflow">;
 }, "strict", z.ZodTypeAny, {
     kind: "workflow";
-    outputSchema: JsonSchema;
     effects: string[];
     requires: {
         id: string;
@@ -2092,6 +2091,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodDiscriminatedUnion<"kind", [
     }>;
     activationHints: string[];
     description?: string | undefined;
+    outputSchema?: JsonSchema | undefined;
     title?: string | undefined;
 }, {
     kind: "workflow";
@@ -2200,8 +2200,8 @@ export declare const graphSchema: z.ZodEffects<z.ZodDiscriminatedUnion<"kind", [
     activationHints?: string[] | undefined;
 }>, z.ZodObject<{
     inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
-    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     entry: z.ZodString;
     nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
         purpose: z.ZodString;
@@ -3160,7 +3160,6 @@ export declare const graphSchema: z.ZodEffects<z.ZodDiscriminatedUnion<"kind", [
     activationHints?: string[] | undefined;
 }>]>, {
     kind: "workflow";
-    outputSchema: JsonSchema;
     effects: string[];
     requires: {
         id: string;
@@ -3262,6 +3261,7 @@ export declare const graphSchema: z.ZodEffects<z.ZodDiscriminatedUnion<"kind", [
     }>;
     activationHints: string[];
     description?: string | undefined;
+    outputSchema?: JsonSchema | undefined;
     title?: string | undefined;
 } | {
     kind: "callable";
@@ -3608,8 +3608,8 @@ export declare const workflowGraphManifestSchema: z.ZodObject<{
         unmetRedirect?: string | undefined;
         unmetMessage?: string | undefined;
     }>, "many">>;
+    outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     entry: z.ZodString;
     nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
         purpose: z.ZodString;
@@ -4372,7 +4372,6 @@ export declare const workflowGraphManifestSchema: z.ZodObject<{
 }, "strict", z.ZodTypeAny, {
     kind: "workflow";
     id: string;
-    outputSchema: JsonSchema;
     effects: string[];
     requires: {
         id: string;
@@ -4475,6 +4474,7 @@ export declare const workflowGraphManifestSchema: z.ZodObject<{
     activationHints: string[];
     version: string;
     description?: string | undefined;
+    outputSchema?: JsonSchema | undefined;
     title?: string | undefined;
 }, {
     kind: "workflow";
@@ -4586,8 +4586,8 @@ export declare const workflowGraphManifestSchema: z.ZodObject<{
 }>;
 export declare const callableGraphManifestSchema: z.ZodObject<{
     inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
-    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     entry: z.ZodString;
     nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
         purpose: z.ZodString;
@@ -5590,8 +5590,8 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
         unmetRedirect?: string | undefined;
         unmetMessage?: string | undefined;
     }>, "many">>;
+    outputSchema: z.ZodOptional<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
-    outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
     entry: z.ZodString;
     nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
         purpose: z.ZodString;
@@ -6354,7 +6354,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
 }, "strict", z.ZodTypeAny, {
     kind: "workflow";
     id: string;
-    outputSchema: JsonSchema;
     effects: string[];
     requires: {
         id: string;
@@ -6457,6 +6456,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
     activationHints: string[];
     version: string;
     description?: string | undefined;
+    outputSchema?: JsonSchema | undefined;
     title?: string | undefined;
 }, {
     kind: "workflow";
@@ -6567,8 +6567,8 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
     activationHints?: string[] | undefined;
 }>, z.ZodObject<{
     inputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
-    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     outputSchema: z.ZodDefault<z.ZodType<JsonSchema, z.ZodTypeDef, JsonSchema>>;
+    effects: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     entry: z.ZodString;
     nodes: z.ZodRecord<z.ZodString, z.ZodEffects<z.ZodObject<{
         purpose: z.ZodString;
@@ -7542,7 +7542,6 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
 } | {
     kind: "workflow";
     id: string;
-    outputSchema: JsonSchema;
     effects: string[];
     requires: {
         id: string;
@@ -7645,6 +7644,7 @@ export declare const graphPackageManifestSchema: z.ZodEffects<z.ZodDiscriminated
     activationHints: string[];
     version: string;
     description?: string | undefined;
+    outputSchema?: JsonSchema | undefined;
     title?: string | undefined;
 } | {
     kind: "callable";
@@ -8260,6 +8260,7 @@ export declare const checkpointSchema: z.ZodEffects<z.ZodObject<{
     }>, "many">>;
     frameCounter: z.ZodDefault<z.ZodNumber>;
     resumeNote: z.ZodOptional<z.ZodString>;
+    finalOutput: z.ZodOptional<z.ZodUnknown>;
 }, "strict", z.ZodTypeAny, {
     status: "active" | "suspended" | "completed" | "abandoned";
     workflow: {
@@ -8305,6 +8306,7 @@ export declare const checkpointSchema: z.ZodEffects<z.ZodObject<{
         packagePath: string;
     } | undefined;
     resumeNote?: string | undefined;
+    finalOutput?: unknown;
 }, {
     status: "active" | "suspended" | "completed" | "abandoned";
     workflow: {
@@ -8350,6 +8352,7 @@ export declare const checkpointSchema: z.ZodEffects<z.ZodObject<{
     }[] | undefined;
     frameCounter?: number | undefined;
     resumeNote?: string | undefined;
+    finalOutput?: unknown;
 }>, {
     status: "active" | "suspended" | "completed" | "abandoned";
     workflow: {
@@ -8395,6 +8398,7 @@ export declare const checkpointSchema: z.ZodEffects<z.ZodObject<{
         packagePath: string;
     } | undefined;
     resumeNote?: string | undefined;
+    finalOutput?: unknown;
 }, {
     status: "active" | "suspended" | "completed" | "abandoned";
     workflow: {
@@ -8440,6 +8444,7 @@ export declare const checkpointSchema: z.ZodEffects<z.ZodObject<{
     }[] | undefined;
     frameCounter?: number | undefined;
     resumeNote?: string | undefined;
+    finalOutput?: unknown;
 }>;
 export declare const currentSchema: z.ZodObject<{
     focusedRunId: z.ZodNullable<z.ZodString>;
@@ -8567,8 +8572,8 @@ export declare const callableCheckpointSchema: z.ZodObject<{
     updatedAt: string;
     outputs: Record<string, unknown>;
     callId: string;
-    input?: unknown;
     finalOutput?: unknown;
+    input?: unknown;
     outputArtifact?: string | undefined;
 }, {
     status: "active" | "completed" | "failed";
@@ -8583,8 +8588,8 @@ export declare const callableCheckpointSchema: z.ZodObject<{
     updatedAt: string;
     callId: string;
     outputs?: Record<string, unknown> | undefined;
-    input?: unknown;
     finalOutput?: unknown;
+    input?: unknown;
     outputArtifact?: string | undefined;
 }>;
 export declare const callableTransitionLogEntrySchema: z.ZodObject<{

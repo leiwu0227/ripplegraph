@@ -121,6 +121,7 @@ export interface RunSummary {
     rootGraph: string;
     position: Position;
     updatedAt: string;
+    output?: unknown;
 }
 export interface RunList {
     status: 'ok';
@@ -169,6 +170,7 @@ export type AdvanceResponse = StateOk | {
         rootGraph: string;
     };
     position: Position;
+    output: unknown;
 } | ValidationErrorResponse;
 export type StepRunResponse = AdvanceResponse;
 export type AdvanceRunResponse = AdvanceResponse;

@@ -17,7 +17,7 @@ import {
   type Node,
   type Position,
 } from './schema.js';
-import { assertSupportedCallableSchema, validateOutput, type ValidationIssue } from './internal/output-validation.js';
+import { assertSupportedSchema, validateOutput, type ValidationIssue } from './internal/output-validation.js';
 import { getNode, selectEdge } from './internal/runtime-graph.js';
 import { assertEffectsAllowed, type EffectPolicy } from './effects.js';
 
@@ -262,8 +262,8 @@ export function listCallableCalls(opts: CallableRootOptions): CallableCallList {
 }
 
 function assertCallableSupported(manifest: CallableGraphManifest): void {
-  assertSupportedCallableSchema(manifest.inputSchema);
-  assertSupportedCallableSchema(manifest.outputSchema);
+  assertSupportedSchema(manifest.inputSchema);
+  assertSupportedSchema(manifest.outputSchema);
   for (const [nodeId, node] of Object.entries(manifest.nodes)) {
     if (node.gate) throw new RipplegraphError('E_CALLABLE_GATE_UNSUPPORTED', `callable node ${nodeId} uses a gate`);
     const hostContractFields = [
@@ -279,7 +279,7 @@ function assertCallableSupported(manifest: CallableGraphManifest): void {
         `callable node ${nodeId} uses host contract metadata: ${hostContractFields.join(', ')}`,
       );
     }
-    assertSupportedCallableSchema(node.outputSchema);
+    assertSupportedSchema(node.outputSchema);
   }
 }
 

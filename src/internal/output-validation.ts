@@ -1,4 +1,5 @@
 import { RipplegraphError, type JsonSchema } from '../schema.js';
+import { collectUnsupportedSchemaKeywords } from './schema-keywords.js';
 
 export interface ValidationIssue {
   path: string;
@@ -11,54 +12,14 @@ export function validateOutput(schema: JsonSchema, output: unknown): ValidationI
   return errors;
 }
 
-const SUPPORTED_SCHEMA_KEYWORDS = new Set([
-  'type',
-  'required',
-  'properties',
-  'enum',
-  'const',
-  'oneOf',
-  'items',
-  'additionalProperties',
-]);
-
-export function assertSupportedCallableSchema(schema: JsonSchema, path = '$'): void {
-  for (const key of Object.keys(schema)) {
-    if (!SUPPORTED_SCHEMA_KEYWORDS.has(key)) {
-      throw new RipplegraphError('E_UNSUPPORTED_SCHEMA_KEYWORD', `unsupported schema keyword at ${path}: ${key}`);
-    }
-  }
-  if ('type' in schema && !['object', 'string', 'number', 'boolean', 'array'].includes(String(schema.type))) {
-    throwUnsupportedSchemaValue(`${path}.type`);
-  }
-  if ('required' in schema && (!Array.isArray(schema.required) || schema.required.some((key) => typeof key !== 'string'))) {
-    throwUnsupportedSchemaValue(`${path}.required`);
-  }
-  if ('properties' in schema && !isSchemaRecord(schema.properties)) {
-    throwUnsupportedSchemaValue(`${path}.properties`);
-  }
-  if ('enum' in schema && !Array.isArray(schema.enum)) {
-    throwUnsupportedSchemaValue(`${path}.enum`);
-  }
-  if ('additionalProperties' in schema && schema.additionalProperties !== false) {
-    throwUnsupportedSchemaValue(`${path}.additionalProperties`);
-  }
-  for (const [key, childSchema] of Object.entries(schema.properties ?? {})) {
-    assertSupportedCallableSchema(childSchema, `${path}.properties.${key}`);
-  }
-  if ('items' in schema && !isSchemaObject(schema.items)) {
-    throwUnsupportedSchemaValue(`${path}.items`);
-  }
-  if (isSchemaObject(schema.items)) {
-    assertSupportedCallableSchema(schema.items as JsonSchema, `${path}.items`);
-  }
-  if ('oneOf' in schema && (!Array.isArray(schema.oneOf) || schema.oneOf.some((childSchema) => !isSchemaObject(childSchema)))) {
-    throwUnsupportedSchemaValue(`${path}.oneOf`);
-  }
-  if (Array.isArray(schema.oneOf)) {
-    schema.oneOf.forEach((childSchema, index) => {
-      assertSupportedCallableSchema(childSchema as JsonSchema, `${path}.oneOf[${index}]`);
-    });
+// Run-time defense-in-depth: manifests are keyword-asserted at load by the manifest
+// schema, but a registered package edited on disk after registration re-enters through
+// here on call start / checkpointed reload.
+export function assertSupportedSchema(schema: JsonSchema, path = '$'): void {
+  const issue = collectUnsupportedSchemaKeywords(schema)[0];
+  if (issue) {
+    const where = [path, ...issue.path].join('.');
+    throw new RipplegraphError('E_UNSUPPORTED_SCHEMA_KEYWORD', `${issue.message} at ${where}`);
   }
 }
 
@@ -127,16 +88,4 @@ function formatExpected(value: unknown): string {
 
 function jsonEqual(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
-}
-
-function isSchemaObject(value: unknown): value is JsonSchema {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function isSchemaRecord(value: unknown): value is Record<string, JsonSchema> {
-  return isSchemaObject(value) && Object.values(value).every(isSchemaObject);
-}
-
-function throwUnsupportedSchemaValue(path: string): never {
-  throw new RipplegraphError('E_UNSUPPORTED_SCHEMA_KEYWORD', `unsupported schema keyword value at ${path}`);
 }

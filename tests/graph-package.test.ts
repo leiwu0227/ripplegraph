@@ -184,6 +184,18 @@ describe('graph package loader', () => {
     }
   });
 
+  it('rejects packages whose runtime-validated schemas carry unsupported keywords', () => {
+    const root = makePackageRoot({
+      ...validManifest,
+      outputSchema: { type: 'string', minLength: 3 },
+    });
+    try {
+      expect(() => loadGraphPackage(root)).toThrow(/outputSchema.*unsupported schema keyword: minLength/);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('rejects workflowRef nodes that still carry inputMap or outputMap', () => {
     const root = makePackageRoot({
       ...validManifest,

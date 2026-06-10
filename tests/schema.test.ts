@@ -77,6 +77,112 @@ describe('graph package manifest schema', () => {
     }
   });
 
+  it('leaves workflow outputSchema absent when undeclared (no contract), while callable still defaults it', () => {
+    const workflowResult = graphPackageManifestSchema.safeParse(manifest());
+    expect(workflowResult.success).toBe(true);
+    if (workflowResult.success && workflowResult.data.kind === 'workflow') {
+      expect(workflowResult.data.outputSchema).toBeUndefined();
+    }
+
+    const declaredResult = graphPackageManifestSchema.safeParse(
+      manifest({ outputSchema: { type: 'object', required: ['summary'] } }),
+    );
+    expect(declaredResult.success).toBe(true);
+    if (declaredResult.success && declaredResult.data.kind === 'workflow') {
+      expect(declaredResult.data.outputSchema).toEqual({ type: 'object', required: ['summary'] });
+    }
+
+    const callableResult = graphPackageManifestSchema.safeParse(manifest({ kind: 'callable' }));
+    expect(callableResult.success).toBe(true);
+    if (callableResult.success && callableResult.data.kind === 'callable') {
+      expect(callableResult.data.outputSchema).toEqual({ type: 'object' });
+      expect(callableResult.data.inputSchema).toEqual({ type: 'object' });
+    }
+  });
+
+  it.each([
+    ['graph outputSchema with format', { outputSchema: { type: 'string', format: 'email' } }, 'outputSchema'],
+    [
+      'node outputSchema with minLength',
+      {
+        nodes: {
+          classify: {
+            purpose: 'Classify the ticket',
+            exec: 'inline',
+            outputSchema: { type: 'object', properties: { note: { type: 'string', minLength: 3 } } },
+            edges: [{ to: 'done' }],
+          },
+          done: { purpose: 'Complete', terminal: true },
+        },
+      },
+      'nodes.classify.outputSchema.properties.note',
+    ],
+    [
+      'gate decisionSchema with pattern',
+      {
+        nodes: {
+          classify: {
+            purpose: 'Classify the ticket',
+            exec: 'inline',
+            outputSchema: { type: 'object' },
+            gate: {
+              type: 'external_decision',
+              decisionSchema: { type: 'string', pattern: '^a' },
+            },
+            edges: [{ to: 'done' }],
+          },
+          done: { purpose: 'Complete', terminal: true },
+        },
+      },
+      'nodes.classify.gate.decisionSchema',
+    ],
+    [
+      'callable inputSchema with pattern',
+      { kind: 'callable', inputSchema: { type: 'string', pattern: '^a' } },
+      'inputSchema',
+    ],
+  ])('rejects unsupported keywords in runtime-validated schemas: %s', (_label, override, expectedPath) => {
+    const result = graphPackageManifestSchema.safeParse(manifest(override));
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((item) => item.message.includes('unsupported schema keyword'));
+      expect(issue).toBeDefined();
+      expect(issue?.path.join('.')).toContain(expectedPath);
+    }
+  });
+
+  it('still accepts exotic keywords in host-facing schemas (never runtime-validated)', () => {
+    const result = graphPackageManifestSchema.safeParse(
+      manifest({
+        nodes: {
+          classify: {
+            purpose: 'Classify the ticket',
+            exec: 'inline',
+            outputSchema: { type: 'object' },
+            interaction: {
+              id: 'classify-form',
+              kind: 'form',
+              prompt: 'Fill in the ticket details.',
+              schema: { type: 'object', properties: { note: { type: 'string', minLength: 3, pattern: '^a' } } },
+            },
+            toolContract: {
+              id: 'ticket-loader',
+              command: 'load-ticket',
+              outputSchema: { type: 'string', format: 'uri', maxLength: 200 },
+            },
+            sideChannelActions: [
+              { id: 'refresh', purpose: 'Refresh state', outputSchema: { type: 'number', minimum: 0 } },
+            ],
+            validators: [{ id: 'check', inputSchema: { type: 'string', pattern: '.*' } }],
+            edges: [{ to: 'done' }],
+          },
+          done: { purpose: 'Complete', terminal: true },
+        },
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+
   it('rejects workflowRef nodes that carry inputMap or outputMap (never applied or exposed)', () => {
     for (const mapField of [{ inputMap: { request: 'ticket' } }, { outputMap: { summary: 'result' } }]) {
       const result = graphPackageManifestSchema.safeParse(
