@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
+  advanceRun,
   appendTransition,
   ensureWorkflowRoot,
   getState,
@@ -1364,6 +1365,26 @@ describe('coach operations', () => {
         expect(response.errors).toEqual([{ path: 'decision', message: 'expected one of proceed, stop' }]);
       }
       expect(readCheckpoint(root, 'daily-a').position).toEqual({ graph: 'daily', node: 'review' });
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('reads each state file at most once per advanceRun call', () => {
+    const root = makeCoachWorkflowRoot();
+    try {
+      startRun({ workflowRoot: root, graphId: 'daily', runId: 'daily-a' });
+      const readSpy = vi.spyOn(fs, 'readFileSync');
+      const response = advanceRun({ workflowRoot: root, input: { decision: 'stop' } });
+      const readCounts = new Map<string, number>();
+      for (const [target] of readSpy.mock.calls) {
+        const key = String(target);
+        readCounts.set(key, (readCounts.get(key) ?? 0) + 1);
+      }
+      readSpy.mockRestore();
+      expect(response.status).toBe('completed');
+      const repeated = [...readCounts.entries()].filter(([, count]) => count > 1).map(([file]) => file);
+      expect(repeated).toEqual([]);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }

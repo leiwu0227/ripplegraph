@@ -378,12 +378,11 @@ export function listRuns(opts: WorkflowRootOptions): RunList {
 }
 
 export function stepRun(opts: StepRunOptions): StepRunResponse {
-  const workflow = loadWorkflow(opts.workflowRoot);
-  const checkpoint = focusedCheckpoint(opts.workflowRoot);
-  if (checkpoint.status !== 'active') {
-    throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
-  }
-  const active = activeContextForCheckpoint(opts.workflowRoot, checkpoint);
+  return stepRunWith(activeFocusedRun(opts.workflowRoot), opts);
+}
+
+function stepRunWith(loaded: LoadedFocusedRun, opts: StepRunOptions): StepRunResponse {
+  const { workflow, checkpoint, active } = loaded;
   const node = getNode(active.graph, checkpoint.position.node);
   if (node.terminal) {
     return completeRun(opts.workflowRoot, checkpoint, checkpoint.position);
@@ -433,20 +432,18 @@ export function stepRun(opts: StepRunOptions): StepRunResponse {
 }
 
 export function advanceRun(opts: AdvanceRunOptions): AdvanceRunResponse {
-  const checkpoint = focusedCheckpoint(opts.workflowRoot);
-  const active = activeContextForCheckpoint(opts.workflowRoot, checkpoint);
-  const node = getNode(active.graph, checkpoint.position.node);
-  if (node.gate) return decideGate({ workflowRoot: opts.workflowRoot, decision: opts.input });
-  return stepRun({ workflowRoot: opts.workflowRoot, output: opts.input });
+  const loaded = activeFocusedRun(opts.workflowRoot);
+  const node = getNode(loaded.active.graph, loaded.checkpoint.position.node);
+  if (node.gate) return decideGateWith(loaded, { workflowRoot: opts.workflowRoot, decision: opts.input });
+  return stepRunWith(loaded, { workflowRoot: opts.workflowRoot, output: opts.input });
 }
 
 export function decideGate(opts: DecideGateOptions): DecideGateResponse {
-  const workflow = loadWorkflow(opts.workflowRoot);
-  const checkpoint = focusedCheckpoint(opts.workflowRoot);
-  if (checkpoint.status !== 'active') {
-    throw new RipplegraphError('E_RUN_NOT_ACTIVE', `focused run is not active: ${checkpoint.status}`);
-  }
-  const active = activeContextForCheckpoint(opts.workflowRoot, checkpoint);
+  return decideGateWith(activeFocusedRun(opts.workflowRoot), opts);
+}
+
+function decideGateWith(loaded: LoadedFocusedRun, opts: DecideGateOptions): DecideGateResponse {
+  const { workflow, checkpoint, active } = loaded;
   const node = getNode(active.graph, checkpoint.position.node);
   if (!node.gate) {
     throw new RipplegraphError('E_NODE_NOT_GATED', `node ${checkpoint.position.node} is not gated`);
@@ -598,7 +595,13 @@ function focusedCheckpoint(rootPath: string): Checkpoint {
   return readCheckpoint(rootPath, current.focusedRunId);
 }
 
-function activeFocusedRun(rootPath: string): { workflow: Workflow; checkpoint: Checkpoint; active: ActiveContext } {
+interface LoadedFocusedRun {
+  workflow: Workflow;
+  checkpoint: Checkpoint;
+  active: ActiveContext;
+}
+
+function activeFocusedRun(rootPath: string): LoadedFocusedRun {
   const workflow = loadWorkflow(rootPath);
   const checkpoint = focusedCheckpoint(rootPath);
   if (checkpoint.status !== 'active') {
