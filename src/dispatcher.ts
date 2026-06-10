@@ -3,6 +3,7 @@ import { startCallableCall, type StartCallableCallResponse } from './callable.js
 import { listRuns, resumeRun, startRun, type RunList, type StateOk } from './coach.js';
 import { listRegisteredGraphs, type RegistryEntry } from './registry.js';
 import { resolveDispatcherEntry } from './internal/dispatcher-resolution.js';
+import { formatIssues } from './internal/zod-issues.js';
 import { RipplegraphError, type JsonSchema } from './schema.js';
 import { assertEffectsAllowed, type EffectPolicy } from './effects.js';
 
@@ -249,8 +250,4 @@ function requireRegisteredGraph(graphs: RegisteredGraphSummary[], graphId: strin
 
 function generatedRunId(graphId: string): string {
   return `${graphId}-${new Date().toISOString().replace(/[^0-9A-Za-z]/g, '').slice(0, 17)}`;
-}
-
-function formatIssues(issues: Array<{ path: Array<string | number>; message: string }>): string {
-  return issues.map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`).join('; ');
 }

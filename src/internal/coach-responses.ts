@@ -54,7 +54,7 @@ export function stateForCheckpoint(workflow: Workflow, checkpoint: Checkpoint, c
   };
 }
 
-function exampleOutput(schema: { properties?: Record<string, { enum?: unknown[]; type?: string }> }): string {
+export function exampleOutput(schema: { properties?: Record<string, { enum?: unknown[]; type?: string }> }): string {
   const payload: Record<string, unknown> = {};
   for (const [name, property] of Object.entries(schema.properties ?? {})) {
     payload[name] = property.enum?.[0] ?? property.type ?? 'value';

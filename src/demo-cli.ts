@@ -17,6 +17,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { emitLine, errorText, parseArgs, parseJsonFromFileOrValue, required, stringFlag, workflowRoot, type ParsedArgs } from './internal/cli-helpers.js';
+import { exampleOutput } from './internal/coach-responses.js';
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const minimalTemplateDir = path.join(packageRoot, 'templates', 'minimal');
@@ -124,14 +125,6 @@ function renderOutputSchema(schema: JsonSchema): string[] {
 function describeSchema(schema: JsonSchema): string {
   if (schema.enum) return schema.enum.map(String).join(' | ');
   return schema.type ?? 'any';
-}
-
-function exampleOutput(schema: JsonSchema): string {
-  const payload: Record<string, unknown> = {};
-  for (const [name, property] of Object.entries(schema.properties ?? {})) {
-    payload[name] = property.enum?.[0] ?? property.type ?? 'value';
-  }
-  return JSON.stringify(payload);
 }
 
 function renderStep(response: StepRunResponse): string {

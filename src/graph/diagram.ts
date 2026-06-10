@@ -1,4 +1,5 @@
 import { RipplegraphError, type GraphPackageManifest, type Node } from '../schema.js';
+import { stableValue } from '../internal/json-utils.js';
 
 export type DiagramFormat = 'mermaid' | 'dot';
 
@@ -61,18 +62,6 @@ function formatWhen(when: Record<string, unknown>): string {
 function formatValue(value: unknown): string {
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
   return JSON.stringify(stableValue(value));
-}
-
-function stableValue(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(stableValue);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value)
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([key, item]) => [key, stableValue(item)]),
-    );
-  }
-  return value;
 }
 
 function diagramNodeId(nodeId: string): string {

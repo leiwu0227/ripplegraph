@@ -3,6 +3,7 @@ import path from 'node:path';
 import { z } from 'zod';
 import { loadGraphPackage, type GraphPackage } from './graph-package.js';
 import { readJson, writeJson } from './internal/json-io.js';
+import { formatIssues } from './internal/zod-issues.js';
 import { registryPath } from './storage.js';
 import { idSchema, RipplegraphError, startRequirementSchema } from './schema.js';
 
@@ -42,10 +43,6 @@ export interface ResolveRegisteredGraphPackageOptions {
   workflowRoot: string;
   graphId: string;
   kind?: RegistryEntry['kind'];
-}
-
-function formatIssues(issues: Array<{ path: Array<string | number>; message: string }>): string {
-  return issues.map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`).join('; ');
 }
 
 function sortRegistry(registry: GraphRegistry): GraphRegistry {

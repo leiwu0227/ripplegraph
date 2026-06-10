@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { graphPackageManifestSchema, RipplegraphError, type GraphPackageManifest } from './schema.js';
 import { readJson } from './internal/json-io.js';
+import { formatIssues } from './internal/zod-issues.js';
 
 export interface GraphPackage {
   path: string;
@@ -11,10 +12,6 @@ export interface GraphPackage {
 
 export function graphPackagePath(packageRoot: string): string {
   return path.join(packageRoot, 'graph.json');
-}
-
-function formatIssues(issues: Array<{ path: Array<string | number>; message: string }>): string {
-  return issues.map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`).join('; ');
 }
 
 export function loadGraphPackage(packageRoot: string): GraphPackage {

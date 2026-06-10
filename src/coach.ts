@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { stableValue } from './internal/json-utils.js';
 import {
   appendTransition,
   ensureWorkflowRoot,
@@ -617,16 +618,6 @@ function runtimeAuditResponse(workflow: Workflow, checkpoint: Checkpoint, active
 
 function stableJson(value: unknown): string {
   return JSON.stringify(stableValue(value));
-}
-
-function stableValue(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(stableValue);
-  if (!value || typeof value !== 'object') return value;
-  return Object.fromEntries(
-    Object.entries(value)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([key, item]) => [key, stableValue(item)]),
-  );
 }
 
 function enterWorkflowRefs(rootPath: string, workflow: Workflow, checkpoint: Checkpoint): StateOk {
