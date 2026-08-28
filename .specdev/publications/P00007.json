@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00007",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:2e1fe1b082565d1a64785e020c74eea5881ec12a2099d28289ad71ce4215a9c3",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph state and recovery model architecture note",
+  "parent_revision": "1edad7c7f2d806279fff73f1183a5c46ee7c19dd",
+  "commit_trailer": "SpecDev-Publication: P00007",
+  "operations": [
+    {
+      "path": "project_notes/architecture/state-and-recovery.md",
+      "previous_hash": null,
+      "new_hash": "sha256:705cadced7b6fc256bed89f0a5f4cc1111fa859609eff74ce7b7af1fe5737816",
+      "bytes": 20983,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T09:20:08.534Z"
+}
