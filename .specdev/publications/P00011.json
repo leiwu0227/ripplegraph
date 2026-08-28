@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00011",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:a0e4774e7aea4d3e873b13d0d30975d53f1b14d8389e9ca870a00d79a1c9441c",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph host contract and metadata model architecture note",
+  "parent_revision": "01e30225c4466039f5225acace89bf56cee93eee",
+  "commit_trailer": "SpecDev-Publication: P00011",
+  "operations": [
+    {
+      "path": "project_notes/architecture/host-contract-and-metadata-model.md",
+      "previous_hash": null,
+      "new_hash": "sha256:b5200ffcf42abc3a2c751fd142f9abc8c597ea30e874a75e2ca95f426445f0cb",
+      "bytes": 21314,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T14:12:34.260Z"
+}
