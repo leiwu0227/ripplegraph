@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00013",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:b662b6672eb7c3d8ee5be28a0929c8d49e0a1dff5c5c07e9beb39bf912ab98fe",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph identity, naming, and scope model architecture note",
+  "parent_revision": "d9606c11df13cdf927980781105e425542c20e04",
+  "commit_trailer": "SpecDev-Publication: P00013",
+  "operations": [
+    {
+      "path": "project_notes/architecture/identity-naming-and-scope-model.md",
+      "previous_hash": null,
+      "new_hash": "sha256:b4dd295f60e336d413afe178e12626a708192339fb0273ef4517bac87e4b11da",
+      "bytes": 19222,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T16:15:01.962Z"
+}
