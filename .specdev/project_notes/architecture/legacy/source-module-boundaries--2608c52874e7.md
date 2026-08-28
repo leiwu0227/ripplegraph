@@ -1,6 +1,6 @@
 # Ripplegraph Source Module Boundaries
 
-Status: implemented
+Status: deprecated
 
 ## Purpose and scope
 
@@ -65,18 +65,12 @@ ripplegraph/
 └── dist/                            # generated JavaScript and declarations
 ```
 
-This text tree is an orientation snapshot of production source and shipped
-package assets, not a complete repository listing. Its paths and purpose
-comments describe the current implementation; the binding structure is the
-ownership, public-surface, and dependency boundary stated below. Equivalent
-file moves or comment changes do not create architectural drift.
-
 ## Source ownership map
 
 | Path | Current ownership | Root library exposure |
 | --- | --- | --- |
 | `src/index.ts` | The package barrel and intentional programmatic entry point. | Defines exposure by re-exporting selected modules. |
-| `src/schema.ts` | Shared errors, manifest schemas, node contracts, workflow/callable checkpoints, transition records, inferred public types, and load-time supported-schema-keyword checks. | Re-exported. |
+| `src/schema.ts` | Shared errors, manifest schemas, node contracts, workflow/callable checkpoints, transition records, and inferred public types. | Re-exported. |
 | `src/storage.ts` | Workspace metadata lookup and the `.ripplegraph/` paths and persistence operations for focus, runs, calls, checkpoints, artifacts, and transition logs. | Re-exported. |
 | `src/graph-package.ts` | Graph-package folder lookup, `graph.json` reading, and manifest validation. | Re-exported. |
 | `src/registry.ts` | Registry schema, persistence, package registration, catalog listing, and kind-aware package resolution. | Re-exported. |
@@ -119,7 +113,6 @@ The current runtime dependency direction is:
 | `src/callable.ts` | Schemas, call storage, package and registry resolution, effects, and private graph and validation helpers. |
 | `src/registry.ts` | Package loading, the registry path, shared schemas, and private JSON and validation formatting. |
 | `src/graph-package.ts`, `src/storage.ts`, `src/effects.ts` | Shared schemas and narrowly scoped private primitives. |
-| `src/schema.ts` | The private supported-schema-keyword collector; it has no inward dependency on runtime engines, persistence, package or registry services, or adapters. |
 | `src/graph/diagram.ts` | Shared graph types and stable JSON formatting only. |
 
 `src/internal/` is a visibility boundary, not a universal lowest layer. Private
@@ -186,7 +179,7 @@ runtime dependency direction, and host/runtime boundary remain equivalent.
 ## Conformance evidence
 
 This note was verified against clean tracked production source at Git revision
-`99e48cacefd581b57c687cea7358fdbe47d269fa` on 2026-08-28.
+`412d293119b58b716cee1182b0023b9d0ff09ece` on 2026-08-28.
 
 Relevant source paths:
 

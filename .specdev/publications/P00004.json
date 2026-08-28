@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "publication": "P00004",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:26e7a93b3c990a086c31cbdd7c8c41d12d412d9777cd83669deea5d612643093",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "amend Ripplegraph source module boundaries architecture note after review",
+  "parent_revision": "99e48cacefd581b57c687cea7358fdbe47d269fa",
+  "commit_trailer": "SpecDev-Publication: P00004",
+  "operations": [
+    {
+      "path": "project_notes/architecture/legacy/source-module-boundaries--2608c52874e7.md",
+      "previous_hash": null,
+      "new_hash": "sha256:c0809cf987f10868639971239e2e570fc59fd332c8ee4ac4cd964633b50526d8",
+      "bytes": 11607,
+      "remove": false
+    },
+    {
+      "path": "project_notes/architecture/source-module-boundaries.md",
+      "previous_hash": "sha256:2608c52874e7b6ee7d8ace4d565a99ac155d40f738fa01d09f07c5791cb8c420",
+      "new_hash": "sha256:f2088c360dfecb6480397c9538d32f5ef548dedf7bc042c2b74e72dfa09d3f27",
+      "bytes": 12190,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T06:04:08.031Z"
+}
