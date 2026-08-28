@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00010",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:8e2c3d7dc0eee176d30447e3e4445b81f951603d213553d8ed9c70c9086e31d1",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph validation and error model architecture note",
+  "parent_revision": "f54052ae83682b04e4efc743303e45f240d69dbc",
+  "commit_trailer": "SpecDev-Publication: P00010",
+  "operations": [
+    {
+      "path": "project_notes/architecture/validation-and-error-model.md",
+      "previous_hash": null,
+      "new_hash": "sha256:fbabce025219e891a9b12f66fcfcf23b36662512738e6fd08d7545cb8a591d77",
+      "bytes": 23061,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T13:10:24.690Z"
+}
