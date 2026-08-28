@@ -92,4 +92,16 @@ describe('graph registry storage', () => {
       fs.rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it('stores descendants whose first segment begins with two dots as relative paths', () => {
+    const root = makeRoot('ripplegraph-registry-leading-dots-');
+    const packageRoot = path.join(root, '..packages', 'support-triage');
+    try {
+      writePackage(packageRoot);
+
+      expect(registerGraphPackage({ workflowRoot: root, packageRoot }).path).toBe('..packages/support-triage');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

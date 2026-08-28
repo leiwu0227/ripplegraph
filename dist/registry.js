@@ -36,7 +36,7 @@ function normalizeRegisteredPath(workflowRoot, packageRoot) {
     const root = path.resolve(workflowRoot);
     const target = path.resolve(packageRoot);
     const relative = path.relative(root, target);
-    const insideRoot = relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+    const insideRoot = relative !== '' && relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
     return (insideRoot ? relative : target).replaceAll(path.sep, '/');
 }
 export function readRegistry(workflowRoot) {
