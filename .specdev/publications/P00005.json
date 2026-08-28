@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00005",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:c0236b7480065022053d6191f1d4f44ea175074f45a63b904bfe560be19c79da",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph host/runtime interaction architecture note",
+  "parent_revision": "acb802cb31ecc91d4fb3c8f20451e87932f6f8bc",
+  "commit_trailer": "SpecDev-Publication: P00005",
+  "operations": [
+    {
+      "path": "project_notes/architecture/host-runtime-interaction.md",
+      "previous_hash": null,
+      "new_hash": "sha256:063e2a5cb6f829b127538cbf492a73644ca60917d33a91b4d92e7dd73e4ab777",
+      "bytes": 15949,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T07:05:31.604Z"
+}
