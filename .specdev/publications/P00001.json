@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00001",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:ea371f877752744093ca4577d8076281f2e98f4f96fb1e849d7d985bbcaf6924",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph core concepts architecture note",
+  "parent_revision": "8288620441e8fdcea2d70b52672d6b8f85436644",
+  "commit_trailer": "SpecDev-Publication: P00001",
+  "operations": [
+    {
+      "path": "project_notes/architecture/core-concepts.md",
+      "previous_hash": null,
+      "new_hash": "sha256:fbc3a752960fa9a71ee154942bea72ac01a26a535cd6ab9feb9383a7fcef63bf",
+      "bytes": 10358,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T03:25:58.636Z"
+}
