@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00006",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:f60f86cd7afaf8ee7758ece49d006ce1ee6561685274b11bb8c432d0ecb66ab4",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph execution and workflow model architecture note",
+  "parent_revision": "5cdf1c75b591baddee04d110c5a314ac2f830ad8",
+  "commit_trailer": "SpecDev-Publication: P00006",
+  "operations": [
+    {
+      "path": "project_notes/architecture/execution-and-workflow-model.md",
+      "previous_hash": null,
+      "new_hash": "sha256:3c29286e61aa6c2cbab5de0a94fa9662cd62baa4d47025a2a06edb19406d0c91",
+      "bytes": 21029,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T08:27:39.323Z"
+}
