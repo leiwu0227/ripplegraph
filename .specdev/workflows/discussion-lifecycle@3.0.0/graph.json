@@ -1,0 +1,82 @@
+{
+  "id": "discussion-lifecycle",
+  "version": "3.0.0",
+  "kind": "callable",
+  "title": "Discussion lifecycle",
+  "description": "Isolated code-read-only exploration that may coexist with a focused workflow.",
+  "activationHints": ["discussion", "brainstorm discussion", "explore idea"],
+  "inputSchema": {
+    "type": "object",
+    "required": ["id", "path", "description", "start_revision"],
+    "properties": {
+      "id": { "type": "string" },
+      "path": { "type": "string" },
+      "description": { "type": "string" },
+      "start_revision": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "required": ["completed_revision", "artifact_hash"],
+    "properties": {
+      "completed_revision": { "type": "string" },
+      "artifact_hash": { "type": "string" },
+      "artifact_schema": { "type": "number", "enum": [2] },
+      "artifact_count": { "type": "number" },
+      "artifact_manifest": { "type": "string" }
+    },
+    "additionalProperties": false
+  },
+  "entry": "brainstorm",
+  "nodes": {
+    "brainstorm": {
+      "purpose": "Explore the topic with the user while treating product code as read-only.",
+      "instructions": "Write bounded eligible UTF-8 text artifacts recursively inside this Discussion's brainstorm tree. Keep brainstorm/proposal.md and brainstorm/design.md as the required canonical syntheses, then resume the Discussion command.",
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "proposal",
+          "design",
+          "artifact_schema",
+          "artifact_hash",
+          "artifact_count",
+          "artifact_manifest"
+        ],
+        "properties": {
+          "proposal": { "type": "string" },
+          "design": { "type": "string" },
+          "artifact_schema": { "type": "number", "enum": [2] },
+          "artifact_hash": { "type": "string" },
+          "artifact_count": { "type": "number" },
+          "artifact_manifest": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "operatorContext": { "phase": "discussion" },
+      "edges": [{ "to": "finalize" }]
+    },
+    "finalize": {
+      "purpose": "Optionally review the Discussion, then complete it when the user is satisfied.",
+      "instructions": "Run optional `specdev reviewloop discussion --discussion=<id>`, or complete with `specdev discussion <id> --complete`.",
+      "outputSchema": {
+        "type": "object",
+        "required": ["completed_revision", "artifact_hash"],
+        "properties": {
+          "completed_revision": { "type": "string" },
+          "artifact_hash": { "type": "string" },
+          "artifact_schema": { "type": "number", "enum": [2] },
+          "artifact_count": { "type": "number" },
+          "artifact_manifest": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "operatorContext": { "phase": "discussion" },
+      "edges": [{ "to": "done" }]
+    },
+    "done": {
+      "purpose": "Discussion is complete.",
+      "terminal": true
+    }
+  }
+}

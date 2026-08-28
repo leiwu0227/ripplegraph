@@ -1,11 +1,18 @@
 ---
 name: specdev-continue
-description: Resume specdev work from where you left off
+description: Resume SpecDev work from durable workflow and folder artifacts
 ---
 
-Run `specdev continue`.
+Run `specdev next --json` for a focused workflow. For a Mission, run `specdev
+mission status <id>` then `specdev mission run <id>`. For a Discussion, run
+`specdev discussion <id>`. Ordinary interrupted source may be inspected,
+continued, repaired, or rewritten; do not assume database-style recovery.
 
-Use `specdev next --json` for the canonical runtime action when available; use `specdev continue` for human-readable diagnosis and migration hints.
-If blockers are reported, resolve them first (for example `specdev migrate`).
+Before resuming an Assignment, inspect its lifecycle in `specdev status --json`.
+A shelved or unsupported Assignment is terminal and immutable: translate “resume” into
+`specdev assignment --from-assignment=<terminal-id>`, which creates a fresh ID
+and contract. Never reactivate the old graph or treat its approval or historical
+verification as current. Abandoned work remains terminal and is not a shelf.
 
-Announce every subtask with "Specdev: <action>".
+Announce meaningful phases, plan changes, failed verification, and blockers
+with "Specdev: <action>"; repeated read-only probes need no separate announcement.

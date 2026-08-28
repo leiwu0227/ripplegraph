@@ -37,6 +37,47 @@ emit_hook_json() {
 EOF
 }
 
+# RippleGraph-backed installations expose the canonical product state through
+# `specdev next --json`. Use it directly so session guidance cannot drift from
+# the focused run. Older installations fall through to the legacy context path.
+NEXT_JSON=$(specdev next --json 2>/dev/null || true)
+if [ -n "$NEXT_JSON" ]; then
+  NEXT_CONTEXT=$(node -e '
+    try {
+      const state = JSON.parse(process.argv[1]);
+      if (
+        !state ||
+        !state.state ||
+        (state.workflow && typeof state.workflow !== "string") ||
+        !state.next_action?.command_line
+      ) process.exit(1);
+      const workflow = state.workflow || "none";
+      const phase = state.phase || state.state;
+      const command = state.next_action.command_line;
+      const instructions = state.instructions || state.prompt || "";
+      if (state.state === "idle" || workflow === "none") {
+        process.stdout.write(
+          "SpecDev installed. Classify the user request before creating state: Direct for questions, read-only inspection, and small non-behavioral documentation writes; or explicitly user-selected Adhoc, Discussion, Assignment, or Mission. Direct writes create no workflow state, receipt, or automatic commit. Never silently create an Assignment for every request." +
+          "\n\nAnnounce meaningful phases, plan changes, failed verification, and blockers with \"Specdev: <action>\"; repeated read-only probes need no separate announcement."
+        );
+        process.exit(0);
+      }
+      process.stdout.write(
+        "SpecDev active. Workflow: " + workflow + " | State: " + state.state + " | Phase: " + phase +
+        "\n\nNext: " + command +
+        (instructions ? "\n\nInstructions: " + instructions : "") +
+        "\n\nAnnounce meaningful phases, plan changes, failed verification, and blockers with \"Specdev: <action>\"; repeated read-only probes need no separate announcement."
+      );
+    } catch {
+      process.exit(1);
+    }
+  ' "$NEXT_JSON" 2>/dev/null) || NEXT_CONTEXT=""
+  if [ -n "$NEXT_CONTEXT" ]; then
+    emit_hook_json "$NEXT_CONTEXT"
+    exit 0
+  fi
+fi
+
 # Try specdev context --json for rich data
 CONTEXT_JSON=$(specdev context --json 2>/dev/null) || CONTEXT_JSON=""
 
@@ -74,13 +115,13 @@ else
   # Fallback: filesystem detection (for older specdev versions)
   ASSIGNMENTS_DIR="$SPECDEV_DIR/assignments"
   if [ ! -d "$ASSIGNMENTS_DIR" ]; then
-    emit_hook_json "You have specdev installed. Read .specdev/_main.md for the full workflow.\n\nAnnounce every subtask with \"Specdev: <action>\".\nIf you stop announcing subtasks, the user will assume you've stopped following the workflow."
+    emit_hook_json "You have specdev installed. Read .specdev/_main.md for the full workflow.\n\nAnnounce meaningful phases, plan changes, failed verification, and blockers with \"Specdev: <action>\"; repeated read-only probes need no separate announcement."
     exit 0
   fi
 
   LATEST=$(ls -1d "$ASSIGNMENTS_DIR"/*/ 2>/dev/null | sort | tail -1 || true)
   if [ -z "$LATEST" ]; then
-    emit_hook_json "You have specdev installed. Read .specdev/_main.md for the full workflow.\n\nAnnounce every subtask with \"Specdev: <action>\".\nIf you stop announcing subtasks, the user will assume you've stopped following the workflow."
+    emit_hook_json "You have specdev installed. Read .specdev/_main.md for the full workflow.\n\nAnnounce meaningful phases, plan changes, failed verification, and blockers with \"Specdev: <action>\"; repeated read-only probes need no separate announcement."
     exit 0
   fi
 
@@ -136,7 +177,7 @@ case "$PHASE" in
     CONTEXT="${CONTEXT}Rules:\n- TDD: write failing test -> make it pass -> refactor\n- No completion claims without running tests\n- One task at a time via subagents\n- Per-task review: spec compliance then code quality\n\nNext: Complete remaining tasks, get user approval\n\nPhase commands: specdev checkpoint implementation, specdev reviewloop implementation, specdev approve implementation"
     ;;
   *)
-    CONTEXT="${CONTEXT}Run specdev assignment <name> to start a new assignment."
+    CONTEXT="${CONTEXT}Classify the request first: Direct needs no state; use Adhoc, Discussion, Assignment, or Mission only when the user selects it."
     ;;
 esac
 
@@ -155,7 +196,7 @@ if [ -n "$TOOL_SKILLS" ]; then
   CONTEXT="${CONTEXT}\n\nTool skills available: ${TOOL_SKILLS}. Declare in plan tasks via Skills: field."
 fi
 
-CONTEXT="${CONTEXT}\n\nAnnounce every subtask with \"Specdev: <action>\".\nIf you stop announcing subtasks, the user will assume you've stopped following the workflow."
+CONTEXT="${CONTEXT}\n\nAnnounce meaningful phases, plan changes, failed verification, and blockers with \"Specdev: <action>\"; repeated read-only probes need no separate announcement."
 
 emit_hook_json "$CONTEXT"
 exit 0

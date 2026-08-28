@@ -1,93 +1,213 @@
-# Workflow Guide
+# Workflow reference
 
-Every assignment follows these 3 required phases in order. Do not skip phases.
+## Direct and Adhoc
 
-For action selection, use the runtime contract first:
+Direct work answers, inspects, or writes a small user-requested documentation
+artifact without creating workflow state, a receipt, or an automatic commit.
+The write qualifies only when it does not change product, runtime,
+public-contract, or governed workflow behavior. For low-risk Direct
+documentation, announce once, read destination instructions and only the facts
+needed, write first, and verify narrowly; broad project orientation is not a
+prerequisite.
 
-```bash
-specdev next --json
-```
+Use Adhoc only when the user explicitly chooses it for a concrete bounded edit
+but the Assignment contract/review cycle would be ceremony. Adhoc has no
+RippleGraph run. `adhoc start` requires an existing Git HEAD and a clean
+worktree unless `--adopt-dirty` explicitly adopts the exact expanded eligible
+path manifest for all existing changes.
 
-The runtime reads `.specdev/workflow.yaml`, the active assignment, artifact presence, gates, and progress, then returns one canonical next action with evidence, blockers, structured choices, and hook outcomes. This guide is the human-readable reference for the same workflow; it should not be treated as a second state machine.
+“Does not want an Assignment” means the bounded detour should not become a new
+Assignment; it does not terminate an unrelated active one. A focused standalone
+Assignment may be preserved through Adhoc only while it is quiescent at the
+approved pre-implementation boundary. Its identity, focus, run, artifacts, and
+Attempt records remain outside Adhoc ownership. An implementation Git boundary,
+live or ambiguous worker/reviewer Attempt, dirty product work, or uncertain
+ownership blocks before state creation, and `--adopt-dirty` cannot absorb the
+conflict. Finish and cancel retain the same resumable Assignment. Shelving is an
+explicit terminal user choice, never an automatic pause or prerequisite.
 
----
+Selecting a bounded file write does not itself select Adhoc. An explicitly
+requested coordination or handoff note in another repository is an auxiliary
+artifact: write only the note, follow destination instructions, and create no
+SpecDev state in the active repository. Re-anchor and classify in the
+destination repository when the request changes its product, runtime, or
+workflow state, or explicitly requests SpecDev governance there.
 
-## Phase 1: Brainstorm
+Examples make the routing boundary concrete:
 
-**Goal:** Understand the problem and produce a validated design or research output.
+- “Write an HTTP usage manual under `project_notes/manual/`” is Direct when it
+  documents existing behavior.
+- “Write this workflow handoff note into the SpecDev CLI thoughts directory” is
+  a Direct auxiliary write governed by that destination's instructions.
+- “Use SpecDev Adhoc to update the public API manual and commit it” is Adhoc and
+  retains the receipt and final delivery commit.
 
-**Output:** `brainstorm/proposal.md` + `brainstorm/design.md`
+Callable-owned paths refuse the whole adoption rather than being filtered.
+`adhoc finish` requires an unchanged HEAD, verifies the manifest, writes one
+small commit-derived receipt, and creates one delivery commit. `adhoc cancel` removes only the
+ignored active marker and leaves source changes untouched. Receipts are not
+knowledge-index sources; inspect them with `specdev adhoc show <ID> --json` or
+search delivery commits by their `SpecDev-Adhoc` trailer.
 
-**Start:** Prefer `specdev assignment "<description>" --type=<type> --slug=<slug>`. This creates the assignment folder, creates the phase directories, and sets `.specdev/.current`.
-- Valid assignment types: feature | bugfix | refactor | familiarization
-- Reserve-only mode exists for manual folder creation: `specdev assignment "<description>"`
-- To switch to an existing assignment: `specdev focus <id>` (updates `.specdev/.current`)
-- To explore ideas without committing to a full assignment: `specdev discussion "<description>"` — creates a lightweight discussion folder; promote later with `specdev assignment "<desc>" --discussion=<id> --type=<type> --slug=<slug>`
+## Assignment
 
-**Choose the skill that matches your work:**
-- Building or changing functionality → `skills/core/brainstorming/SKILL.md`
-- Understanding existing code → `skills/core/investigation/SKILL.md`
-- Diagnosing a bug → `skills/core/diagnosis/SKILL.md`
+Use `_guides/assignment_guide.md`. Approval is the only routine user gate;
+successful evidence and implementation review complete automatically.
+The Git boundary is established immediately before implementation. Existing
+product changes require an explicit inspect/checkpoint/adopt decision. A
+standalone Assignment ends in one host-owned delivery commit; Mission children
+remain owned by the Mission controller. Successful standalone completion first
+preserves final activity and evidence, compacts only its terminal run, Attempts,
+process markers, and matching focus, and then publishes from the unchanged Git
+boundary through a temporary index. The exact manifest contains only the reviewed
+product candidate, that Assignment's durable artifact tree, and semantically
+validated shared workflow paths; unrelated staged, unstaged, untracked, callable,
+or installed workflow changes remain untouched.
 
-After setup, run `specdev next --json` and follow the returned guide or command.
+An approved standalone Assignment may instead reach a successful negative
+conclusion with `specdev assignment close <id> --outcome=unsupported`. The user
+must provide a reason and written evidence, inspect the exact HEAD/ownership
+plan, and confirm it with `--snapshot=owned`. SpecDev then records
+`unsupported.md` and terminal status, compacts only owned runtime, clears focus,
+and publishes those effects as one exact commit. Concurrent or unattributed
+dirt remains unstaged and is reported by owner. Unsupported history is
+immutable; `specdev assignment --from-assignment=<id>` creates a fresh contract,
+approval, evidence, and delivery boundary.
 
-**Checkpoint:** Run `specdev checkpoint brainstorm`.
-Must pass before requesting review.
+## Mission
 
-**Review (optional):**
-- `specdev review brainstorm` — manual review in a separate session
-- `specdev reviewloop brainstorm` — automated review via external CLI (e.g., Codex)
+A Mission is a static foreground workflow with a simple static-wave
+`design/assignments.yaml` queue. The contract defaults to `Initial child plan:
+single`; use `planned` only for a worker context limit, an information
+dependency, an intermediate decision, or independent verification/rollback.
+File count and multiple Tasks are not split reasons. A full-scope single child
+is derived from the approved Mission contract and its exact implementation
+review may satisfy Mission convergence when the candidate digest still matches.
+The Mission contract follows the same proportionality rule as an Assignment:
+reference project context, avoid plan details, and keep only independent
+observable acceptance criteria. Multi-child contracts are concise deltas that
+inherit parent authority rather than reproducing the Mission brainstorm.
+After approval, blocking review/evidence and explicit required follow-up open
+stable durable gaps. Each gap receives a focused resolution Assignment and,
+when it remains unresolved, advances automatically through resolver and
+arbiter stages without sharing another child's recovery allowance. Repair
+descendants retain their parent gap identity, restarts deduplicate the same
+signal, and terminal semantic, authority, and infrastructure failures remain
+distinct. Children that do not depend on one another may share a wave. The
+foreground controller automatically runs up to three children in validated
+ignored worktrees and integrates reviewed deliveries in declared order. Users
+do not tune concurrency, and parallel speed is not a reason to split work.
 
-**Gate:** `specdev approve brainstorm` must have been run. If `specdev reviewloop --autocontinue` approved the phase, continue with the next action from its contract or from `specdev next --json`.
+A planned child may use `execution: evidence-only` only with an exact
+`observation_command` equal to the Mission final-verification command. A
+negative observation remains failed evidence but returns as
+completed-with-follow-up so the Mission can open a repair gap. Ordinary
+implementation children cannot use that disposition.
 
----
+`specdev mission adopt-successor M00001 --assignment=00042` is exceptional
+recovery for an active Mission blocked inside its owned child. The first call is
+read-only and prints a content-addressed plan; `--confirm=<snapshot>` applies
+only that unchanged plan. Candidate ancestry, contract/review/evidence hashes,
+the exact command and environment policy, cleanup identity, predecessor
+authority, and excluded dirt all fail closed. Adoption links superseding
+evidence and returns the nested graph without rerunning a provider or command.
 
-## Phase 2: Breakdown
+## Discussion
 
-**Goal:** Turn the approved design into an implementation plan with coherent tasks, verification guidance, and an execution mode.
+A Discussion is a RippleGraph callable and never becomes the focused scheduler.
+It may inspect changing repository state but treats product code as read-only.
+Its author owns only bounded eligible UTF-8 text artifacts recursively under the
+Discussion's `brainstorm/**`; proposal and design remain required canonical
+syntheses, while `review/**`, runtime state, shared notes, tests, and product code
+retain their existing owners. New completion writes a sorted schema-v2 manifest
+and binds the full bundle digest; legacy two-file completions retain their v1
+digest. Promotion verifies the terminal digest, copies immutable canonical and
+manifest provenance (plus only explicitly selected support), and creates a fresh
+Assignment or Mission whose contract alone grants implementation authority.
+Artifacts edited after completion must be restored or continued in a new
+Discussion.
 
-**Skill:** `skills/core/breakdown/SKILL.md`
+Shared publication is orthogonal to every lane. Evidence-bound knowledge uses
+`specdev knowledge curate`; exact user-requested eligible project notes use
+`specdev publish --proposal=<path>`, then the content-addressed approval command.
+The publisher rechecks all baselines, uses recoverable multi-path application,
+writes a monotonic `P…` receipt and exact-path commit, and never changes the
+originating workflow phase or product-code authority. Big-picture and protected
+architecture retain their separate approval rules.
 
-**Internal reviews:** Design review (up to 2 rounds) then plan review (1-2 rounds). Both run automatically inside breakdown.
+## Test Audit
 
-**Output:** `breakdown/plan.md`
+`specdev test-audit "<scope>"` is another isolated callable. It reads product
+code and tests but writes only `audit.md` and `assignment-contract.md` in its own
+folder. Each removal needs rationale, retained protection, cost impact, and
+confidence. `--complete` freezes the artifacts; `specdev assignment
+--from-test-audit=TA00001` copies the exact contract into the normal approval
+workflow before any test is changed.
 
-After writing the plan, run `specdev next --json` for the next implementation action.
+## Profiles and guides
 
----
+`.specdev/agents.yaml` chooses worker/reviewer provider, model, effort, and
+timeout. Ignored `cache/agents.local.yaml` overrides it on one machine. Prompts
+and up to three selected guides define temporary work; there are no permanent
+reviewer personas.
+Only `specdev reviewloop` produces a transition-authorizing result envelope.
+Native Codex, Claude, or Cursor review sessions remain advisory and their plain
+Markdown must not be treated as a SpecDev verdict.
 
-## Phase 3: Implement
+## Knowledge
 
-**Goal:** Execute tasks using the plan's execution mode and task-level verification/review.
+Active notes under `project_notes/architecture/` are protected project authority;
+`legacy/` is history. Read `_guides/architecture_guide.md` for explicit creation,
+replacement, conflict, and checkpoint rules. Markdown under `knowledge/` is
+durable but revisable, and `knowledge/codebase/` never overrides protected
+architecture. `cache/knowledge.sqlite` is generated.
+Always read `project_notes/big_picture.md`. Use default precise all-term or
+quoted-phrase search at the planning or uncertainty boundary instead of reading
+every note; reserve `--mode=broad` for explicit any-term discovery. Narrow noisy
+partial matches with distinguishing terms or phrases. Assignment records useful
+paths in its plan; Mission searches once and passes relevant paths to children;
+Adhoc searches only for unfamiliar behavior or conventions. Search unexpected
+symptoms again. Treat matches as historical leads and verify relevant current
+code, including hard-coded counts, enumerated families, or other closed-world
+assumptions. Reusable constraints missing from living knowledge go through an
+evidence-bound, user-approved curation proposal; source is not bulk-indexed or
+promoted by search. FAQ entries past `review_after` require explicit
+`--include-stale` and revalidation; `status: superseded` stays outside default
+scope.
 
-**Skill:** `skills/core/implementing/SKILL.md`
+`specdev knowledge curate` scans without authoritative mutation and binds exact
+owner queries to an untruncated scoped-owner map. Schema-v2 proposals classify
+every matched current owner as retain, update, or delete and every matched
+legacy owner as update or delete; create, update, and delete are the only new
+mutation actions. Exact approval covers no-write decisions as well as writes and
+removals. Publication journals idempotent removals, writes a receipt (including
+retain-only decisions), and rebuilds the disposable index when knowledge bytes
+change. Oversized and legacy-cleanup scopes use immutable `KCS` manifests and
+separately approved batches. Resume active v1 journals with their frozen v1
+semantics; new preparation is v2-only. A failed rebuild leaves published truth
+in place and reports `specdev knowledge rebuild`. The legacy `knowledge distill`
+brief remains read-only compatibility and is not a publication workflow.
+Bounded `--repo-evidence=path#Lstart-Lend` attaches clean tracked current-code
+bytes and their Git boundary to a proposal, but never replaces durable-source,
+verification, owner, destination-approval, receipt, or rebuild requirements.
 
-**Checkpoint:** Run `specdev checkpoint implementation`.
-Must pass before requesting review.
+## Verification
 
-**Review (optional):**
-- `specdev review implementation` — manual review in a separate session
-- `specdev reviewloop implementation` — automated review via external CLI (e.g., Codex)
+Focused evidence first. Reuse the same command on the same revision. A
+standalone Assignment may run a full suite at most once only when approved scope
+requires it. Mission children never run the full suite; the Mission may run one
+exact final integrated command per final candidate. Repository instructions can
+require an additional explicit user confirmation.
 
-**Gate:** `specdev approve implementation` must have been run. If `specdev reviewloop --autocontinue` approved the phase, continue with the next action from its contract or from `specdev next --json`.
+When work adds or upgrades an external dependency, resolve its version from the
+package manager or registry during the Attempt and inspect available lockfile
+and audit evidence. Direct high/critical advisories block review unless the
+approved contract explicitly accepts them. Lockfile-only resolution is not
+install or launch evidence.
 
----
+## Commit identity
 
-## Optional Phase-End Knowledge Capture
-
-**Goal:** Capture reusable knowledge only when it helps future assignments.
-
-**Skill:** `skills/core/knowledge-capture/SKILL.md`
-
-**Output:** Optional direct updates to `knowledge/` or `project_notes/`. This never blocks workflow progress.
-
-At the end of brainstorm, breakdown, or implementation, suggest capture only if the phase produced reusable knowledge. Search first with `specdev knowledge search "<issue>"`. Prefer prune-and-replace: update or replace an existing note when one applies; create a concise new note only when no existing note fits. Ask the user before writing.
-
----
-
-## Always-Apply Skills
-
-Read these before starting any assignment:
-- `skills/core/verification-before-completion.md` — no completion claims without evidence
-- `skills/core/receiving-code-review.md` — no performative agreement in reviews
-- `_guides/codestyle_guide.md` — coding standards
+Authoritative SpecDev commits use trailers: `SpecDev-Adhoc`,
+`SpecDev-Assignment`, and/or `SpecDev-Mission`, plus `SpecDev-Commit-Type`.
+Commit hashes are derived from Git when needed. Do not put an ending commit hash
+inside an artifact that is part of that same commit.

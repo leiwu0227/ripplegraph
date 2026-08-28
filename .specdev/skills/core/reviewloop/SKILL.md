@@ -1,66 +1,62 @@
 ---
 name: reviewloop
-description: Automated external review loop — spawns external CLI reviewer, reads verdict from artifacts, auto-approves on pass
+description: Run interactive reviews or bounded automatic review convergence
 type: core
-phase: brainstorm, implement
-input: Completed work (code changes, design docs, etc.)
-output: Review verdict in review/{phase}-feedback.md
-next: auto-approve on pass, check-review on fail
-triggers:
-  - after brainstorm checkpoint passes
-  - after implementation checkpoint passes
-  - when user requests automated external review
+phase: brainstorm, implementation, discussion, mission
 ---
 
-# Reviewloop — Automated External Review
+# Reviewloop
 
-Run an external CLI reviewer (Codex, OpenCode, Aider, etc.) against the current assignment. The CLI command handles all mechanics: spawn reviewer, read verdict from artifacts, enforce round limits, auto-approve on pass.
+Reviewer capability comes from `.specdev/agents.yaml`, with optional ignored
+machine overrides in `.specdev/cache/agents.local.yaml`. Prompts and selected
+guides define the temporary review task; there is no reviewer persona picker.
 
-## Usage
+## Brainstorm
 
-```bash
-specdev reviewloop <phase>
-specdev reviewloop <phase> --reviewer=<name>
-```
+Run `specdev reviewloop brainstorm`. The command freezes the contract baseline,
+runs the configured reviewer once, and reports the verdict, textual changes,
+material-divergence classification, and exact contract hash. Findings return
+control to the user; a later explicit invocation may review again without a
+round lockout.
 
-Without `--reviewer`: lists available reviewers and emits a runtime `interaction` block — render it via `AskUserQuestion` (Claude Code) or its host equivalent using the exact labels and order. Do not paraphrase, reorder, or drop options.
-With `--reviewer`: spawns the reviewer and processes the result.
-With `--autocontinue`: on approval the runtime prints a `continuation` block — when `interrupt: false`, invoke the printed command immediately without prompting the user.
+Never approve automatically. Show the verdict, exact contract path and hash,
+and the command's concise contract-preview bullets to the user. Run `specdev
+approve brainstorm` only after explicit agreement.
 
-## Reviewer Launch Notes
+## Mission Brainstorm
 
-See `reviewers/README.md` for per-reviewer launch contracts. In particular:
+Run `specdev reviewloop mission --mission=M00001`. This optional review has the
+same visible baseline, divergence, and exact-hash rules as Assignment Brainstorm
+review. It never approves the Mission; approval remains `specdev mission run
+M00001 --approve` after the same contract preview and explicit user agreement.
 
-- Claude runs in print mode and must write the feedback file before exiting.
-- Codex runs through `codex exec` with isolated ephemeral review state.
-- Reviewer stdout/stderr is captured to the per-round log artifact below.
+## Implementation
 
-## Review Artifacts
+`specdev implement` normally starts implementation review automatically. Direct
+resume is `specdev reviewloop implementation`. Automatic review uses two primary
+rounds, a conditional third round only while the candidate and findings are
+changing, one resolver, and one final arbiter. Approved results and
+host-validated nonblocking disagreements may advance; objective failures
+terminate explicitly.
 
-Two append-only files with clear ownership:
+When the current work includes an approved `proposed` note, or evidence suggests
+an `implemented` note has drifted, read `_guides/architecture_guide.md` and
+compare code behavior with the active note. Report implemented, still proposed,
+or drifted. Only authorized conformance evidence can support an exact,
+separately approved status change.
 
-- `review/{phase}-feedback.md` — review agent writes findings (append `## Round N`)
-- `review/{phase}-changelog.md` — main agent writes what it fixed (append `## Round N`)
-- `review/{phase}-reviewer-{name}-round-N.log` — captured stdout/stderr for debugging reviewer failures
+## Discussion
 
-Each agent only writes to its own file and reads the other's.
+Run `specdev reviewloop discussion --discussion=D00001`. Review is optional and
+does not approve or complete the Discussion. Each invocation runs once and
+returns control without a round lockout.
 
-## Flow
+## Rules
 
-1. Run `specdev reviewloop <phase>` — lists reviewers and emits an `interaction` block when reviewer selection is required. Render it via `AskUserQuestion` (Claude Code) or its host equivalent, using the exact labels and order. Do not paraphrase, reorder, or drop options.
-2. Run `specdev reviewloop <phase> --reviewer=<name>` (the value the user picked).
-3. Command spawns reviewer, waits for completion, reads verdict from `review/{phase}-feedback.md`.
-4. **Pass** → command auto-approves the phase and may print a `continuation` block. After any command that prints a `continuation` block with `interrupt: false`, invoke the printed command immediately without prompting the user.
-5. **Fail** → run `specdev check-review` to read findings, fix issues, write `{phase}-changelog.md`, then re-run `specdev reviewloop` for the next round.
-
-## Autocontinue Contract
-
-The runtime is the single source of truth for what happens after an approved review. Honour the `continuation` block emitted by the CLI; do not hardcode reviewer carry, phase transitions, or "stop and ask" behaviour in this skill. Sticky values such as the carried reviewer are persisted by the runtime in `.specdev/.session-state.json`. If a reviewer returns `needs-changes`, run `specdev check-review`, address findings, write the changelog, and rerun reviewloop within max rounds.
-
-When the runtime does not print a `continuation` block (e.g., manual review chosen, or reviewer needs-changes), consult `specdev next --json` to discover the canonical next action rather than guessing.
-
-## Hard Rules
-
-1. **Never skip check-review** — always read findings before the next round
-2. **Never argue with findings** — fix what the reviewer says or escalate to the user
-3. **Never exceed max rounds** — when max is reached, stop and defer to the user
+- Do not pass `--autocontinue` or choose a reviewer per execution.
+- Use `specdev reviewloop` for an authoritative verdict. Native coding-CLI
+  review sessions are advisory and cannot advance SpecDev state.
+- Reviewers do not repair code.
+- Reuse receipts and prefer narrow checks; never run a full suite without exact
+  authority.
+- Raw provider output belongs in ignored cache, not durable review history.
