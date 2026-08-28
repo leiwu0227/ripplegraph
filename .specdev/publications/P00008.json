@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00008",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:06cfc053d08495b18f2af55c7daab792e606e65f7914b688a44e36ff89f2ab4f",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph effects and authority model architecture note",
+  "parent_revision": "71f82204af7046851620ac66f7a9f3b096b131ae",
+  "commit_trailer": "SpecDev-Publication: P00008",
+  "operations": [
+    {
+      "path": "project_notes/architecture/effects-and-authority.md",
+      "previous_hash": null,
+      "new_hash": "sha256:a007425d0cd8a96aad716263aa50c2e31250ed1785c122f6d24f4caff57d10ec",
+      "bytes": 17972,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T10:22:59.164Z"
+}
