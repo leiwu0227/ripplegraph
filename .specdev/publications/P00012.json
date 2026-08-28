@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00012",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:eb8b27b5fe9aa8d2c5070437545101c6382b95955b8328694ce0b8cc7930f62c",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph public API and compatibility model architecture note",
+  "parent_revision": "5ec460ae01373b1fb844b0933403c5f2781d97e8",
+  "commit_trailer": "SpecDev-Publication: P00012",
+  "operations": [
+    {
+      "path": "project_notes/architecture/public-api-and-compatibility-model.md",
+      "previous_hash": null,
+      "new_hash": "sha256:663fb3ae64c876771411e3477d903d8dd29e43c3db19e9acfb4b4d971e421551",
+      "bytes": 21583,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T15:22:50.398Z"
+}
