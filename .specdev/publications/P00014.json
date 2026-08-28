@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00014",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:e2482f2d89a65bacb33980a717cd9247facf566b46fd3a46f961e92ae0e844d1",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph data flow and value propagation architecture note",
+  "parent_revision": "b3af413fa58617968aeb8098474f676ed20114f3",
+  "commit_trailer": "SpecDev-Publication: P00014",
+  "operations": [
+    {
+      "path": "project_notes/architecture/data-flow-and-value-propagation.md",
+      "previous_hash": null,
+      "new_hash": "sha256:9fb3f34ef045d963f539b5e3a3228548409ec5ed7afbc93fc0733b1af2082f57",
+      "bytes": 19378,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T17:14:13.053Z"
+}
