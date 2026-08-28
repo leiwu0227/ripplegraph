@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "publication": "P00003",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:5e95ab39aae0b0b4b1f58b7a152bb30dfc6e88d1bd80527bdee62ba03580e903",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "amend Ripplegraph core concepts architecture note after source-backed review",
+  "parent_revision": "6cabf76c2ec4d0fcb5d7eb57b3a4679bac84ec07",
+  "commit_trailer": "SpecDev-Publication: P00003",
+  "operations": [
+    {
+      "path": "project_notes/architecture/legacy/core-concepts--fbc3a752960f.md",
+      "previous_hash": null,
+      "new_hash": "sha256:caad99550c6427c7834fac304fb89c5ae31a0a73879a5cb6b4dfdf094f78b16a",
+      "bytes": 10357,
+      "remove": false
+    },
+    {
+      "path": "project_notes/architecture/core-concepts.md",
+      "previous_hash": "sha256:fbc3a752960fa9a71ee154942bea72ac01a26a535cd6ab9feb9383a7fcef63bf",
+      "new_hash": "sha256:72b1dd73bcadf2e95fe55893b9206af9829aa9ef8fd00b8f15bbe31eb95c4bcb",
+      "bytes": 11599,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T05:47:17.998Z"
+}

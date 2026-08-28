@@ -1,6 +1,6 @@
 # Ripplegraph Core Concepts
 
-Status: implemented
+Status: deprecated
 
 ## Purpose
 
@@ -41,12 +41,10 @@ current contract and advances only along declared graph edges.
 - **Context is served to the host.** Runtime state includes orientation, current
   node instructions and schema, nearby context, the accepted response contract,
   the next allowed command, and a help command.
-- **Effects are preflighted before state creation.** Effect identifiers are
-  checked against the caller's allow-list, but the enforced set is
-  engine-specific. Workflow starts check each node's effective execution
-  effects plus tool-contract and side-channel effects across root and referenced
-  child workflows. Callable starts check only the callable manifest's
-  graph-level effects.
+- **Effects are explicit permissions.** Graphs, nodes, tool contracts, and
+  side-channel actions can declare effect identifiers. Starts fail before
+  execution state is created when required effects are not in the caller's
+  allow-list.
 - **Package identity is checked during recovery.** Checkpoints retain the graph
   identifier, version, and registered package path. Reload enforces the expected
   graph kind and refuses a package whose identity no longer matches.
@@ -66,7 +64,7 @@ current contract and advances only along declared graph edges.
 | Dispatcher | A metadata-only registered front door. Ripplegraph presents the user's request, the registered graph catalog, and a fixed action schema to the host, then validates and applies the returned action. Dispatchers do not contain executable nodes. |
 | Workflow graph | An executable graph with start requirements, declared effects, an entry node, nodes and edges, and an optional completion-output schema. It executes as a durable run. |
 | Callable graph | An executable graph with validated input and output schemas. It executes as an isolated persisted call rather than as the focused workflow. |
-| Node | A unit of host work with a purpose, optional instructions and host-facing metadata, an output schema, declared effects, and outgoing edges. The shared node schema also permits gates and child-workflow references; workflow execution implements them, while callable startup rejects gates and does not execute child-workflow references. |
+| Node | A unit of host work with a purpose, optional instructions and host-facing metadata, an output schema, declared effects, and outgoing edges. Workflow nodes may also expose gates or child-workflow references. |
 | Edge | An ordered route to another node. An edge may be unconditional or require shallow equality between named output fields and its `when` object; the first matching edge is selected. |
 | Gate | A workflow node boundary whose transition requires an external decision conforming to the gate's decision schema. The decision source may identify a human or tool. |
 | Workflow reference | A workflow node's reference to another registered workflow graph. The runtime pushes a stack frame, executes the child in the same run, and uses the child's result to route the parent. |
@@ -76,7 +74,7 @@ current contract and advances only along declared graph edges.
 | Checkpoint | The schema-validated snapshot from which a run or call is inspected, advanced, and recovered. |
 | Artifact | A JSON file containing a successfully accepted node result. Workflow artifacts belong to a run and scope; callable artifacts belong to a call. |
 | Transition log | An append-only JSON Lines audit of workflow starts, accepted or rejected steps, decisions, lifecycle operations, and callable starts, steps, and completion. |
-| Effect | A declarative capability identifier used by start-time policy checks. For workflows, each node inherits graph effects unless its own `effects` array overrides them; tool-contract and side-channel effects are added, including in referenced child workflows. Callable starts check only graph-level manifest effects. |
+| Effect | A declarative capability identifier that must appear in the caller-provided allow-list before the associated graph can start. |
 | Operator context | Arbitrary graph-authored metadata returned with the active node so a host can orient its work without deriving context from runtime internals. |
 
 ## Current execution invariants
@@ -86,10 +84,7 @@ current contract and advances only along declared graph edges.
    enforced by the runtime may use only supported keywords.
 2. A workflow run starts only from a registered workflow package, only when no
    other run is focused, and only after declared start requirements and the
-   effective per-node effects of the root and referenced child workflows pass.
-   A node without `effects` inherits its graph's effects; a node-supplied array,
-   including `[]`, replaces that default. Tool-contract and side-channel effects
-   are additive for the node.
+   effect requirements of the root and referenced child workflows pass.
 3. A normal workflow step validates the current node's output before recording
    an artifact or changing position. A gate validates its external decision in
    the same way. A rejected value leaves the durable position unchanged and is
@@ -99,10 +94,9 @@ current contract and advances only along declared graph edges.
    when none matches.
 5. Completion validates the final value when the root graph declares an output
    schema, persists that value on the checkpoint, and clears workflow focus.
-6. Callable start preflights graph-level manifest effects and validates declared
-   input before creating call state. Callable stepping validates node outputs
-   and the terminal output, persists call-local artifacts and transitions, and
-   never changes workflow focus.
+6. Callable start validates declared input before creating call state. Callable
+   stepping validates node outputs and the terminal output, persists call-local
+   artifacts and transitions, and never changes workflow focus.
 7. Inspecting state returns the current contract and recovery context rather
    than requiring the host to reconstruct them from previous conversation.
 8. Reloading a checkpointed run or call verifies the graph identifier, kind,
@@ -116,11 +110,8 @@ current contract and advances only along declared graph edges.
 - Node execution is currently host-driven and `inline`. Tool contracts,
   validators, interactions, interrupts, and side-channel actions are metadata
   exposed to the host; Ripplegraph does not execute those tools or validators.
-- Effect checking is a declarative allow-list gate. Workflow graph effects act
-  as per-node defaults and can be replaced or cleared by node-level arrays;
-  callable preflight checks only graph-level manifest effects and does not check
-  node-level effects. Effect checking does not infer effects, sandbox a process,
-  block network access, or enforce operating-system policy.
+- Effect checking is a declarative allow-list gate. It does not infer effects,
+  sandbox a process, block network access, or enforce operating-system policy.
 - Runtime-enforced JSON schemas support a deliberate subset: `type`, `required`,
   `properties`, `enum`, `const`, `oneOf`, array `items`, and
   `additionalProperties: false`. Unsupported runtime schema keywords fail
@@ -129,11 +120,8 @@ current contract and advances only along declared graph edges.
   body. The current dispatcher action vocabulary is implemented by Ripplegraph
   and includes starting, resuming or switching, and listing runs; asking the
   user; and starting callable calls.
-- Callable startup currently rejects gates, interactions, interrupts,
-  side-channel actions, tool contracts, and validators. The shared node schema
-  also accepts `workflowRef`, but the callable engine neither executes nor
-  rejects it. Callable authors therefore cannot rely on child-workflow behavior;
-  this is a current enforcement gap rather than a supported callable feature.
+- Callable nodes currently cannot use gates, interactions, interrupts,
+  side-channel actions, tool contracts, or validators.
 - A workspace may retain many workflow runs and callable calls, but only one
   workflow run may be focused at a time.
 - Checkpoints bind package path and declared identity, not a content hash. A
@@ -143,7 +131,7 @@ current contract and advances only along declared graph edges.
 ## Conformance evidence
 
 This note was verified against clean tracked source at Git revision
-`6cabf76c2ec4d0fcb5d7eb57b3a4679bac84ec07` on 2026-08-28.
+`8288620441e8fdcea2d70b52672d6b8f85436644` on 2026-08-28.
 
 Relevant source paths:
 
@@ -162,5 +150,3 @@ Relevant source paths:
 - `src/internal/output-validation.ts`
 - `src/internal/runtime-graph.ts`
 - `src/internal/schema-keywords.ts`
-- `tests/effects.test.ts`
-- `tests/callable.test.ts`
