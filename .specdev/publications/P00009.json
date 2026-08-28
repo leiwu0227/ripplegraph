@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00009",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:2fb6aaadf0c258fabfd868876c94841f3782843a44ce61be20073f675b5e64c5",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph package and extension model architecture note",
+  "parent_revision": "480dcc8ef55b4b840737d066d56c54ceca8f228d",
+  "commit_trailer": "SpecDev-Publication: P00009",
+  "operations": [
+    {
+      "path": "project_notes/architecture/package-and-extension-model.md",
+      "previous_hash": null,
+      "new_hash": "sha256:bcdef7951f0763ea0ead7ee1dcffe4db249c4627267f4e329d3d497db2a83618",
+      "bytes": 18929,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-28T12:02:38.722Z"
+}
