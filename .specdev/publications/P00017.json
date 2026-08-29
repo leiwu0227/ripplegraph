@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00017",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:00dfb123870a6fb151fd129155f58ac1e66b8b373a0d061ed494e499859aaaee",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph guarantee layering and low-level API architecture note",
+  "parent_revision": "3f62cebacec27dacbc892b29d0ed61ec9e619b6c",
+  "commit_trailer": "SpecDev-Publication: P00017",
+  "operations": [
+    {
+      "path": "project_notes/architecture/guarantee-layering-and-low-level-api-model.md",
+      "previous_hash": null,
+      "new_hash": "sha256:9e8963a91885acaa285ae410471ca87acbdcd04373e5e8e343ec41ae4a8986ef",
+      "bytes": 22811,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-29T02:26:00.203Z"
+}
