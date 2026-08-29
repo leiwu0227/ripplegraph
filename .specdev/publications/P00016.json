@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00016",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:689e77dc6f71cf614b05459df58d9fdc1e18bbce678a7a471d68adc638ae221e",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph admission and lifecycle guard architecture note",
+  "parent_revision": "c4f80535d9084708b95177004e1b4632e535b8af",
+  "commit_trailer": "SpecDev-Publication: P00016",
+  "operations": [
+    {
+      "path": "project_notes/architecture/admission-and-lifecycle-guard-model.md",
+      "previous_hash": null,
+      "new_hash": "sha256:7ba0222a416dca8d47b28bb561ebd45ddaa759362a2b53d397f77c74082bcb49",
+      "bytes": 25067,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-29T01:37:43.420Z"
+}
