@@ -1,6 +1,6 @@
 # Ripplegraph Execution and Workflow Model
 
-Status: implemented
+Status: deprecated
 
 ## Purpose and scope
 
@@ -15,8 +15,9 @@ workflow focus and lifecycle, gates, child workflows, callable isolation,
 completion, history, and cross-execution boundaries. It refines the vocabulary
 in `core-concepts.md` and the pull/submit protocol in
 `host-runtime-interaction.md`. Exact storage layout and failure recovery are
-owned by `state-and-recovery.md`; effect-grant detail is owned by
-`effects-and-authority.md`.
+reserved for the planned `state-and-recovery.md` note; effect-grant detail is
+reserved for the planned `effects-and-authority.md` note. Those roadmap
+destinations are not active authority until separately approved and published.
 Command tutorials and installed workflow catalogs remain ordinary
 documentation.
 
@@ -282,7 +283,7 @@ call state reloads the explicitly named call. Active execution reloads its
 checkpointed package source and requires the stored identifier, version, and
 expected graph kind to still match. These checks do not hash package contents.
 Exact filesystem layout, write ordering, corruption behavior, and migration
-guarantees remain owned by `state-and-recovery.md`.
+guarantees are deferred to the planned `state-and-recovery.md` decision.
 
 ## Isolation and external-effect boundaries
 
@@ -351,8 +352,8 @@ guarantees remain owned by `state-and-recovery.md`.
   a current engine-entry-point enforcement gap, not a portable graph-authoring
   guarantee.
 - Runtime persistence operations are not claimed here to form one atomic
-  transaction. The separate `state-and-recovery.md` decision owns crash
-  consistency and repair guarantees.
+  transaction. Crash consistency and repair guarantees require the separate
+  planned state-and-recovery decision.
 
 ## Conformance evidence
 

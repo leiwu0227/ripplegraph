@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "publication": "P00018",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:982ef57a486facdff619d1e4b0252072a332434093443e5d1620df461f63a0ef",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "refresh execution and workflow architecture note temporal ownership references",
+  "parent_revision": "14f3c3ba3abe6b61b3654ea23a583f242490bcb6",
+  "commit_trailer": "SpecDev-Publication: P00018",
+  "operations": [
+    {
+      "path": "project_notes/architecture/legacy/execution-and-workflow-model--3c29286e61aa.md",
+      "previous_hash": null,
+      "new_hash": "sha256:4dc2ee2be3432dcb1dab4c53d8de48499882f57b6f5d4dbc04f656baf69ab863",
+      "bytes": 21028,
+      "remove": false
+    },
+    {
+      "path": "project_notes/architecture/execution-and-workflow-model.md",
+      "previous_hash": "sha256:3c29286e61aa6c2cbab5de0a94fa9662cd62baa4d47025a2a06edb19406d0c91",
+      "new_hash": "sha256:235f651686937f89ec2db0db7e1c62da413297c84f285f0af8ddbe26deef62bd",
+      "bytes": 20867,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-29T02:52:48.656Z"
+}
