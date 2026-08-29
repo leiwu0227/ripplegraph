@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "publication": "P00015",
+  "status": "committed_by_exact_trailer",
+  "approval": "sha256:b9013b630684795d762cfb2b9e896ce514246a55c4003fef78118b03613e6474",
+  "source": {
+    "kind": "discussion",
+    "id": "D00001"
+  },
+  "summary": "publish current Ripplegraph determinism, ordering, and replay architecture note",
+  "parent_revision": "47284a82d05a25ac39415abe22f303eedef2b216",
+  "commit_trailer": "SpecDev-Publication: P00015",
+  "operations": [
+    {
+      "path": "project_notes/architecture/determinism-ordering-and-replay-model.md",
+      "previous_hash": null,
+      "new_hash": "sha256:47fc0bb0c5f39740a07635e5c8d5dc171929741efe41eb5ea095f76b7c051a2a",
+      "bytes": 19921,
+      "remove": false
+    }
+  ],
+  "approved_at": "2026-08-29T00:28:21.700Z"
+}
